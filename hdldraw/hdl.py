@@ -18,7 +18,7 @@ class HDLExpression(object):
 class HDLVectorDescriptor(object):
     """Describe a vector signal."""
 
-    def __init__(self, left_size, right_size):
+    def __init__(self, left_size, right_size=None):
         """Initialize.
 
         Args
@@ -28,8 +28,13 @@ class HDLVectorDescriptor(object):
         right_size: int
            Size on the right of vector declaration
         """
-        if not isinstance(right_size, int) or not isinstance(left_size, int):
+        if not isinstance(left_size, int):
             raise TypeError('only int allowed as vector size')
+
+        if not isinstance(right_size, int):
+            if right_size is None:
+                # take this as zero
+                right_size = 0
 
         if (right_size < 0) or (left_size < 0):
             raise ValueError('only positive values allowed for sizes')

@@ -14,6 +14,8 @@ def test_hdl_primitives():
     if len(vec) != 1:
         raise Exception
 
+    vec = HDLVectorDescriptor(7)
+
     # test failure modes
     try:
         vec = HDLVectorDescriptor(-1, 0)
@@ -68,9 +70,13 @@ def test_hdl_primitives():
     mod = HDLModule('my_module', params=[HDLModuleParameter('myparam',
                                                             'integer',
                                                             0)])
-    mod = HDLModule('my_module', params=HDLModuleParameter('myparam',
-                                                           'integer',
-                                                           0))
+    mod = HDLModule('my_module',
+                    ports=[HDLModulePort('in',
+                                         'myport',
+                                         8)],
+                    params=HDLModuleParameter('myparam',
+                                              'integer',
+                                              0))
     print(mod.dumps())
 
     # failures
