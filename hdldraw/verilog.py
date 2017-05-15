@@ -1,7 +1,7 @@
 """Verilog module declaration parser."""
 
 from textx.metamodel import metamodel_from_str
-
+from .hdl import HDLModulePort, HDLModule
 
 VERILOG_DECL_GRAMMAR = """
 VerilogFile:
@@ -29,9 +29,6 @@ SimpleExpression:
 Value:
   ID | INT | (SimpleExpression);
 """
-
-
-from .hdl import HDLModulePort, HDLVectorDescriptor, HDLModule
 
 
 class VerilogModuleParser(object):
@@ -77,3 +74,9 @@ class VerilogModuleParser(object):
                                      size=size)
 
             hdl_mod.add_ports(hdl_port)
+
+        self.hdl_model = hdl_mod
+
+    def get_module(self):
+        """Get intermediate module representation."""
+        return self.hdl_model
