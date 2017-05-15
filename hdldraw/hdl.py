@@ -4,7 +4,7 @@
 class HDLVectorDescriptor(object):
     """Describe a vector signal."""
 
-    def __init__(self, right_size, left_size):
+    def __init__(self, left_size, right_size):
         """Initialize.
 
         Args
@@ -26,6 +26,14 @@ class HDLVectorDescriptor(object):
     def __len__(self):
         """Get vector length."""
         return abs(self.left_size - self.right_size) + 1
+
+    def __repr__(self):
+        """Represent."""
+        return '[{}:{}]'.format(self.left_size, self.right_size)
+
+    def dumps(self):
+        """Dump description to string."""
+        return self.__repr__()
 
 
 class HDLModulePort(object):
@@ -67,6 +75,16 @@ class HDLModulePort(object):
             raise TypeError('size can only be of types: int, list or'
                             ' HDLVectorDescriptor')
 
+    def __repr__(self):
+        """Get readable representation."""
+        return '{} {}{}'.format(self.direction.upper(),
+                                self.name,
+                                self.vector.dumps())
+
+    def dumps(self):
+        """Alias for __repr__."""
+        return self.__repr__()
+
 
 class HDLModule(object):
     """HDL Module."""
@@ -105,3 +123,17 @@ class HDLModule(object):
                 self.ports.extend(ports)
         else:
             raise TypeError('ports must be a list or HDLModulePort')
+
+    def __repr__(self):
+        """Get readable representation."""
+        ret_str = '{} {{\n'.format(self.name.upper())
+
+        for port in self.ports:
+            ret_str += '    {}\n'.format(port.dumps())
+
+        ret_str += '}'
+        return ret_str
+
+    def dumps(self):
+        """Alias for __repr__."""
+        return self.__repr__()
