@@ -1,20 +1,20 @@
 """Verilog module declaration parser."""
 
 from textx.metamodel import metamodel_from_str
-from .hdl import HDLModulePort, HDLModule
+from .hdl import HDLModulePort, HDLModule, HDLModuleParameter
 
 VERILOG_DECL_GRAMMAR = """
 VerilogFile:
   mod_decl=ModuleDeclaration /.*/*;
 ModuleDeclaration:
-  'module' mod_name=ID ModuleParameterDecl?
+  'module' mod_name=ID param_decl=ModuleParameterDecl?
   '('ports*=ModulePort fport=FinalModulePort')' ';';
 ModuleParameterDecl:
   '#(' params*=ModuleParameter fparam=FinalParameter ')';
 ModuleParameter:
   FinalParameter ',';
 FinalParameter:
-  'parameter' par_type=ID? par_name=ID '=' (INT|ID);
+  'parameter' par_type=ID? par_name=ID ('=' def_val=ParameterValue)?;
 ModulePort:
   FinalModulePort ',';
 FinalModulePort:
@@ -30,11 +30,25 @@ ModulePortDeclaration:
 VectorRange:
   '[' left_size=VectorRangeElement ':' right_size=VectorRangeElement ']';
 VectorRangeElement:
-  SimpleExpression;
-SimpleExpression:
-  Value (('+'|'-'|'*'|'/') Value)*;
+  Expression;
+Expression:
+  Sum;
+Sum:
+  Product (('+'|'-') Product)*;
+Product:
+  Value ('*' Value)*;
 Value:
-  ID | INT | (SimpleExpression);
+  ID | INT | ('(' Expression ')');
+ParameterValue:
+  INT | BitString;
+BitString:
+  BinBitString | DecBitString | HexBitString;
+BinBitString:
+  width=INT? "'b" val=/(0|1)+/;
+DecBitString:
+  width=INT? "'d" val=/[0-9]+/;
+HexBitString:
+  width=INT? "'h" val=/[0-9a-fA-F]+/;
 Comment:
   /\/\/.*$/;
 """
@@ -69,7 +83,10 @@ class VerilogModuleParser(object):
         hdl_mod = HDLModule(module_decl.mod_decl.mod_name)
 
         # create and add ports
-        for port in module_decl.mod_decl.ports:
+        ports = module_decl.mod_decl.ports[:]
+        # add last port
+        ports.append(module_decl.mod_decl.fport)
+        for port in ports:
             # ugly, but not my fault
             direction = self._class_to_port_dir[port.__class__.__name__]
             name = port.decl.port_name
@@ -78,11 +95,25 @@ class VerilogModuleParser(object):
                         port.decl.srange.right_size)
             else:
                 size = 1
-            hdl_port = HDLModulePort(direction=direction,
-                                     name=name,
-                                     size=size)
+            try:
+                hdl_port = HDLModulePort(direction=direction,
+                                         name=name,
+                                         size=size)
+            except TypeError:
+                continue  # just for testing
 
             hdl_mod.add_ports(hdl_port)
+
+        # same, for parameters
+        if module_decl.mod_decl.param_decl is not None:
+            params = module_decl.mod_decl.param_decl.params[:]
+            params.append(module_decl.mod_decl.param_decl.fparam)
+            for param in params:
+                hdl_param = HDLModuleParameter(param_name=param.par_name,
+                                               param_type=param.par_type,
+                                               param_default=param.def_val)
+
+                hdl_mod.add_parameters(hdl_param)
 
         self.hdl_model = hdl_mod
 
