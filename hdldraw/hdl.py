@@ -66,3 +66,42 @@ class HDLModulePort(object):
         else:
             raise TypeError('size can only be of types: int, list or'
                             ' HDLVectorDescriptor')
+
+
+class HDLModule(object):
+    """HDL Module."""
+
+    def __init__(self, module_name, ports=None):
+        """Initialize.
+
+        Args
+        ----
+        module_name: str
+            Module or entity name
+        ports: list
+            List of ports in module declaration
+        """
+        self.name = module_name
+        self.ports = []
+        if ports is not None:
+            self.add_ports(ports)
+
+    def add_ports(self, ports):
+        """Add ports to module.
+
+        Args
+        ----
+        ports: list or HDLModulePort
+            List of ports to be added
+        """
+        # TODO: duplicate port verification
+        if isinstance(ports, HDLModulePort):
+            self.ports.append(ports)
+        elif isinstance(ports, (tuple, list)):
+            for port in ports:
+                if not isinstance(port, HDLModulePort):
+                    raise TypeError('list may only contain HDLModulePort'
+                                    ' instances')
+                self.ports.extend(ports)
+        else:
+            raise TypeError('ports must be a list or HDLModulePort')
