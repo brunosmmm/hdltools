@@ -2,6 +2,7 @@
 
 from textx.metamodel import metamodel_from_str
 from .hdl import HDLModulePort, HDLModule, HDLModuleParameter
+import re
 
 VERILOG_DECL_GRAMMAR = """
 VerilogFile:
@@ -52,6 +53,38 @@ HexBitString:
 Comment:
   /\/\/.*$/;
 """
+
+
+def verilog_bitstring_to_int(bitstring):
+    """Parse bitstring and return value."""
+    HEX_BITSTRING_REGEX = re.compile(r'([0-9]+)?\'h([0-9a-fA-F]+)')
+    DEC_BITSTRING_REGEX = re.compile(r'([0-9]+)?\'d([0-9]+)')
+    BIN_BITSTRING_REGEX = re.compile(r'([0-9]+)?\'b([01]+)')
+
+    m_hex = HEX_BITSTRING_REGEX.match(bitstring)
+    m_dec = DEC_BITSTRING_REGEX.match(bitstring)
+    m_bin = BIN_BITSTRING_REGEX.match(bitstring)
+
+    if m_hex is not None:
+        if m_hex.group == '':
+            width = None
+        else:
+            width = int(m_hex.group(1))
+        return (width, int(m_hex.group(2), 16))
+    elif m_dec is not None:
+        if m_dec.group == '':
+            width = None
+        else:
+            width = int(m_dec.group(1))
+        return (width, int(m_dec.group(2), 10))
+    elif m_bin is not None:
+        if m_bin.group == '':
+            width = None
+        else:
+            width = int(m_bin.group(1))
+        return (width, int(m_bin.group(2), 2))
+    else:
+        raise ValueError('could not convert bitstring')
 
 
 class VerilogModuleParser(object):

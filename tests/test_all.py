@@ -1,4 +1,4 @@
-from hdldraw.verilog import VerilogModuleParser
+from hdldraw.verilog import VerilogModuleParser, verilog_bitstring_to_int
 from hdldraw.hdl import (HDLVectorDescriptor,
                          HDLModulePort,
                          HDLModule,
@@ -124,6 +124,10 @@ def test_hdl_primitives():
         pass
 
 def test_verilog_parser():
+
+    # bitstrings
+    width, value = verilog_bitstring_to_int("4'b0011")
+    print('{}, {}'.format(width, value))
 
     parser = VerilogModuleParser(os.path.join('tests',
                                               'assets',
