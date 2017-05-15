@@ -1,5 +1,7 @@
 """Common HDL declaration elements."""
 
+import math
+
 
 class HDLExpression(object):
     """An expression involving parameters."""
@@ -38,7 +40,13 @@ class HDLVectorDescriptor(object):
 
         self.right_size = right_size
         self.left_size = left_size
-        self.stored_value = stored_value
+
+        # check for value legality
+        if stored_value is not None:
+            if self.value_fits_width(len(self), stored_value) is True:
+                self.stored_value = stored_value
+            else:
+                raise ValueError('vector cannot hold passed stored_value')
 
     def __len__(self):
         """Get vector length."""
@@ -51,6 +59,19 @@ class HDLVectorDescriptor(object):
     def dumps(self):
         """Dump description to string."""
         return self.__repr__()
+
+    @staticmethod
+    def value_fits_width(width, value):
+        """Check if a value fits in a vector.
+
+        Args
+        ----
+        width: int
+           Bit Vector width
+        value: int
+           The value
+        """
+        return bool(value <= (int(math.pow(2, width)) - 1))
 
 
 class HDLModuleParameter(object):

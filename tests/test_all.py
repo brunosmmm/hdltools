@@ -35,6 +35,19 @@ def test_hdl_primitives():
     except TypeError:
         pass
 
+    fit = HDLVectorDescriptor.value_fits_width(8, 256)
+    if fit is True:
+        raise Exception
+    fit = HDLVectorDescriptor.value_fits_width(8, 255)
+    if fit is False:
+        raise Exception
+
+    try:
+        HDLVectorDescriptor(7, stored_value=256)
+        raise Exception
+    except ValueError:
+        pass
+
     # ports
     port = HDLModulePort('in', 'myport', 3)
     port = HDLModulePort('out', 'myport', (2, 0))
