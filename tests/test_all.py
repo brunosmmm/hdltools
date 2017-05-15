@@ -7,6 +7,7 @@ def test_hdl_primitives():
 
     # basic testing
     vec = HDLVectorDescriptor(0, 0)
+    print(vec.dumps())
     if len(vec) != 1:
         raise Exception
 
@@ -27,6 +28,7 @@ def test_hdl_primitives():
     port = HDLModulePort('in', 'myport', 3)
     port = HDLModulePort('out', 'myport', (2, 0))
     port = HDLModulePort('inout', 'myport', HDLVectorDescriptor(2, 0))
+    print(port.dumps())
 
     # fail cases
     try:
@@ -56,6 +58,7 @@ def test_hdl_primitives():
     # HDL MODULE
     mod = HDLModule('my_module')
     mod = HDLModule('my_module', [HDLModulePort('in', 'myport', 8)])
+    print(mod.dumps())
 
     # failures
     try:
