@@ -7,7 +7,14 @@ VERILOG_DECL_GRAMMAR = """
 VerilogFile:
   mod_decl=ModuleDeclaration /.*/*;
 ModuleDeclaration:
-  'module' mod_name=ID '('ports*=ModulePort fport=FinalModulePort')' ';';
+  'module' mod_name=ID ModuleParameterDecl?
+  '('ports*=ModulePort fport=FinalModulePort')' ';';
+ModuleParameterDecl:
+  '#(' params*=ModuleParameter fparam=FinalParameter ')';
+ModuleParameter:
+  FinalParameter ',';
+FinalParameter:
+  'parameter' par_type=ID? par_name=ID '=' (INT|ID);
 ModulePort:
   FinalModulePort ',';
 FinalModulePort:
@@ -28,6 +35,8 @@ SimpleExpression:
   Value (('+'|'-'|'*'|'/') Value)*;
 Value:
   ID | INT | (SimpleExpression);
+Comment:
+  /\/\/.*$/;
 """
 
 
