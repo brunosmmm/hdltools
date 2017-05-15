@@ -29,6 +29,12 @@ def test_hdl_primitives():
     except TypeError:
         pass
 
+    try:
+        vec = HDLVectorDescriptor(7, stored_value='a')
+        raise Exception
+    except TypeError:
+        pass
+
     # ports
     port = HDLModulePort('in', 'myport', 3)
     port = HDLModulePort('out', 'myport', (2, 0))

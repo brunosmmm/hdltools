@@ -1,14 +1,6 @@
 """Common HDL declaration elements."""
 
 
-class HDLBitVector(object):
-    """Why do I have two kinds of vectors."""
-
-    def __init__(self, width, value):
-        """Initialize."""
-        pass
-
-
 class HDLExpression(object):
     """An expression involving parameters."""
 
@@ -18,15 +10,17 @@ class HDLExpression(object):
 class HDLVectorDescriptor(object):
     """Describe a vector signal."""
 
-    def __init__(self, left_size, right_size=None):
+    def __init__(self, left_size, right_size=None, stored_value=None):
         """Initialize.
 
         Args
         ----
         left_size: int
            Size on the left of vector declaration
-        right_size: int
+        right_size: int, NoneType
            Size on the right of vector declaration
+        stored_value: int, NoneType
+           A stored value
         """
         if not isinstance(left_size, int):
             raise TypeError('only int allowed as vector size')
@@ -36,11 +30,15 @@ class HDLVectorDescriptor(object):
                 # take this as zero
                 right_size = 0
 
+        if not isinstance(stored_value, (int, (type(None)))):
+            raise TypeError('stored_value can only be int or None')
+
         if (right_size < 0) or (left_size < 0):
             raise ValueError('only positive values allowed for sizes')
 
         self.right_size = right_size
         self.left_size = left_size
+        self.stored_value = stored_value
 
     def __len__(self):
         """Get vector length."""
