@@ -36,6 +36,39 @@ class HDLVectorDescriptor(object):
         return self.__repr__()
 
 
+class HDLModuleParameter(object):
+    """Module parameter / generic values."""
+
+    def __init__(self, param_name, param_type, param_default=None):
+        """Initialize.
+
+        Args
+        ----
+        param_name: str
+           Parameter name
+        param_type: str
+           Parameter type
+        param_default: object
+           Parameter value
+        """
+        self.name = param_name
+        self.ptype = param_type
+        self.value = param_default
+
+    def __repr__(self):
+        """Get readable representation."""
+        ret_str = '#{} {}'.format(self.ptype.upper(),
+                                  self.name.upper())
+        if self.value is not None:
+            ret_str += ' ({})'.format(self.value)
+
+        return ret_str
+
+    def dumps(self):
+        """Alias for __repr__."""
+        return self.__repr__()
+
+
 class HDLModulePort(object):
     """HDL Module port."""
 
@@ -89,7 +122,7 @@ class HDLModulePort(object):
 class HDLModule(object):
     """HDL Module."""
 
-    def __init__(self, module_name, ports=None):
+    def __init__(self, module_name, ports=None, params=None):
         """Initialize.
 
         Args
@@ -101,8 +134,11 @@ class HDLModule(object):
         """
         self.name = module_name
         self.ports = []
+        self.params = []
         if ports is not None:
             self.add_ports(ports)
+        if params is not None:
+            self.add_parameters(params)
 
     def add_ports(self, ports):
         """Add ports to module.
@@ -123,6 +159,26 @@ class HDLModule(object):
                 self.ports.extend(ports)
         else:
             raise TypeError('ports must be a list or HDLModulePort')
+
+    def add_parameters(self, params):
+        """Add parameters to module.
+
+        Args
+        ----
+        params: list or HDLModuleParameter
+            List of parameters to be added.
+        """
+        # TODO: duplicate parameter verification
+        if isinstance(params, HDLModuleParameter):
+            self.params.append(params)
+        elif isinstance(params, (tuple, list)):
+            for param in params:
+                if not isinstance(param, HDLModuleParameter):
+                    raise TypeError('list may only contain HDLModuleParameter'
+                                    ' instances')
+                self.params.extend(params)
+        else:
+            raise TypeError('params must be a list or HDLModuleParameter')
 
     def __repr__(self):
         """Get readable representation."""

@@ -1,5 +1,8 @@
 from hdldraw.verilog import VerilogModuleParser
-from hdldraw.hdl import HDLVectorDescriptor, HDLModulePort, HDLModule
+from hdldraw.hdl import (HDLVectorDescriptor,
+                         HDLModulePort,
+                         HDLModule,
+                         HDLModuleParameter)
 import os
 
 
@@ -55,9 +58,19 @@ def test_hdl_primitives():
     except TypeError:
         pass
 
+    # HDL Parameter
+    param = HDLModuleParameter('myparam', 'integer', param_default=0)
+    print(param.dumps())
+
     # HDL MODULE
     mod = HDLModule('my_module')
     mod = HDLModule('my_module', [HDLModulePort('in', 'myport', 8)])
+    mod = HDLModule('my_module', params=[HDLModuleParameter('myparam',
+                                                            'integer',
+                                                            0)])
+    mod = HDLModule('my_module', params=HDLModuleParameter('myparam',
+                                                           'integer',
+                                                           0))
     print(mod.dumps())
 
     # failures
@@ -73,9 +86,22 @@ def test_hdl_primitives():
     except TypeError:
         pass
 
+    try:
+        mod = HDLModule('my_module', params=[0])
+        raise Exception
+    except TypeError:
+        pass
+
+    try:
+        mod = HDLModule('my_module', params=0)
+        raise Exception
+    except TypeError:
+        pass
+
 def test_verilog_parser():
 
     parser = VerilogModuleParser(os.path.join('tests',
                                               'assets',
                                               'verilog',
                                               'test.v'))
+    model = parser.get_module()
