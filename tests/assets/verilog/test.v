@@ -1,4 +1,7 @@
 module my_module
+  #(
+    parameter integer MY_PARAM = 0
+    )
   (
    input wire clk,
    input wire rst,
