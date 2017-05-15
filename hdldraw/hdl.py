@@ -1,6 +1,20 @@
 """Common HDL declaration elements."""
 
 
+class HDLBitVector(object):
+    """Why do I have two kinds of vectors."""
+
+    def __init__(self, width, value):
+        """Initialize."""
+        pass
+
+
+class HDLExpression(object):
+    """An expression involving parameters."""
+
+    pass
+
+
 class HDLVectorDescriptor(object):
     """Describe a vector signal."""
 
@@ -135,10 +149,10 @@ class HDLModule(object):
         self.name = module_name
         self.ports = []
         self.params = []
-        if ports is not None:
-            self.add_ports(ports)
         if params is not None:
             self.add_parameters(params)
+        if ports is not None:
+            self.add_ports(ports)
 
     def add_ports(self, ports):
         """Add ports to module.
@@ -183,6 +197,9 @@ class HDLModule(object):
     def __repr__(self):
         """Get readable representation."""
         ret_str = '{} {{\n'.format(self.name.upper())
+
+        for param in self.params:
+            ret_str += '{}\n'.format(param.dumps())
 
         for port in self.ports:
             ret_str += '    {}\n'.format(port.dumps())
