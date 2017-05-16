@@ -1,12 +1,132 @@
 """Common HDL declaration elements."""
 
 import math
+import ast
+import operator as op
+
+# TODO: EVALUATE ONLY INTEGERS, FAIL OTHERWISE
 
 
-class HDLExpression(object):
+class HDLValue(object):
+    """Abstract class for deriving other values."""
+
+    def dumps(self):
+        """Get representation."""
+        pass
+
+    def evaluate(self, **kwargs):
+        """Evaluate and return value."""
+        pass
+
+
+class HDLExpression(HDLValue):
     """An expression involving parameters."""
 
-    pass
+    _ast_op_names = {ast.Sub: '-',
+                     ast.Add: '+',
+                     ast.Mult: '*',
+                     ast.Div: '/'}
+    _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
+                  ast.Div: op.truediv, ast.Pow: op.pow,
+                  ast.USub: op.neg}
+
+    def __init__(self, expr_tree):
+        """Initialize.
+
+        Args
+        ----
+        expr_tree: ast.Expression
+            Expression tree
+        """
+        super(HDLExpression, self).__init__()
+        self.tree = expr_tree
+
+    def evaluate(self, **kwargs):
+        """Evaluate current expression.
+
+        Args
+        ----
+        kwargs: dict
+           Dictionary which must contain all necessary symbols to evaluate
+        """
+        return self._evaluate(self.tree, **kwargs)
+
+    def _evaluate(self, node, **kwargs):
+        """Evaluate current expression.
+
+        Args
+        ----
+        kwargs: dict
+           Dictionary which must contain all necessary symbols to evaluate
+        """
+        if isinstance(node, ast.Expression):
+            return self._evaluate(node.body, **kwargs)
+        elif isinstance(node, ast.Num):
+            return node.n
+        elif isinstance(node, ast.Name):
+            if node.id in kwargs:
+                return kwargs[node.id]
+            else:
+                raise KeyError(node.id)
+        elif isinstance(node, ast.BinOp):
+            return self._operators[type(node.op)](self._evaluate(node.left,
+                                                                 **kwargs),
+                                                  self._evaluate(node.right,
+                                                                 **kwargs))
+        elif isinstance(node, ast.UnaryOp):
+            return self._operators[type(node.op)](self._evaluate(node.operand,
+                                                                 **kwargs))
+        else:
+            raise TypeError(node)
+
+    def _get_expr(self, node):
+        if isinstance(node, ast.Expression):
+            return self._get_expr(node.body)
+        elif isinstance(node, ast.BinOp):
+            left_expr = self._get_expr(node.left)
+            right_expr = self._get_expr(node.right)
+
+            return '({}{}{})'.format(left_expr,
+                                     self._ast_op_names[node.op.__class__],
+                                     right_expr)
+        elif isinstance(node, ast.Num):
+            return str(node.n)
+        elif isinstance(node, ast.Name):
+            return node.id
+
+    def __repr__(self):
+        """Get representation of expression."""
+        return self._get_expr(self.tree)
+
+    def dumps(self):
+        """Alias for __repr__."""
+        return self.__repr__()
+
+
+class HDLConstant(HDLValue):
+    """A constant value."""
+
+    def __init__(self, value):
+        """Initialize.
+
+        Args
+        ----
+        value: int
+            A constant value
+        """
+        self.value = value
+
+    def evaluate(self, **kwargs):
+        """Evaluate."""
+        return self.value
+
+    def __repr__(self):
+        """Get representation."""
+        return str(self.value)
+
+    def dumps(self):
+        """Alias for __repr__."""
+        return self.__repr__()
 
 
 class HDLVectorDescriptor(object):
@@ -24,22 +144,31 @@ class HDLVectorDescriptor(object):
         stored_value: int, NoneType
            A stored value
         """
-        if not isinstance(left_size, int):
-            raise TypeError('only int allowed as vector size')
+        if not isinstance(left_size, (int, HDLExpression)):
+            raise TypeError('only int or HDLExpression allowed as size')
 
-        if not isinstance(right_size, int):
+        if not isinstance(right_size, (int, HDLExpression)):
             if right_size is None:
                 # take this as zero
                 right_size = 0
+            else:
+                raise TypeError('only int or HDLExpression allowed as size')
 
         if not isinstance(stored_value, (int, (type(None)))):
             raise TypeError('stored_value can only be int or None')
 
-        if (right_size < 0) or (left_size < 0):
-            raise ValueError('only positive values allowed for sizes')
+        # if integer, check bounds
+        self._check_value(right_size)
+        self._check_value(left_size)
 
-        self.right_size = right_size
-        self.left_size = left_size
+        if isinstance(left_size, int):
+            self.left_size = HDLConstant(left_size)
+        else:
+            self.left_size = left_size
+        if isinstance(right_size, int):
+            self.right_size = HDLConstant(right_size)
+        else:
+            self.right_size = right_size
 
         # check for value legality
         if stored_value is not None:
@@ -48,17 +177,36 @@ class HDLVectorDescriptor(object):
             else:
                 raise ValueError('vector cannot hold passed stored_value')
 
+    def _check_value(self, value):
+        if isinstance(value, int):
+            if value < 0:
+                raise ValueError('only positive values allowed for sizes')
+
+    def evaluate_right(self, eval_scope):
+        """Evaluate right side size."""
+        return self.right_size.evaluate(**eval_scope)
+
+    def evaluate_left(self, eval_scope):
+        """Evaluate left side size."""
+        return self.left_size.evaluate(**eval_scope)
+
     def __len__(self):
         """Get vector length."""
         return abs(self.left_size - self.right_size) + 1
 
-    def __repr__(self):
+    def __repr__(self, eval_scope=None):
         """Represent."""
-        return '[{}:{}]'.format(self.left_size, self.right_size)
+        if eval_scope is not None:
+            left_size = self.evaluate_left(eval_scope)
+            right_size = self.evaluate_right(eval_scope)
+        else:
+            left_size = self.left_size
+            right_size = self.right_size
+        return '[{}:{}]'.format(left_size, right_size)
 
-    def dumps(self):
+    def dumps(self, eval_scope=None):
         """Dump description to string."""
-        return self.__repr__()
+        return self.__repr__(eval_scope)
 
     @staticmethod
     def value_fits_width(width, value):
@@ -129,7 +277,6 @@ class HDLModulePort(object):
 
         self.direction = direction
         self.name = name
-
         if isinstance(size, int):
             # default is [size-1:0] / (size-1 downto 0)
             if (size < 0):
@@ -146,15 +293,15 @@ class HDLModulePort(object):
             raise TypeError('size can only be of types: int, list or'
                             ' HDLVectorDescriptor')
 
-    def __repr__(self):
+    def __repr__(self, eval_scope=None):
         """Get readable representation."""
         return '{} {}{}'.format(self.direction.upper(),
                                 self.name,
-                                self.vector.dumps())
+                                self.vector.dumps(eval_scope))
 
-    def dumps(self):
+    def dumps(self, eval_scope=None):
         """Alias for __repr__."""
-        return self.__repr__()
+        return self.__repr__(eval_scope)
 
 
 class HDLModule(object):
@@ -218,19 +365,39 @@ class HDLModule(object):
         else:
             raise TypeError('params must be a list or HDLModuleParameter')
 
-    def __repr__(self):
+    def get_parameter_scope(self):
+        """Get parameters as dictionary."""
+        scope = {}
+        for param in self.params:
+            scope[param.name] = param.value
+
+        return scope
+
+    def __repr__(self, evaluate=False):
         """Get readable representation."""
+        if evaluate is True:
+            eval_scope = self.get_parameter_scope()
+        else:
+            eval_scope = None
         ret_str = '{} {{\n'.format(self.name.upper())
 
         for param in self.params:
             ret_str += '{}\n'.format(param.dumps())
 
         for port in self.ports:
-            ret_str += '    {}\n'.format(port.dumps())
+            ret_str += '    {}\n'.format(port.dumps(eval_scope=eval_scope))
 
         ret_str += '}'
         return ret_str
 
-    def dumps(self):
+    def dumps(self, evaluate=False):
         """Alias for __repr__."""
-        return self.__repr__()
+        return self.__repr__(evaluate)
+
+    def get_param_names(self):
+        """Return list of all parameters available."""
+        return [x.name for x in self.params]
+
+    def get_port_names(self):
+        """Return list of all ports available."""
+        return [x.name for x in self.ports]
