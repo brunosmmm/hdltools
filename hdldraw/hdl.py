@@ -128,6 +128,32 @@ class HDLConstant(HDLValue):
         """Alias for __repr__."""
         return self.__repr__()
 
+    def __sub__(self, other):
+        return HDLConstant(self.value - other.value)
+
+    def __abs__(self):
+        if self.value < 0:
+            return HDLConstant(-self.value)
+        else:
+            return HDLConstant(self.value)
+
+    def __int__(self):
+        return self.value
+
+    def __add__(self, other):
+        return HDLConstant(self.value + int(other))
+
+    def __radd__(self, other):
+        return HDLConstant(self.value + int(other))
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return bool(self.value == other)
+        elif isinstance(other, HDLConstant):
+            return bool(self.value == other.value)
+        else:
+            raise TypeError
+
 
 class HDLVectorDescriptor(object):
     """Describe a vector signal."""
@@ -192,7 +218,7 @@ class HDLVectorDescriptor(object):
 
     def __len__(self):
         """Get vector length."""
-        return abs(self.left_size - self.right_size) + 1
+        return abs(int(self.left_size) - int(self.right_size)) + 1
 
     def __repr__(self, eval_scope=None):
         """Represent."""
