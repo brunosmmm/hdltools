@@ -396,8 +396,11 @@ class HDLModuleParameter(object):
 
     def __repr__(self):
         """Get readable representation."""
-        ret_str = '#{} {}'.format(self.ptype.upper(),
-                                  self.name.upper())
+        if self.ptype is not None:
+            ret_str = '#{} {}'.format(self.ptype.upper(),
+                                      self.name.upper())
+        else:
+            ret_str = '#{}'.format(self.name.upper())
         if self.value is not None:
             ret_str += ' ({})'.format(self.value)
 
