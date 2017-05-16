@@ -129,24 +129,61 @@ class HDLConstant(HDLValue):
         return self.__repr__()
 
     def __sub__(self, other):
-        return HDLConstant(self.value - other.value)
+        """Subtract two constants, return a new one.
+
+        Args
+        ----
+        other: int or HDLConstant
+           Other value
+        """
+        if isinstance(other, (int, HDLConstant)):
+            return HDLConstant(self.value - int(other))
+        else:
+            raise TypeError('can only subtract int and HDLConstant types')
 
     def __abs__(self):
+        """Return absolute value."""
         if self.value < 0:
             return HDLConstant(-self.value)
         else:
             return HDLConstant(self.value)
 
     def __int__(self):
+        """Convert to integer."""
         return self.value
 
     def __add__(self, other):
-        return HDLConstant(self.value + int(other))
+        """Add two constants, return a new one.
+
+        Args
+        ----
+        other: int, HDLConstant
+           Other value to add
+        """
+        if isinstance(other, (int, HDLConstant)):
+            return HDLConstant(self.value + int(other))
+        else:
+            raise TypeError('can only add int and HDLConstant types')
 
     def __radd__(self, other):
-        return HDLConstant(self.value + int(other))
+        """Reverse add. Uses __add__."""
+        return self.__add__(other)
+
+    def __mul__(self, other):
+        """Multiply two constants."""
+        if isinstance(other, (int, HDLConstant)):
+            return HDLConstant(self.value * int(other))
+        else:
+            raise TypeError('can only multiply int and HDLConstant types')
 
     def __eq__(self, other):
+        """Equality test.
+
+        Args
+        ----
+        other: int, HDLConstant
+           Value to compare against
+        """
         if isinstance(other, int):
             return bool(self.value == other)
         elif isinstance(other, HDLConstant):
