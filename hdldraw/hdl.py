@@ -103,7 +103,13 @@ class HDLExpression(HDLValue):
         return self.__repr__()
 
 
-class HDLIntegerConstant(HDLValue):
+class HDLConstant(HDLValue):
+    """Abstract class from which other constants inherit."""
+
+    pass
+
+
+class HDLIntegerConstant(HDLConstant):
     """A constant value."""
 
     def __init__(self, value):
