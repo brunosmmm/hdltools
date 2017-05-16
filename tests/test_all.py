@@ -2,9 +2,10 @@ from hdldraw.verilog import VerilogModuleParser, verilog_bitstring_to_int
 from hdldraw.hdl import (HDLVectorDescriptor,
                          HDLModulePort,
                          HDLModule,
-                         HDLModuleParameter)
+                         HDLModuleParameter,
+                         HDLExpression)
 import os
-
+import ast
 
 def test_hdl_primitives():
 
@@ -89,14 +90,23 @@ def test_hdl_primitives():
     mod = HDLModule('my_module', params=[HDLModuleParameter('myparam',
                                                             'integer',
                                                             0)])
+
+    expr = ast.parse('myparam-1', mode='eval')
+    vec = HDLVectorDescriptor(left_size=HDLExpression(expr),
+                              right_size=0)
     mod = HDLModule('my_module',
                     ports=[HDLModulePort('in',
                                          'myport',
-                                         8)],
+                                         vec)],
                     params=HDLModuleParameter('myparam',
                                               'integer',
                                               0))
-    print(mod.dumps())
+    print(mod.dumps(evaluate=True))
+
+    param_scope = mod.get_parameter_scope()
+    full_scope = mod.get_full_scope()
+    params = mod.get_param_names()
+    ports = mod.get_port_names()
 
     # failures
     try:
