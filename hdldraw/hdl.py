@@ -19,6 +19,64 @@ class HDLValue(object):
         pass
 
 
+class HDLBuiltinFunction(object):
+    """Builtin function."""
+
+    def __init__(self, name, args, ret, cb):
+        """Initialize.
+
+        Args
+        ----
+        name: str
+           Function name
+        args: List
+           Argument List: TBD
+        ret: class
+           Return type ? TBD
+        """
+        self.name = name
+        self.arg_list = args
+        self.ret_type = ret
+        self.cb = cb
+
+    def call(self, *args):
+        """Perform function call.
+
+        Args
+        ----
+        args: list
+           Argument list
+        """
+        # perform argument checking?
+        return self.cb(*args)
+
+
+class HDLBuiltins(object):
+    """Default builtin objects."""
+
+    # placeholders
+    _functions = {'_ceil': HDLBuiltinFunction('ceil',
+                                              [],
+                                              None,
+                                              lambda x: int(math.ceil(x))),
+                  '_log2': HDLBuiltinFunction('log2',
+                                              [],
+                                              None,
+                                              lambda x: math.log2(x)),
+                  '_clog2': HDLBuiltinFunction('clog2',
+                                               [],
+                                               None,
+                                               lambda x: int(math.ceil(
+                                                   math.log2(x))))}
+
+    @classmethod
+    def get_builtin_scope(cls):
+        """Get dictionary with all available symbols."""
+        scope = {}
+        scope.update(cls._functions)
+        return scope
+
+
 class HDLExpression(HDLValue):
     """An expression involving parameters."""
 
@@ -76,6 +134,17 @@ class HDLExpression(HDLValue):
         elif isinstance(node, ast.UnaryOp):
             return self._operators[type(node.op)](self._evaluate(node.operand,
                                                                  **kwargs))
+        elif isinstance(node, ast.Call):
+            if node.func.id in kwargs:
+                # evaluate arguments
+                arg_eval = []
+                for arg in node.args:
+                    arg_eval.append(self._evaluate(arg, **kwargs))
+
+                return kwargs[node.func.id].call(*arg_eval)
+            else:
+                raise KeyError('function "{}" not'
+                               ' available'.format(node.func.id))
         else:
             raise TypeError(node)
 
@@ -105,6 +174,12 @@ class HDLExpression(HDLValue):
 
 class HDLConstant(HDLValue):
     """Abstract class from which other constants inherit."""
+
+    pass
+
+
+class HDLStringConstant(HDLConstant):
+    """String constant value."""
 
     pass
 
@@ -444,10 +519,17 @@ class HDLModule(object):
 
         return scope
 
+    def get_full_scope(self):
+        """Get scope, including builtins."""
+        scope = {}
+        scope.update(self.get_parameter_scope())
+        scope.update(HDLBuiltins.get_builtin_scope())
+        return scope
+
     def __repr__(self, evaluate=False):
         """Get readable representation."""
         if evaluate is True:
-            eval_scope = self.get_parameter_scope()
+            eval_scope = self.get_full_scope()
         else:
             eval_scope = None
         ret_str = '{} {{\n'.format(self.name.upper())
