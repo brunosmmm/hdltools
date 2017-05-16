@@ -103,7 +103,7 @@ class HDLExpression(HDLValue):
         return self.__repr__()
 
 
-class HDLConstant(HDLValue):
+class HDLIntegerConstant(HDLValue):
     """A constant value."""
 
     def __init__(self, value):
@@ -133,20 +133,21 @@ class HDLConstant(HDLValue):
 
         Args
         ----
-        other: int or HDLConstant
+        other: int or HDLIntegerConstant
            Other value
         """
-        if isinstance(other, (int, HDLConstant)):
-            return HDLConstant(self.value - int(other))
+        if isinstance(other, (int, HDLIntegerConstant)):
+            return HDLIntegerConstant(self.value - int(other))
         else:
-            raise TypeError('can only subtract int and HDLConstant types')
+            raise TypeError('can only subtract int and '
+                            'HDLIntegerConstant types')
 
     def __abs__(self):
         """Return absolute value."""
         if self.value < 0:
-            return HDLConstant(-self.value)
+            return HDLIntegerConstant(-self.value)
         else:
-            return HDLConstant(self.value)
+            return HDLIntegerConstant(self.value)
 
     def __int__(self):
         """Convert to integer."""
@@ -157,13 +158,13 @@ class HDLConstant(HDLValue):
 
         Args
         ----
-        other: int, HDLConstant
+        other: int, HDLIntegerConstant
            Other value to add
         """
-        if isinstance(other, (int, HDLConstant)):
-            return HDLConstant(self.value + int(other))
+        if isinstance(other, (int, HDLIntegerConstant)):
+            return HDLIntegerConstant(self.value + int(other))
         else:
-            raise TypeError('can only add int and HDLConstant types')
+            raise TypeError('can only add int and HDLIntegerConstant types')
 
     def __radd__(self, other):
         """Reverse add. Uses __add__."""
@@ -171,22 +172,23 @@ class HDLConstant(HDLValue):
 
     def __mul__(self, other):
         """Multiply two constants."""
-        if isinstance(other, (int, HDLConstant)):
-            return HDLConstant(self.value * int(other))
+        if isinstance(other, (int, HDLIntegerConstant)):
+            return HDLIntegerConstant(self.value * int(other))
         else:
-            raise TypeError('can only multiply int and HDLConstant types')
+            raise TypeError('can only multiply int and'
+                            ' HDLIntegerConstant types')
 
     def __eq__(self, other):
         """Equality test.
 
         Args
         ----
-        other: int, HDLConstant
+        other: int, HDLIntegerConstant
            Value to compare against
         """
         if isinstance(other, int):
             return bool(self.value == other)
-        elif isinstance(other, HDLConstant):
+        elif isinstance(other, HDLIntegerConstant):
             return bool(self.value == other.value)
         else:
             raise TypeError
@@ -225,11 +227,11 @@ class HDLVectorDescriptor(object):
         self._check_value(left_size)
 
         if isinstance(left_size, int):
-            self.left_size = HDLConstant(left_size)
+            self.left_size = HDLIntegerConstant(left_size)
         else:
             self.left_size = left_size
         if isinstance(right_size, int):
-            self.right_size = HDLConstant(right_size)
+            self.right_size = HDLIntegerConstant(right_size)
         else:
             self.right_size = right_size
 
