@@ -32,7 +32,7 @@ ModulePortDeclaration:
 VectorRange:
   '[' left_size=VectorRangeElement ':' right_size=VectorRangeElement ']';
 VectorRangeElement:
-  /[0-9a-zA-Z_\+\-\*\/\(\))]+/;
+  /[0-9a-zA-Z_\+\-\*\/\(\))\$]+/;
 ParameterValue:
   INT | BitString;
 BitString:
@@ -134,9 +134,12 @@ class VerilogModuleParser(object):
                         port.decl.srange.right_size)
 
                 # use ast to parse, avoiding complicated grammar
-                left_tree = ast.parse(port.decl.srange.left_size,
+                left_str = port.decl.srange.left_size.replace('$', '_')
+                right_str = port.decl.srange.right_size.replace('$',
+                                                                '_')
+                left_tree = ast.parse(left_str,
                                       mode='eval')
-                right_tree = ast.parse(port.decl.srange.right_size,
+                right_tree = ast.parse(right_str,
                                        mode='eval')
                 left_deps = self._find_dependencies(left_tree)
                 right_deps = self._find_dependencies(right_tree)
@@ -171,7 +174,7 @@ class VerilogModuleParser(object):
             deps.extend(left_node_dep)
             deps.extend(right_node_dep)
             return deps
-        elif isinstance(node, ast.Num):
+        elif isinstance(node, (ast.Num, ast.Call)):
             return []
         elif isinstance(node, ast.Name):
             return [node.id]
