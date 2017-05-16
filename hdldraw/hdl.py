@@ -149,6 +149,7 @@ class HDLExpression(HDLValue):
             raise TypeError(node)
 
     def _get_expr(self, node):
+        # TODO: eliminate unnecessary parentheses
         if isinstance(node, ast.Expression):
             return self._get_expr(node.body)
         elif isinstance(node, ast.BinOp):
@@ -162,6 +163,12 @@ class HDLExpression(HDLValue):
             return str(node.n)
         elif isinstance(node, ast.Name):
             return node.id
+        elif isinstance(node, ast.Call):
+            arg_list = []
+            for arg in node.args:
+                arg_list.append(self._get_expr(arg))
+            return '{}({})'.format(node.func.id,
+                                   ','.join(arg_list))
 
     def __repr__(self):
         """Get representation of expression."""
