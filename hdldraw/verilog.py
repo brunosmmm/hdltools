@@ -1,8 +1,9 @@
 """Verilog module declaration parser."""
 
 from textx.metamodel import metamodel_from_str
-from .hdl import HDLModulePort, HDLModule, HDLModuleParameter
+from .hdl import HDLModulePort, HDLModule, HDLModuleParameter, HDLExpression
 import re
+import ast
 
 VERILOG_DECL_GRAMMAR = """
 VerilogFile:
@@ -31,15 +32,7 @@ ModulePortDeclaration:
 VectorRange:
   '[' left_size=VectorRangeElement ':' right_size=VectorRangeElement ']';
 VectorRangeElement:
-  Expression;
-Expression:
-  Sum;
-Sum:
-  Product (('+'|'-') Product)*;
-Product:
-  Value ('*' Value)*;
-Value:
-  ID | INT | ('(' Expression ')');
+  /[0-9a-zA-Z_\+\-\*\/\(\))]+/;
 ParameterValue:
   INT | BitString;
 BitString:
@@ -115,29 +108,7 @@ class VerilogModuleParser(object):
         # create module object
         hdl_mod = HDLModule(module_decl.mod_decl.mod_name)
 
-        # create and add ports
-        ports = module_decl.mod_decl.ports[:]
-        # add last port
-        ports.append(module_decl.mod_decl.fport)
-        for port in ports:
-            # ugly, but not my fault
-            direction = self._class_to_port_dir[port.__class__.__name__]
-            name = port.decl.port_name
-            if port.decl.srange is not None:
-                size = (port.decl.srange.left_size,
-                        port.decl.srange.right_size)
-            else:
-                size = 1
-            try:
-                hdl_port = HDLModulePort(direction=direction,
-                                         name=name,
-                                         size=size)
-            except TypeError:
-                continue  # just for testing
-
-            hdl_mod.add_ports(hdl_port)
-
-        # same, for parameters
+        # create and add parameters
         if module_decl.mod_decl.param_decl is not None:
             params = module_decl.mod_decl.param_decl.params[:]
             params.append(module_decl.mod_decl.param_decl.fparam)
@@ -149,6 +120,61 @@ class VerilogModuleParser(object):
                 hdl_mod.add_parameters(hdl_param)
 
         self.hdl_model = hdl_mod
+
+        # create and add ports
+        ports = module_decl.mod_decl.ports[:]
+        # add last port
+        ports.append(module_decl.mod_decl.fport)
+        for port in ports:
+            # ugly, but not my fault
+            direction = self._class_to_port_dir[port.__class__.__name__]
+            name = port.decl.port_name
+            if port.decl.srange is not None:
+                size = (port.decl.srange.left_size,
+                        port.decl.srange.right_size)
+
+                # use ast to parse, avoiding complicated grammar
+                left_tree = ast.parse(port.decl.srange.left_size,
+                                      mode='eval')
+                right_tree = ast.parse(port.decl.srange.right_size,
+                                       mode='eval')
+                left_deps = self._find_dependencies(left_tree)
+                right_deps = self._find_dependencies(right_tree)
+
+                # search dependencies in parameters
+                for dep in left_deps:
+                    if dep not in self.hdl_model.get_param_names():
+                        raise KeyError('unknown identifier: {}'.format(dep))
+                for dep in right_deps:
+                    if dep not in self.hdl_model.get_param_names():
+                        raise KeyError('unknown identifier: {}'.format(dep))
+
+                size = (HDLExpression(left_tree), HDLExpression(right_tree))
+            else:
+                size = (0, 0)
+            try:
+                hdl_port = HDLModulePort(direction=direction,
+                                         name=name,
+                                         size=size)
+            except TypeError:
+                pass
+
+            self.hdl_model.add_ports(hdl_port)
+
+    def _find_dependencies(self, node):
+        if isinstance(node, ast.Expression):
+            return self._find_dependencies(node.body)
+        elif isinstance(node, ast.BinOp):
+            left_node_dep = self._find_dependencies(node.left)
+            right_node_dep = self._find_dependencies(node.right)
+            deps = []
+            deps.extend(left_node_dep)
+            deps.extend(right_node_dep)
+            return deps
+        elif isinstance(node, ast.Num):
+            return []
+        elif isinstance(node, ast.Name):
+            return [node.id]
 
     def get_module(self):
         """Get intermediate module representation."""
