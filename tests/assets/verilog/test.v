@@ -1,6 +1,8 @@
 module my_module
   #(
-    parameter integer MY_PARAM = 0
+    parameter integer MY_PARAM_0 = 0,
+    parameter integer MY_PARAM_1 = 1,
+    parameter integer MY_PARAM_2 = 2
     )
   (
    input wire clk,
@@ -8,7 +10,7 @@ module my_module
 
    output reg A,
    output wire [7:0] B,
-   output wire [SOME_EXPR-1:0] C
+   output wire [(MY_PARAM_0-MY_PARAM_1)+MY_PARAM_2+1:0] C
    );
 
    //rest gets ignored for now!
