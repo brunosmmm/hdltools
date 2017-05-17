@@ -7,9 +7,11 @@ import ast
 
 VERILOG_DECL_GRAMMAR = """
 VerilogFile:
-  VerilogTimescale? mod_decl=ModuleDeclaration /.*/*;
+  VerilogTimescale? VerilogDefine* mod_decl=ModuleDeclaration /.*/*;
 VerilogTimescale:
   '`' 'timescale' val_1=/[0-9]+/ /[unpm]s/ '/' val_2=/[0-9]+/ /[unpm]s/;
+VerilogDefine:
+  '`' 'define' alias=ID val=VectorRangeElement;
 ModuleDeclaration:
   'module' mod_name=ID param_decl=ModuleParameterDecl?
   '('ports*=ModulePort fport=FinalModulePort')' ';';
@@ -36,7 +38,7 @@ VectorRange:
 VectorRangeElement:
   /[0-9a-zA-Z_\+\-\*\/\(\))\$]+/;
 ParameterValue:
-  INT | BitString;
+  expr=VectorRangeElement | bitstr=BitString;
 ParameterType:
   'integer';
 BitString:
