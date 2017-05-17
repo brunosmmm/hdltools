@@ -57,7 +57,7 @@ def test_hdl_primitives():
 
     # fail cases
     try:
-        port = HDLModulePort('unknown', 'myport', 0)
+x        port = HDLModulePort('unknown', 'myport', 0)
         raise Exception
     except ValueError:
         pass
@@ -132,6 +132,14 @@ def test_hdl_primitives():
         raise Exception
     except TypeError:
         pass
+
+    expr_1 = 'PARAM-2'
+    expr_2 = 'PARAM_X+1'
+    hdl_expr_1 = HDLExpression(ast.parse(expr_1, mode='eval'))
+    hdl_expr_2 = HDLExpression(ast.parse(expr_2, mode='eval'))
+    sum = hdl_expr_1 + hdl_expr_2
+    print(sum.dumps())
+    # raise
 
 def test_verilog_parser():
 
