@@ -3,6 +3,7 @@
 import math
 import ast
 import operator as op
+import copy
 
 # TODO: EVALUATE ONLY INTEGERS, FAIL OTHERWISE
 
@@ -39,7 +40,7 @@ class HDLBuiltinFunction(object):
         self.ret_type = ret
         self.cb = cb
 
-    def call(self, *args):
+    def call(self, *args, **kwargs):
         """Perform function call.
 
         Args
@@ -48,26 +49,51 @@ class HDLBuiltinFunction(object):
            Argument list
         """
         # perform argument checking?
-        return self.cb(*args)
+        return self.cb(*args, **kwargs)
 
 
 class HDLBuiltins(object):
     """Default builtin objects."""
 
     # placeholders
-    _functions = {'_ceil': HDLBuiltinFunction('ceil',
-                                              [],
-                                              None,
-                                              lambda x: int(math.ceil(x))),
-                  '_log2': HDLBuiltinFunction('log2',
-                                              [],
-                                              None,
-                                              lambda x: math.log2(x)),
-                  '_clog2': HDLBuiltinFunction('clog2',
-                                               [],
-                                               None,
-                                               lambda x: int(math.ceil(
-                                                   math.log2(x))))}
+    _functions = {'_ceil':
+                  HDLBuiltinFunction('ceil',
+                                     [],
+                                     None,
+                                     lambda x, **scope:
+                                     int(
+                                         math.ceil(
+                                             HDLBuiltins
+                                             ._decide_and_evaluate(x,
+                                                                   **scope)))),
+                  '_log2':
+                  HDLBuiltinFunction('log2',
+                                     [],
+                                     None,
+                                     lambda x, **scope:
+                                     math.log2(HDLBuiltins
+                                               ._decide_and_evaluate(x,
+                                                                     **scope))),
+                  '_clog2':
+                  HDLBuiltinFunction('clog2',
+                                     [],
+                                     None,
+                                     lambda x, **scope:
+                                     int(
+                                         math.ceil(
+                                             math.log2(
+                                                 HDLBuiltins.
+                                                 _decide_and_evaluate(x,
+                                                                      **scope)))))}
+
+    @staticmethod
+    def _decide_and_evaluate(value, **scope):
+        if isinstance(value, int):
+            return value
+        elif isinstance(value, HDLExpression):
+            return value.evaluate(**scope)
+        else:
+            raise TypeError('invalid type: "{}"'.format(type(value)))
 
     @classmethod
     def get_builtin_scope(cls):
@@ -88,7 +114,7 @@ class HDLExpression(HDLValue):
                   ast.Div: op.truediv, ast.Pow: op.pow,
                   ast.USub: op.neg}
 
-    def __init__(self, expr_tree):
+    def __init__(self, value):
         """Initialize.
 
         Args
@@ -97,7 +123,14 @@ class HDLExpression(HDLValue):
             Expression tree
         """
         super(HDLExpression, self).__init__()
-        self.tree = expr_tree
+        if isinstance(value, ast.Expression):
+            self.tree = value
+        elif isinstance(value, HDLIntegerConstant):
+            self.tree = ast.Expression(body=ast.Num(n=value.value))
+        elif isinstance(value, int):
+            self.tree = ast.Expression(body=ast.Num(n=value))
+        else:
+            raise TypeError('invalid type provided')
 
     def evaluate(self, **kwargs):
         """Evaluate current expression.
@@ -141,7 +174,7 @@ class HDLExpression(HDLValue):
                 for arg in node.args:
                     arg_eval.append(self._evaluate(arg, **kwargs))
 
-                return kwargs[node.func.id].call(*arg_eval)
+                return kwargs[node.func.id].call(*arg_eval, **kwargs)
             else:
                 raise KeyError('function "{}" not'
                                ' available'.format(node.func.id))
@@ -169,6 +202,8 @@ class HDLExpression(HDLValue):
                 arg_list.append(self._get_expr(arg))
             return '{}({})'.format(node.func.id,
                                    ','.join(arg_list))
+        else:
+            raise TypeError('invalid type: "{}"'.format(type(node)))
 
     def __repr__(self):
         """Get representation of expression."""
@@ -177,6 +212,77 @@ class HDLExpression(HDLValue):
     def dumps(self):
         """Alias for __repr__."""
         return self.__repr__()
+
+    @classmethod
+    def _get_reverse_operator_mapping(cls):
+        reverse_dict = {}
+        for key, value in cls._ast_op_names.items():
+            reverse_dict[value] = key
+
+        return reverse_dict
+
+    @classmethod
+    def combine_expressions(cls, lhs, op, rhs):
+        """Combine two expressions into a new BinOp.
+
+        Args
+        ----
+        lhs: HDLExpression
+           left-hand side operand
+        op: str
+           operation descriptor string
+        rhs: HDLExpression
+           right-hand side operand
+        """
+        if not isinstance(lhs, HDLExpression) or\
+           not isinstance(rhs, HDLExpression):
+            raise TypeError('can only combine two HDLExpression objects')
+
+        # check operator?
+        op_mapping = cls._get_reverse_operator_mapping()
+        if op not in op_mapping:
+            raise ValueError('illegal operator: "{}"'.format(op))
+
+        new_op = ast.BinOp(left=copy.copy(lhs.tree),
+                           op=op_mapping[op](),
+                           right=copy.copy(rhs.tree))
+        return HDLExpression(ast.Expression(body=new_op))
+
+    def _new_binop(self, op, other, this_lhs=True):
+        if isinstance(other, HDLExpression):
+            rhs = other
+        elif isinstance(other, HDLIntegerConstant):
+            rhs = HDLExpression(other)
+        elif isinstance(other, int):
+            rhs = HDLExpression(other)
+        else:
+            raise TypeError('illegal type: "{}"'.format(type(rhs)))
+        # create new BinOp
+        if this_lhs is True:
+            return self.combine_expressions(self, op, rhs)
+        else:
+            return self.combine_expressions(rhs, op, self)
+
+    def __add__(self, other):
+        return self._new_binop('+', other)
+
+    def __radd__(self, other):
+        return self._new_binop('+', other, this_lhs=False)
+
+    def __sub__(self, other):
+        return self._new_binop('-', other)
+
+    def __rsub__(self, other):
+        return self._new_binop('-', other, this_lhs=False)
+
+    def __mul__(self, other):
+        return self._new_binop('*', other)
+
+    def __rmul__(self, other):
+        return self._new_binop('*', other, this_lhs=False)
+
+    def __truediv__(self, other):
+        return self._new_binop('/', other)
 
 
 class HDLConstant(HDLValue):
