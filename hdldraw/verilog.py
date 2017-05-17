@@ -20,7 +20,8 @@ ModuleParameterDecl:
 ModuleParameter:
   FinalParameter ',';
 FinalParameter:
-  'parameter' par_type=ParameterType? par_name=ID ('=' def_val=ParameterValue)?;
+  'parameter' par_type=ParameterType?
+  par_name=ID ('=' def_val=ParameterValue)?;
 ModulePort:
   FinalModulePort ',';
 FinalModulePort:

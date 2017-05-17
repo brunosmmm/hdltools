@@ -57,34 +57,37 @@ class HDLBuiltins(object):
 
     # placeholders
     _functions = {'_ceil':
-                  HDLBuiltinFunction('ceil',
-                                     [],
-                                     None,
-                                     lambda x, **scope:
-                                     int(
-                                         math.ceil(
-                                             HDLBuiltins
-                                             ._decide_and_evaluate(x,
-                                                                   **scope)))),
+                  HDLBuiltinFunction(
+                      'ceil',
+                      [],
+                      None,
+                      lambda x, **scope:
+                      int(
+                          math.ceil(
+                              HDLBuiltins
+                              ._decide_and_evaluate(x,
+                                                    **scope)))),
                   '_log2':
-                  HDLBuiltinFunction('log2',
-                                     [],
-                                     None,
-                                     lambda x, **scope:
-                                     math.log2(HDLBuiltins
-                                               ._decide_and_evaluate(x,
-                                                                     **scope))),
+                  HDLBuiltinFunction(
+                      'log2',
+                      [],
+                      None,
+                      lambda x, **scope:
+                      math.log2(HDLBuiltins
+                                ._decide_and_evaluate(x,
+                                                      **scope))),
                   '_clog2':
-                  HDLBuiltinFunction('clog2',
-                                     [],
-                                     None,
-                                     lambda x, **scope:
-                                     int(
-                                         math.ceil(
-                                             math.log2(
-                                                 HDLBuiltins.
-                                                 _decide_and_evaluate(x,
-                                                                      **scope)))))}
+                  HDLBuiltinFunction(
+                      'clog2',
+                      [],
+                      None,
+                      lambda x, **scope:
+                      int(
+                          math.ceil(
+                              math.log2(
+                                  HDLBuiltins.
+                                  _decide_and_evaluate(x,
+                                                       **scope)))))}
 
     @staticmethod
     def _decide_and_evaluate(value, **scope):
@@ -264,24 +267,73 @@ class HDLExpression(HDLValue):
             return self.combine_expressions(rhs, op, self)
 
     def __add__(self, other):
+        """Add expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
         return self._new_binop('+', other)
 
     def __radd__(self, other):
+        """Add expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
         return self._new_binop('+', other, this_lhs=False)
 
     def __sub__(self, other):
+        """Subtract expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
         return self._new_binop('-', other)
 
     def __rsub__(self, other):
+        """Subtract expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
         return self._new_binop('-', other, this_lhs=False)
 
     def __mul__(self, other):
+        """Multiply expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
         return self._new_binop('*', other)
 
     def __rmul__(self, other):
+        """Multiply expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
         return self._new_binop('*', other, this_lhs=False)
 
     def __truediv__(self, other):
+        """Divide expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
         return self._new_binop('/', other)
 
 
