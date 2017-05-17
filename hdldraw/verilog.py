@@ -119,9 +119,28 @@ class VerilogModuleParser(object):
             params = module_decl.mod_decl.param_decl.params[:]
             params.append(module_decl.mod_decl.param_decl.fparam)
             for param in params:
+
+                # use ast to parse
+                if param.def_val.expr is not None:
+                    param_str = param.def_val.expr.replace('$', '_')
+                    param_tree = ast.parse(param_str, mode='eval')
+
+                    # dependency check
+                    param_deps = self._find_dependencies(param_tree)
+                    for dep in param_deps:
+                        if dep not in self.hdl_model.get_param_names():
+                            raise KeyError('unknown identifier:'
+                                           ' {}'.format(dep))
+
+                    # evaluate parameters immediately (not necessary)
+                    scope = hdl_mod.get_full_scope()
+                    param_val = HDLExpression(param_tree).evaluate(**scope)
+                else:
+                    param_val = param.def_val.bitstr
+
                 hdl_param = HDLModuleParameter(param_name=param.par_name,
                                                param_type=param.par_type,
-                                               param_default=param.def_val)
+                                               param_default=param_val)
 
                 hdl_mod.add_parameters(hdl_param)
 
