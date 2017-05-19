@@ -7,11 +7,12 @@ MMAP_COMPILER_GRAMMAR = """
 AXIDescription:
   static_declarations*=StaticStatement statements*=Statement;
 StaticStatement:
-  '#' var=ID value=PositiveInteger ';';
+  '#' var=ID value=StaticValue ';';
 Statement:
   (SlaveRegister | SlaveRegisterField | SlavePort) ';';
 SlaveRegister:
-  'register'  name=ID properties*=RegisterProperty;
+  'register' name=ID ('at=' address=RegisterAddress )?
+  properties*=RegisterProperty;
 SlaveRegisterField:
   'field' ('source='? source=BitAccessor
            'position='? position=BitField
@@ -31,8 +32,14 @@ BitAccessor:
   register=ID '.' bit=ID;
 RegisterProperty:
   name=ID '=' '"' value=/[^"]+/ '"';
+StaticValue:
+  ID | PositiveInteger;
+RegisterAddress:
+  Hex | PositiveInteger;
 BitField:
   left=PositiveInteger ('..' right=PositiveInteger)?;
+Hex:
+  '0x' /[0-9a-fA-F]+/;
 PositiveInteger:
   /[0-9]+/;
 AccessPermission:
@@ -57,27 +64,70 @@ class MemoryMappedInterface(object):
     def __init__(self):
         """Initialize."""
         self.registers = {}
+        self.current_reg_addr = 0
+        self.set_reg_addr_offset(4)
+        self.set_reg_size(32)
+
+    def set_reg_size(self, size):
+        self.reg_size = size
+
+    def set_reg_addr_offset(self, off):
+        self.reg_addr_offset = off
+
+    def next_available_address(self):
+        if len(self.registers) == 0:
+            self.current_reg_addr += self.reg_addr_offset
+            return 0
+
+        addr_set = set()
+        for regname, register in self.registers.items():
+            addr_set.add(register.addr)
+
+        possible_offsets = range(0,
+                                 max(addr_set)+self.reg_addr_offset,
+                                 self.reg_addr_offset)
+        for offset in possible_offsets:
+            if offset in addr_set:
+                continue
+            else:
+                self.current_reg_addr = offset
+                return offset
+
+        # must increment
+        self.current_reg_addr = max(addr_set) + self.reg_addr_offset
+        return self.current_reg_addr
 
     def parse_str(self, text):
         """Parse model from string."""
         meta = metamodel_from_str(MMAP_COMPILER_GRAMMAR)
         decl = meta.model_from_str(text)
 
-        default_reg_size = 32
         declared_reg_size = None
         for statement in decl.static_declarations:
             if statement.__class__.__name__ == 'StaticStatement':
                 if statement.var == 'register_size':
-                    declared_reg_size = statement.value
+                    if statement.value is not None:
+                        self.set_reg_size(int(statement.value))
+                elif statement.var == 'addr_mode':
+                    if statement.value == 'byte':
+                        self.set_reg_addr_offset(int(self.reg_size/8))
+                    elif statement.value == 'word':
+                        self.set_reg_addr_offset(1)
+                    elif statement.value is not None:
+                        raise ValueError('addr_mode can only be "byte" or'
+                                         '"word"')
 
         for statement in decl.statements:
             if statement.__class__.__name__ == 'SlaveRegister':
-                if declared_reg_size is None:
-                    reg_size = default_reg_size
+
+                if statement.address is not None:
+                    reg_addr = int(statement.address)
                 else:
-                    reg_size = declared_reg_size
+                    reg_addr = self.next_available_address()
+
                 register = HDLRegister(statement.name,
-                                       size=declared_reg_size)
+                                       size=declared_reg_size,
+                                       addr=reg_addr)
 
                 # add properties
                 for prop in statement.properties:
@@ -135,3 +185,12 @@ class MemoryMappedInterface(object):
     def add_port(self, port):
         """Add a port."""
         pass
+
+    def dumps(self):
+
+        ret_str = 'REGISTERS:\n'
+
+        for regname, register in self.registers.items():
+            ret_str += '0x{:02X}: {}\n'.format(register.addr, regname)
+
+        return ret_str
