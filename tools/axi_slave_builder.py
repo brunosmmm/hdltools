@@ -26,3 +26,5 @@ if __name__ == "__main__":
 
     # parse file
     mmap.parse_file(args.model)
+
+    print(mmap.dumps())
