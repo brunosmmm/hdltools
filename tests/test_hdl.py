@@ -148,8 +148,7 @@ def test_verilog_parser():
     width, value = verilog_bitstring_to_int("4'b0011")
     print('{}, {}'.format(width, value))
 
-    parser = VerilogModuleParser(os.path.join('tests',
-                                              'assets',
+    parser = VerilogModuleParser(os.path.join('assets',
                                               'verilog',
                                               'test.v'))
     model = parser.get_module()
