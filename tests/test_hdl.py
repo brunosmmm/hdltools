@@ -1,9 +1,10 @@
-from hdldraw.verilog import VerilogModuleParser, verilog_bitstring_to_int
-from hdldraw.hdl import (HDLVectorDescriptor,
-                         HDLModulePort,
-                         HDLModule,
-                         HDLModuleParameter,
-                         HDLExpression)
+from hdltools.verilog.parser import (VerilogModuleParser,
+                                     verilog_bitstring_to_int)
+from hdltools.hdl import (HDLVectorDescriptor,
+                          HDLModulePort,
+                          HDLModule,
+                          HDLModuleParameter,
+                          HDLExpression)
 import os
 import ast
 
@@ -57,7 +58,7 @@ def test_hdl_primitives():
 
     # fail cases
     try:
-x        port = HDLModulePort('unknown', 'myport', 0)
+        port = HDLModulePort('unknown', 'myport', 0)
         raise Exception
     except ValueError:
         pass
