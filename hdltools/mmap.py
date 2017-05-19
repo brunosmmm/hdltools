@@ -41,26 +41,6 @@ Comment:
   /\/\/.*$/;
 """
 
-TEST_STR = """
-#register_size 32;
-//registers
-register control;
-register status;
-
-//register fields
-field control.IRQEN 0 RW description="Enable Interrupts";
-field control.STOP_ON_ERROR 1 RW description="Stop on Error";
-field status.IRQCLR 7 RW description="Interrupt flag; write 1 to clear";
-field position=2..1 source=status.TEST access=R;
-//field unknown.UNKNOWN 0;
-//field position=2 source=status.Conflict access=R;
-
-//outputs from register bits
-output IRQ_EN source=control.IRQEN;
-output STOP_ON_ERR source=control.STOP_ON_ERROR;
-output UNKNOWN source=unknown.UNKNOWN;
-"""
-
 
 def bitfield_pos_to_slice(pos):
     """Convert to slice from parser object."""
@@ -70,60 +50,89 @@ def bitfield_pos_to_slice(pos):
 
     return ret
 
-if __name__ == "__main__":
-    meta = metamodel_from_str(MMAP_COMPILER_GRAMMAR)
-    decl = meta.model_from_str(TEST_STR)
 
-    default_reg_size = 32
-    declared_reg_size = None
-    registers = {}
-    for statement in decl.static_declarations:
-        print(statement)
-        if statement.__class__.__name__ == 'StaticStatement':
-            if statement.var == 'register_size':
-                print('Register size is {}'.format(statement.value))
-                declared_reg_size = statement.value
+class MemoryMappedInterface(object):
+    """Memory mapped interface."""
 
-    for statement in decl.statements:
-        print(statement)
-        if statement.__class__.__name__ == 'SlaveRegister':
-            print('Creating register "{}"'.format(statement.name))
-            if declared_reg_size is None:
-                reg_size = default_reg_size
-            else:
-                reg_size = declared_reg_size
-            registers[statement.name] = HDLRegister(statement.name,
-                                                    size=declared_reg_size)
+    def __init__(self):
+        """Initialize."""
+        self.registers = {}
 
-            # add properties
-            for prop in statement.properties:
-                registers[statement.name].add_property(**{prop.name:
-                                                          prop.value})
-        elif statement.__class__.__name__ == 'SlaveRegisterField':
-            # parse
-            source_reg = statement.source.register
+    def parse_str(self, text):
+        """Parse model from string."""
+        meta = metamodel_from_str(MMAP_COMPILER_GRAMMAR)
+        decl = meta.model_from_str(text)
 
-            if source_reg not in registers:
-                raise ValueError('unknown register: "{}"'.format(source_reg))
+        default_reg_size = 32
+        declared_reg_size = None
+        for statement in decl.static_declarations:
+            print(statement)
+            if statement.__class__.__name__ == 'StaticStatement':
+                if statement.var == 'register_size':
+                    declared_reg_size = statement.value
 
-            formatted_slice = HDLRegisterField.dumps_slice(
-                bitfield_pos_to_slice(statement.position))
-            print('Adding field "{}" ({})'
-                  ' to register slice "{}{}"'.format(statement.source.bit,
-                                                     statement.access,
-                                                     source_reg,
-                                                     formatted_slice))
+        for statement in decl.statements:
+            if statement.__class__.__name__ == 'SlaveRegister':
+                if declared_reg_size is None:
+                    reg_size = default_reg_size
+                else:
+                    reg_size = declared_reg_size
+                register = HDLRegister(statement.name,
+                                       size=declared_reg_size)
 
-            reg_field = HDLRegisterField(statement.source.bit,
-                                         bitfield_pos_to_slice(
-                                             statement.position),
-                                         statement.access)
+                # add properties
+                for prop in statement.properties:
+                    register.add_property(**{prop.name:
+                                             prop.value})
 
-            # add properties
-            for prop in statement.properties:
-                reg_field.add_properties(**{prop.name: prop.value})
+                self.add_register(register)
+            elif statement.__class__.__name__ == 'SlaveRegisterField':
+                # parse
+                source_reg = statement.source.register
 
-            registers[source_reg].add_fields(reg_field)
+                if source_reg not in self.get_register_list():
+                    raise ValueError('unknown register:'
+                                     ' "{}"'.format(source_reg))
 
-    for name, reg in registers.items():
-        print('{}: {}'.format(name, hex(reg.get_write_mask())))
+                reg_field = HDLRegisterField(statement.source.bit,
+                                             bitfield_pos_to_slice(
+                                                 statement.position),
+                                             statement.access)
+
+                # add properties
+                for prop in statement.properties:
+                    reg_field.add_properties(**{prop.name: prop.value})
+
+                self.registers[source_reg].add_fields(reg_field)
+            # TODO parse ports
+
+    def parse_file(self, filename):
+        """Parse model from file."""
+        with open(filename, 'r') as f:
+            self.parse_str(f.read())
+
+    def add_register(self, register):
+        """Add a register to model."""
+        if not isinstance(register, HDLRegister):
+            raise TypeError('only HDLRegister allowed')
+
+        if register.name in self.registers:
+            raise KeyError('register "{}" already'
+                           'exists'.format(register.name))
+
+        self.registers[register.name] = register
+
+    def get_register_list(self):
+        """Get register name list."""
+        return list(self.registers.keys())
+
+    def get_register(self, name):
+        """Get register objct by name."""
+        if name not in self.registers:
+            raise KeyError('register "{}" does not exist'.format(name))
+
+        return self.registers[name]
+
+    def add_port(self, port):
+        """Add a port."""
+        pass
