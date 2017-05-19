@@ -66,7 +66,6 @@ class MemoryMappedInterface(object):
         default_reg_size = 32
         declared_reg_size = None
         for statement in decl.static_declarations:
-            print(statement)
             if statement.__class__.__name__ == 'StaticStatement':
                 if statement.var == 'register_size':
                     declared_reg_size = statement.value
