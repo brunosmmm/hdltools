@@ -58,6 +58,9 @@ class HDLTemplateParser(object):
         with open(filename, 'r') as f:
             self.parse_str(f.read())
 
+    def _dumps_templated(self):
+        return '\n'.join(self.text_lines)
+
     def dump_templated(self, filename):
         """Dump templated file."""
         if len(self.locations) > 0:
@@ -65,6 +68,13 @@ class HDLTemplateParser(object):
 
         with open(filename, 'w') as f:
             f.write('\n'.join(self.text_lines))
+
+    def find_template_tag(self, tag):
+        for location, loc_tag in self.locations.items():
+            if loc_tag == tag:
+                return location
+
+        return None
 
 
 if __name__ == "__main__":

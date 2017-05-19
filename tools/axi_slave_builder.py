@@ -28,3 +28,23 @@ if __name__ == "__main__":
     mmap.parse_file(args.model)
 
     print(mmap.dumps())
+
+    # get template and populate
+    tmp = HDLTemplateParser()
+    tmp.parse_file(DEFAULT_TEMPLATE)
+
+    bits_loc = tmp.find_template_tag('REGISTER_BITS')
+    if bits_loc is None:
+        raise ValueError('invalid template file')
+
+    # prepare contents and insert
+    define_list = []
+    for name, reg in mmap.registers.items():
+        for field in reg.fields:
+            def_name = '{}_{}_INDEX'.format(name, field.name)
+            def_value = field.get_range()[0]
+            define_list.append(dumps_define(def_name, def_value))
+
+    tmp.insert_contents(bits_loc, '\n'.join(define_list))
+
+    #print(tmp._dumps_templated())
