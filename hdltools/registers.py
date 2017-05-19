@@ -39,13 +39,12 @@ class HDLRegisterField(object):
         else:
             return self.reg_slice
 
-    @staticmethod
-    def dumps_slice(reg_slice):
+    def dumps_slice(self):
         """Print formatted slice."""
-        if len(reg_slice) == 2:
-            return '[{}..{}]'.format(*reg_slice)
+        if len(self.reg_slice) == 2:
+            return '[{}..{}]'.format(*self.reg_slice)
         else:
-            return '[{}]'.format(reg_slice[0])
+            return '[{}]'.format(self.reg_slice[0])
 
 
 class HDLRegister(object):
