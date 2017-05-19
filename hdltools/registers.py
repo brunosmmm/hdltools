@@ -51,10 +51,11 @@ class HDLRegisterField(object):
 class HDLRegister(object):
     """Register."""
 
-    def __init__(self, name, size):
+    def __init__(self, name, size, addr):
         """Initialize."""
         self.name = name
         self.size = size
+        self.addr = addr
         self.fields = []
         self.properties = {}
 
