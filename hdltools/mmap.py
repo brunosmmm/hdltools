@@ -21,13 +21,17 @@ SlaveRegisterField:
 SlavePort:
   SlaveOutput | SlaveInput;
 SlaveOutput:
-  'output' descriptor=PortDescriptor;
+  'output' descriptor=OutputDescriptor;
 SlaveInput:
-  'input'  descriptor=PortDescriptor;
-PortDescriptor:
+  'input'  descriptor=InputDescriptor;
+OutputDescriptor:
   name=ID source=SignalSource;
+InputDescriptor:
+  name=ID dest=SignalDestination;
 SignalSource:
   'source' '=' BitAccessor;
+SignalDestination:
+  'dest' '=' BitAccessor;
 BitAccessor:
   register=ID '.' bit=ID;
 RegisterProperty:
@@ -69,12 +73,15 @@ class MemoryMappedInterface(object):
         self.set_reg_size(32)
 
     def set_reg_size(self, size):
+        """Set register size in bits."""
         self.reg_size = size
 
     def set_reg_addr_offset(self, off):
+        """Set register address offset."""
         self.reg_addr_offset = off
 
     def next_available_address(self):
+        """Find next available address."""
         if len(self.registers) == 0:
             self.current_reg_addr += self.reg_addr_offset
             return 0
@@ -187,10 +194,16 @@ class MemoryMappedInterface(object):
         pass
 
     def dumps(self):
-
+        """Dump summary."""
         ret_str = 'REGISTERS:\n'
 
         for regname, register in self.registers.items():
             ret_str += '0x{:02X}: {}\n'.format(register.addr, regname)
+            # dump field information
+            for field in sorted(register.fields,
+                                key=lambda x: x.reg_slice[0]):
+                ret_str += '{: <2}{} -> {}\n'.format(field.permissions,
+                                                     field.dumps_slice(),
+                                                     field.name)
 
         return ret_str
