@@ -43,3 +43,13 @@ class HDLCodeGenerator(object):
     def gen_HDLModulePort(self, element, **kwargs):
         """Generate ports."""
         raise NotImplementedError
+
+    # builtin types
+
+    def gen_int(self, element, **kwargs):
+        """Integer."""
+        return str(element)
+
+    def get_str(self, element, **kwargs):
+        """String."""
+        return element
