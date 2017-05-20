@@ -97,6 +97,22 @@ class HDLRegister(object):
             # else, insert
             self.fields.append(arg)
 
+    def has_field(self, field_name):
+        """Check if field is present."""
+        for field in self.fields:
+            if field.name == field_name:
+                return True
+
+        return False
+
+    def get_field(self, field_name):
+        """Get a field object."""
+        for field in self.fields:
+            if field.name == field_name:
+                return field
+
+        raise KeyError('invalid field: "{}"'.format(field_name))
+
     def get_write_mask(self):
         """Get register write access mask."""
         wr_mask = 0
