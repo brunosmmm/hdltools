@@ -10,6 +10,7 @@ import copy
 
 class HDLObject:
     """Abstract class from which all HDL objects derive from."""
+
     pass
 
 
