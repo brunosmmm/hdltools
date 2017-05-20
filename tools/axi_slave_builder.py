@@ -5,6 +5,7 @@ import argparse
 import os
 from hdltools.abshdl.mmap import MemoryMappedInterface
 from hdltools.abshdl.macro import HDLMacro
+from hdltools.abshdl.signal import HDLSignal
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 
@@ -69,7 +70,10 @@ if __name__ == "__main__":
     if reg_signal_loc is None:
         raise ValueError('invalid template file')
 
+    reg_decl_list = ['/* REGISTERS */']
     for name, reg in mmap.registers.items():
-        pass
+        signal = HDLSignal('reg', 'REG_'+name, reg.size)
+        reg_decl_list.append(vlog.dump_element(signal))
+    tmp.insert_contents(reg_signal_loc, '\n'.join(reg_decl_list))
 
     print(tmp._dumps_templated())
