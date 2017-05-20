@@ -4,7 +4,8 @@
 class HDLRegisterField(object):
     """Bitfield inside a register."""
 
-    def __init__(self, name, reg_slice, permissions, properties=None):
+    def __init__(self, name, reg_slice,
+                 permissions, default_value=0, properties=None):
         """Initialize."""
         self.name = name
 
@@ -12,6 +13,7 @@ class HDLRegisterField(object):
 
         self.reg_slice = _slice
         self.permissions = permissions
+        self.default_value = default_value
         if properties is not None:
             self.properties = dict(properties)
         else:
