@@ -1,6 +1,7 @@
 """HDL Signals."""
 
-from . import HDLObject, HDLVectorDescriptor
+from . import HDLObject
+from .vector import HDLVectorDescriptor
 
 # TODO allow multiple dimensions
 

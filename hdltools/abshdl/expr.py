@@ -1,0 +1,238 @@
+"""HDL Expressions."""
+
+from . import HDLValue
+from .const import HDLIntegerConstant
+import ast
+import operator as op
+import copy
+
+
+class HDLExpression(HDLValue):
+    """An expression involving parameters."""
+
+    _ast_op_names = {ast.Sub: '-',
+                     ast.Add: '+',
+                     ast.Mult: '*',
+                     ast.Div: '/'}
+    _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
+                  ast.Div: op.truediv, ast.Pow: op.pow,
+                  ast.USub: op.neg}
+
+    def __init__(self, value):
+        """Initialize.
+
+        Args
+        ----
+        expr_tree: ast.Expression
+            Expression tree
+        """
+        super(HDLExpression, self).__init__()
+        if isinstance(value, ast.Expression):
+            self.tree = value
+        elif isinstance(value, HDLIntegerConstant):
+            self.tree = ast.Expression(body=ast.Num(n=value.value))
+        elif isinstance(value, int):
+            self.tree = ast.Expression(body=ast.Num(n=value))
+        else:
+            raise TypeError('invalid type provided')
+
+    def evaluate(self, **kwargs):
+        """Evaluate current expression.
+
+        Args
+        ----
+        kwargs: dict
+           Dictionary which must contain all necessary symbols to evaluate
+        """
+        return self._evaluate(self.tree, **kwargs)
+
+    def _evaluate(self, node, **kwargs):
+        """Evaluate current expression.
+
+        Args
+        ----
+        kwargs: dict
+           Dictionary which must contain all necessary symbols to evaluate
+        """
+        if isinstance(node, ast.Expression):
+            return self._evaluate(node.body, **kwargs)
+        elif isinstance(node, ast.Num):
+            return node.n
+        elif isinstance(node, ast.Name):
+            if node.id in kwargs:
+                return kwargs[node.id]
+            else:
+                raise KeyError(node.id)
+        elif isinstance(node, ast.BinOp):
+            return self._operators[type(node.op)](self._evaluate(node.left,
+                                                                 **kwargs),
+                                                  self._evaluate(node.right,
+                                                                 **kwargs))
+        elif isinstance(node, ast.UnaryOp):
+            return self._operators[type(node.op)](self._evaluate(node.operand,
+                                                                 **kwargs))
+        elif isinstance(node, ast.Call):
+            if node.func.id in kwargs:
+                # evaluate arguments
+                arg_eval = []
+                for arg in node.args:
+                    arg_eval.append(self._evaluate(arg, **kwargs))
+
+                return kwargs[node.func.id].call(*arg_eval, **kwargs)
+            else:
+                raise KeyError('function "{}" not'
+                               ' available'.format(node.func.id))
+        else:
+            raise TypeError(node)
+
+    def _get_expr(self, node):
+        # TODO: eliminate unnecessary parentheses
+        if isinstance(node, ast.Expression):
+            return self._get_expr(node.body)
+        elif isinstance(node, ast.BinOp):
+            left_expr = self._get_expr(node.left)
+            right_expr = self._get_expr(node.right)
+
+            return '({}{}{})'.format(left_expr,
+                                     self._ast_op_names[node.op.__class__],
+                                     right_expr)
+        elif isinstance(node, ast.Num):
+            return str(node.n)
+        elif isinstance(node, ast.Name):
+            return node.id
+        elif isinstance(node, ast.Call):
+            arg_list = []
+            for arg in node.args:
+                arg_list.append(self._get_expr(arg))
+            return '{}({})'.format(node.func.id,
+                                   ','.join(arg_list))
+        else:
+            raise TypeError('invalid type: "{}"'.format(type(node)))
+
+    def __repr__(self):
+        """Get representation of expression."""
+        return self._get_expr(self.tree)
+
+    def dumps(self):
+        """Alias for __repr__."""
+        return self.__repr__()
+
+    @classmethod
+    def _get_reverse_operator_mapping(cls):
+        reverse_dict = {}
+        for key, value in cls._ast_op_names.items():
+            reverse_dict[value] = key
+
+        return reverse_dict
+
+    @classmethod
+    def combine_expressions(cls, lhs, op, rhs):
+        """Combine two expressions into a new BinOp.
+
+        Args
+        ----
+        lhs: HDLExpression
+           left-hand side operand
+        op: str
+           operation descriptor string
+        rhs: HDLExpression
+           right-hand side operand
+        """
+        if not isinstance(lhs, HDLExpression) or\
+           not isinstance(rhs, HDLExpression):
+            raise TypeError('can only combine two HDLExpression objects')
+
+        # check operator?
+        op_mapping = cls._get_reverse_operator_mapping()
+        if op not in op_mapping:
+            raise ValueError('illegal operator: "{}"'.format(op))
+
+        new_op = ast.BinOp(left=copy.copy(lhs.tree),
+                           op=op_mapping[op](),
+                           right=copy.copy(rhs.tree))
+        return HDLExpression(ast.Expression(body=new_op))
+
+    def _new_binop(self, op, other, this_lhs=True):
+        if isinstance(other, HDLExpression):
+            rhs = other
+        elif isinstance(other, HDLIntegerConstant):
+            rhs = HDLExpression(other)
+        elif isinstance(other, int):
+            rhs = HDLExpression(other)
+        else:
+            raise TypeError('illegal type: "{}"'.format(type(rhs)))
+        # create new BinOp
+        if this_lhs is True:
+            return self.combine_expressions(self, op, rhs)
+        else:
+            return self.combine_expressions(rhs, op, self)
+
+    def __add__(self, other):
+        """Add expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return self._new_binop('+', other)
+
+    def __radd__(self, other):
+        """Add expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
+        return self._new_binop('+', other, this_lhs=False)
+
+    def __sub__(self, other):
+        """Subtract expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return self._new_binop('-', other)
+
+    def __rsub__(self, other):
+        """Subtract expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
+        return self._new_binop('-', other, this_lhs=False)
+
+    def __mul__(self, other):
+        """Multiply expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return self._new_binop('*', other)
+
+    def __rmul__(self, other):
+        """Multiply expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
+        return self._new_binop('*', other, this_lhs=False)
+
+    def __truediv__(self, other):
+        """Divide expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return self._new_binop('/', other)

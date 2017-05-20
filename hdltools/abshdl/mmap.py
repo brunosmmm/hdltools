@@ -2,7 +2,7 @@
 
 from textx.metamodel import metamodel_from_str
 from .registers import HDLRegister, HDLRegisterField
-from . import HDLModulePort
+from .module import HDLModulePort
 
 MMAP_COMPILER_GRAMMAR = """
 AXIDescription:

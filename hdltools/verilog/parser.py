@@ -1,8 +1,9 @@
 """Verilog module declaration parser."""
 
 from textx.metamodel import metamodel_from_str
-from ..abshdl import (HDLModulePort, HDLModule,
-                      HDLModuleParameter, HDLExpression)
+from ..abshdl.module import (HDLModulePort, HDLModule,
+                             HDLModuleParameter)
+from ..abshdl.expr import HDLExpression
 import re
 import ast
 

@@ -1,10 +1,10 @@
 from hdltools.verilog.parser import (VerilogModuleParser,
                                      verilog_bitstring_to_int)
-from hdltools.abshdl import (HDLVectorDescriptor,
-                             HDLModulePort,
-                             HDLModule,
-                             HDLModuleParameter,
-                             HDLExpression)
+from hdltools.abshdl.vector import HDLVectorDescriptor
+from hdltools.abshdl.module import (HDLModulePort,
+                                    HDLModule,
+                                    HDLModuleParameter)
+from hdltools.abshdl.expr import HDLExpression
 import os
 import ast
 
