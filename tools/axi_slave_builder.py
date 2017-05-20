@@ -4,6 +4,7 @@
 import argparse
 import os
 from hdltools.abshdl.mmap import MemoryMappedInterface
+from hdltools.abshdl.macro import HDLMacro
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 
@@ -48,8 +49,8 @@ if __name__ == "__main__":
         for field in reg.fields:
             def_name = '{}_{}_INDEX'.format(name, field.name)
             def_value = field.get_range()[0]
-            define_list.append(VerilogCodeGenerator.dumps_define(def_name,
-                                                                 def_value))
+            macro = HDLMacro(def_name, def_value)
+            define_list.append(vlog.dump_element(macro))
 
     tmp.insert_contents(bits_loc, '\n'.join(define_list))
 
