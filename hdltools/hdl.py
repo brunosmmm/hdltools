@@ -493,13 +493,18 @@ class HDLVectorDescriptor(object):
             if value < 0:
                 raise ValueError('only positive values allowed for sizes')
 
-    def evaluate_right(self, eval_scope):
+    def evaluate_right(self, eval_scope={}):
         """Evaluate right side size."""
         return self.right_size.evaluate(**eval_scope)
 
-    def evaluate_left(self, eval_scope):
+    def evaluate_left(self, eval_scope={}):
         """Evaluate left side size."""
         return self.left_size.evaluate(**eval_scope)
+
+    def evaluate(self, eval_scope={}):
+        """Evaluate both sides."""
+        return (self.evaluate_left(eval_scope),
+                self.evaluate_right(eval_scope))
 
     def __len__(self):
         """Get vector length."""
