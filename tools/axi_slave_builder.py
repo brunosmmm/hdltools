@@ -29,6 +29,10 @@ if __name__ == "__main__":
 
     print(mmap.dumps())
 
+    # code generator
+    vlog = VerilogCodeGenerator()
+    vlog.add_class_alias('HDLModulePort', 'FlagPort')
+
     # get template and populate
     tmp = HDLTemplateParser()
     tmp.parse_file(DEFAULT_TEMPLATE)
@@ -56,10 +60,7 @@ if __name__ == "__main__":
 
     port_list = ['/* FIELD DEPENDENT PORTS */']
     for name, port in mmap.ports.items():
-        port_list.append(VerilogCodeGenerator.dumps_port(
-            port.direction,
-            port.name,
-            port.vector.evaluate()))
+        port_list.append(vlog.dump_element(port))
     tmp.insert_contents(port_loc, '\n'.join(port_list))
 
     # registers
