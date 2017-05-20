@@ -14,7 +14,7 @@ field STATUS.VIDEOERR position=0 access=R description="Video error flag";
 
 //outputs from register bits
 output IRQ_EN source=CONTROL.IRQEN;
-output STOP_ON_ERROR source=CONTROL.STOP_ON_ERROR;
+output STOP_ON_ERROR source=CONTROL.STOP_ON_ERR;
 output IRQ_ACK source=STATUS.IRQCLR;
 
 //input flags from logic
