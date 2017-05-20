@@ -40,6 +40,21 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         value = self.dump_element(element.value, **kwargs)
         return self.dumps_define(element.name, value)
 
+    def gen_HDLSignal(self, element, **kwargs):
+        """Generate signals."""
+        if element.sig_type == 'comb':
+            st = 'wire'
+        elif element.sig_type == 'reg':
+            st = 'reg'
+
+        _slice = self.dump_element(element.vector)
+
+        return '{} {} {};'.format(st, _slice, element.name)
+
+    def gen_HDLVectorDescriptor(self, element, **kwargs):
+        """Generate a vector slice."""
+        return self.dumps_extents(*element.evaluate())
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
