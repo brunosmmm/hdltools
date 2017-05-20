@@ -4,6 +4,7 @@ from . import HDLObject
 from .vector import HDLVectorDescriptor
 from .builtin import HDLBuiltins
 
+
 class HDLModuleParameter(HDLObject):
     """Module parameter / generic values."""
 
@@ -52,7 +53,7 @@ class HDLModulePort(HDLObject):
         ----
         direction: str
            Port direction
-        size: int, tuple or HDLVectorDescriptor
+        size: int, tuple or vector.HDLVectorDescriptor
            Port description
         name: str
            Port name
@@ -76,7 +77,7 @@ class HDLModulePort(HDLObject):
             self.vector = size
         else:
             raise TypeError('size can only be of types: int, list or'
-                            ' HDLVectorDescriptor')
+                            ' vector.HDLVectorDescriptor')
 
     def __repr__(self, eval_scope=None):
         """Get readable representation."""

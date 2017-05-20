@@ -1,7 +1,7 @@
 """Vector descriptor."""
 
 from . import HDLObject
-from .expr import HDLExpression
+import hdltools.abshdl.expr as expr
 from .const import HDLIntegerConstant
 import math
 
@@ -21,10 +21,10 @@ class HDLVectorDescriptor(HDLObject):
         stored_value: int, NoneType
            A stored value
         """
-        if not isinstance(left_size, (int, HDLExpression)):
+        if not isinstance(left_size, (int, expr.HDLExpression)):
             raise TypeError('only int or HDLExpression allowed as size')
 
-        if not isinstance(right_size, (int, HDLExpression)):
+        if not isinstance(right_size, (int, expr.HDLExpression)):
             if right_size is None:
                 # take this as zero
                 right_size = 0

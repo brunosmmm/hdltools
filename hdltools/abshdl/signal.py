@@ -1,7 +1,7 @@
 """HDL Signals."""
 
 from . import HDLObject
-from .vector import HDLVectorDescriptor
+import hdltools.abshdl as hdl
 
 # TODO allow multiple dimensions
 
@@ -23,17 +23,21 @@ class HDLSignal(HDLObject):
             # default is [size-1:0] / (size-1 downto 0)
             if (size < 0):
                 raise ValueError('only positive size allowed')
-            self.vector = HDLVectorDescriptor(size-1, 0)
+            self.vector = hdl.vector.HDLVectorDescriptor(size-1, 0)
         elif isinstance(size, (tuple, list)):
             if len(size) != 2:
                 raise ValueError('invalid vector '
                                  'dimensions: "{}"'.format(size))
-            self.vector = HDLVectorDescriptor(*size)
-        elif isinstance(size, HDLVectorDescriptor):
+            self.vector = hdl.vector.HDLVectorDescriptor(*size)
+        elif isinstance(size, hdl.vector.HDLVectorDescriptor):
             self.vector = size
         else:
             raise TypeError('size can only be of types: int, list or'
                             ' HDLVectorDescriptor')
+
+    def __getitem__(self, key):
+        """Slice of signal."""
+        pass
 
     def __repr__(self, eval_scope=None):
         """Get readable representation."""
@@ -60,13 +64,13 @@ class HDLSignalSlice(HDLObject):
             # default is [size-1:0] / (size-1 downto 0)
             if (slic < 0):
                 raise ValueError('only positive integers allowed')
-            self.vector = HDLVectorDescriptor(slic, slic)
+            self.vector = hdl.vector.HDLVectorDescriptor(slic, slic)
         elif isinstance(slic, (tuple, list)):
             if len(slic) != 2:
                 raise ValueError('invalid vector '
                                  'dimensions: "{}"'.format(slic))
-            self.vector = HDLVectorDescriptor(*slic)
-        elif isinstance(slic, HDLVectorDescriptor):
+            self.vector = hdl.vector.HDLVectorDescriptor(*slic)
+        elif isinstance(slic, hdl.vector.HDLVectorDescriptor):
             self.vector = slic
         else:
             raise TypeError('size can only be of types: int, list or'
