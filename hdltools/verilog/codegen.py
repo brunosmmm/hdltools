@@ -5,7 +5,7 @@ from ..codegen import HDLCodeGenerator
 
 
 class VerilogCodeGenerator(HDLCodeGenerator):
-    """Generate verilog code"""
+    """Generate verilog code."""
 
     VERILOG_CONSTANT_RADIX = ['d', 'b', 'h']
     VERILOG_PORT_DIRECTION = ['in', 'out', 'inout']
@@ -16,6 +16,24 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         return self.dumps_port(element.direction,
                                element.name,
                                element.vector.evaluate())
+
+    def gen_HDLIntegerConstant(self, element, **kwargs):
+        """Generate an integer constant."""
+        # check for format
+        if 'radix' in kwargs:
+            radix = kwargs['radix']
+        else:
+            radix = 'b'
+
+        # check for size
+        if 'size' in kwargs:
+            size = kwargs['size']
+        else:
+            size = 32
+
+        return self.dumps_vector(element.evaluate(),
+                                 size,
+                                 radix)
 
     @staticmethod
     def dumps_define(name, value):
