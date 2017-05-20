@@ -44,3 +44,30 @@ class HDLSignal(HDLObject):
     def dumps(self, eval_scope=None):
         """Alias for __repr__."""
         return self.__repr__(eval_scope)
+
+
+class HDLSignalSlice(HDLObject):
+    """Slice of a vector signal."""
+
+    def __init__(self, signal, slic):
+        """Initialize."""
+        if not isinstance(signal, HDLSignal):
+            raise TypeError('only HDLSignal allowed')
+
+        self.signal = signal
+
+        if isinstance(slic, int):
+            # default is [size-1:0] / (size-1 downto 0)
+            if (slic < 0):
+                raise ValueError('only positive integers allowed')
+            self.vector = HDLVectorDescriptor(slic, slic)
+        elif isinstance(slic, (tuple, list)):
+            if len(slic) != 2:
+                raise ValueError('invalid vector '
+                                 'dimensions: "{}"'.format(slic))
+            self.vector = HDLVectorDescriptor(*slic)
+        elif isinstance(slic, HDLVectorDescriptor):
+            self.vector = slic
+        else:
+            raise TypeError('size can only be of types: int, list or'
+                            ' HDLVectorDescriptor')

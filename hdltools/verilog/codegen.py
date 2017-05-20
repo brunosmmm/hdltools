@@ -51,9 +51,20 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return '{} {} {};'.format(st, _slice, element.name)
 
+    def gen_HDLSignalSlice(self, element, **kwargs):
+        """Generate sliced signal."""
+        signal = self.dump_element(element.signal)
+        slic = self.dump_element(element.vector)
+
+        return '{}{}'.format(signal, slic)
+
     def gen_HDLVectorDescriptor(self, element, **kwargs):
         """Generate a vector slice."""
         return self.dumps_extents(*element.evaluate())
+
+    def gen_HDLAssignment(self, element, **kwargs):
+        """Generate assignments."""
+        pass
 
     @staticmethod
     def dumps_define(name, value):
