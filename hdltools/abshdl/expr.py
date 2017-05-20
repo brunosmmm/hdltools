@@ -2,6 +2,7 @@
 
 from . import HDLValue
 from .const import HDLIntegerConstant
+from .signal import HDLSignal
 import ast
 import operator as op
 import copy
@@ -33,6 +34,8 @@ class HDLExpression(HDLValue):
             self.tree = ast.Expression(body=ast.Num(n=value.value))
         elif isinstance(value, int):
             self.tree = ast.Expression(body=ast.Num(n=value))
+        elif isinstance(value, HDLSignal):
+            self.tree = ast.Expression(body=ast.Name(id=value.name))
         else:
             raise TypeError('invalid type provided')
 
