@@ -18,6 +18,7 @@ SlaveRegisterField:
   'field' ('source='? source=BitAccessor
            'position='? position=BitField
            'access='? access=AccessPermission
+           'default='? default=PositiveInteger
            properties*=RegisterProperty)#;
 SlavePort:
   SlaveOutput | SlaveInput;
@@ -164,10 +165,16 @@ class MemoryMappedInterface(object):
                     raise ValueError('unknown register:'
                                      ' "{}"'.format(source_reg))
 
+                if statement.default is not None:
+                    defval = statement.default
+                else:
+                    defval = 0
+
                 reg_field = HDLRegisterField(statement.source.bit,
                                              bitfield_pos_to_slice(
                                                  statement.position),
-                                             statement.access)
+                                             statement.access,
+                                             default_value=defval)
 
                 # add properties
                 for prop in statement.properties:
