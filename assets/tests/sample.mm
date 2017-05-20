@@ -7,8 +7,8 @@ register CONTROL;
 register STATUS;
 
 //register fields
-field CONTROL.IRQEN position=0 access=RW description="Enable Interrupts";
-field CONTROL.STOP_ON_ERR position=1 access=RW description="Stop IP on video errors";
+field CONTROL.IRQEN position=0 access=RW description="Enable Interrupts" default=1;
+field CONTROL.STOP_ON_ERR position=1 access=RW description="Stop IP on video errors" default=0;
 field STATUS.IRQCLR position=7 access=RW description="Interrupt flag; write 1 to clear";
 field STATUS.VIDEOERR position=0 access=R description="Video error flag";
 
