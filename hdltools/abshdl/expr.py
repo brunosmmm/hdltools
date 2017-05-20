@@ -2,7 +2,7 @@
 
 from . import HDLValue
 from .const import HDLIntegerConstant
-from .signal import HDLSignal
+import hdltools.abshdl.signal as signal
 import ast
 import operator as op
 import copy
@@ -34,8 +34,18 @@ class HDLExpression(HDLValue):
             self.tree = ast.Expression(body=ast.Num(n=value.value))
         elif isinstance(value, int):
             self.tree = ast.Expression(body=ast.Num(n=value))
-        elif isinstance(value, HDLSignal):
+        elif isinstance(value, signal.HDLSignal):
             self.tree = ast.Expression(body=ast.Name(id=value.name))
+        elif isinstance(value, signal.HDLSignalSlice):
+            name = ast.Name(id=value.signal.name)
+            if len(value.vector) > 1:
+                _slice = ast.Slice(upper=value.vector.left_size.tree,
+                                   lower=value.vector.right_size.tree,
+                                   step=None)
+            else:
+                _slice = ast.Index(value=value.vector.left_size.tree)
+            self.tree = ast.Expression(body=ast.Subscript(value=name,
+                                                          slice=_slice))
         else:
             raise TypeError('invalid type provided')
 
@@ -85,6 +95,17 @@ class HDLExpression(HDLValue):
             else:
                 raise KeyError('function "{}" not'
                                ' available'.format(node.func.id))
+        elif isinstance(node, ast.Subscript):
+            signal_name = self._evaluate(node.value)
+            _slice = self._evaluate(node.slice)
+            # return string only
+            return signal_name+_slice
+        elif isinstance(node, ast.Index):
+            return '[{}]'.format(self._evaluate(node.value))
+        elif isinstance(node, ast.Slice):
+            return '[{}:{}]'.format(self._evaluate(node.upper),
+                                    self._evaluate(node.lower))
+
         else:
             raise TypeError(node)
 
