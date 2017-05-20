@@ -11,6 +11,12 @@ class VerilogCodeGenerator(HDLCodeGenerator):
     VERILOG_PORT_DIRECTION = ['in', 'out', 'inout']
     VERILOG_SIGNAL_TYPE = ['wire', 'reg']
 
+    def gen_HDLModulePort(self, element, **kwargs):
+        """Generate port."""
+        return self.dumps_port(element.direction,
+                               element.name,
+                               element.vector.evaluate())
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
