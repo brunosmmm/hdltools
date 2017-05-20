@@ -8,7 +8,12 @@ import copy
 # TODO: EVALUATE ONLY INTEGERS, FAIL OTHERWISE
 
 
-class HDLValue(object):
+class HDLObject:
+    """Abstract class from which all HDL objects derive from."""
+    pass
+
+
+class HDLValue(HDLObject):
     """Abstract class for deriving other values."""
 
     def dumps(self):
@@ -20,7 +25,7 @@ class HDLValue(object):
         pass
 
 
-class HDLBuiltinFunction(object):
+class HDLBuiltinFunction(HDLObject):
     """Builtin function."""
 
     def __init__(self, name, args, ret, cb):
@@ -52,7 +57,7 @@ class HDLBuiltinFunction(object):
         return self.cb(*args, **kwargs)
 
 
-class HDLBuiltins(object):
+class HDLBuiltins(HDLObject):
     """Default builtin objects."""
 
     # placeholders
@@ -440,7 +445,7 @@ class HDLIntegerConstant(HDLConstant):
             raise TypeError
 
 
-class HDLVectorDescriptor(object):
+class HDLVectorDescriptor(HDLObject):
     """Describe a vector signal."""
 
     def __init__(self, left_size, right_size=None, stored_value=None):
@@ -538,7 +543,7 @@ class HDLVectorDescriptor(object):
         return bool(value <= (int(math.pow(2, width)) - 1))
 
 
-class HDLModuleParameter(object):
+class HDLModuleParameter(HDLObject):
     """Module parameter / generic values."""
 
     def __init__(self, param_name, param_type, param_default=None):
@@ -574,7 +579,7 @@ class HDLModuleParameter(object):
         return self.__repr__()
 
 
-class HDLModulePort(object):
+class HDLModulePort(HDLObject):
     """HDL Module port."""
 
     _port_directions = ['in', 'out', 'inout']
@@ -623,7 +628,7 @@ class HDLModulePort(object):
         return self.__repr__(eval_scope)
 
 
-class HDLModule(object):
+class HDLModule(HDLObject):
     """HDL Module."""
 
     def __init__(self, module_name, ports=None, params=None):
