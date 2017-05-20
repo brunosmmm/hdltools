@@ -2,6 +2,7 @@
 
 from textx.metamodel import metamodel_from_str
 from .registers import HDLRegister, HDLRegisterField
+from .hdl import HDLModulePort
 
 MMAP_COMPILER_GRAMMAR = """
 AXIDescription:
@@ -29,9 +30,9 @@ OutputDescriptor:
 InputDescriptor:
   name=ID dest=SignalDestination;
 SignalSource:
-  'source' '=' BitAccessor;
+  'source' '=' field=BitAccessor;
 SignalDestination:
-  'dest' '=' BitAccessor;
+  'dest' '=' field=BitAccessor;
 BitAccessor:
   register=ID '.' bit=ID;
 RegisterProperty:
@@ -62,12 +63,25 @@ def bitfield_pos_to_slice(pos):
     return ret
 
 
+class FlagPort(HDLModulePort):
+    """A port dependent on a register field."""
+
+    def __init__(self, target_register, target_field, direction, name):
+        """Initialize."""
+        field = target_register.get_field(target_field)
+        field_size = len(field.get_range())
+        self.target_register = target_register
+        self.target_field = target_field
+        super(FlagPort, self).__init__(direction, name, field_size)
+
+
 class MemoryMappedInterface(object):
     """Memory mapped interface."""
 
     def __init__(self):
         """Initialize."""
         self.registers = {}
+        self.ports = {}
         self.current_reg_addr = 0
         self.set_reg_addr_offset(4)
         self.set_reg_size(32)
@@ -161,6 +175,38 @@ class MemoryMappedInterface(object):
 
                 self.registers[source_reg].add_fields(reg_field)
             # TODO parse ports
+            elif statement.__class__.__name__ == 'SlaveOutput':
+                descriptor = statement.descriptor
+                name = descriptor.name
+                source = descriptor.source.field
+                src_reg = source.register
+                src_bit = source.bit
+
+                if src_reg not in self.registers:
+                    raise KeyError('invalid register: "{}"'.format(src_reg))
+
+                src_reg = self.registers[src_reg]
+                if src_reg.has_field(src_bit) is False:
+                    raise KeyError('invalid field: "{}"'.format(src_bit))
+
+                port = FlagPort(src_reg, src_bit, 'out', name)
+                self.add_port(port)
+            elif statement.__class__.__name__ == 'SlaveInput':
+                descriptor = statement.descriptor
+                name = descriptor.name
+                dest = descriptor.dest.field
+                dest_reg = dest.register
+                dest_bit = dest.bit
+
+                if dest_reg not in self.registers:
+                    raise KeyError('invalid register: "{}"'.format(dest_reg))
+
+                dest_reg = self.registers[dest_reg]
+                if dest_reg.has_field(dest_bit) is False:
+                    raise KeyError('invalid field: "{}"'.format(dest_bit))
+
+                port = FlagPort(dest_reg, dest_bit, 'in', name)
+                self.add_port(port)
 
     def parse_file(self, filename):
         """Parse model from file."""
@@ -191,7 +237,13 @@ class MemoryMappedInterface(object):
 
     def add_port(self, port):
         """Add a port."""
-        pass
+        if not isinstance(port, FlagPort):
+            raise TypeError('only FlagPort allowed')
+
+        if port.name in self.ports:
+            raise KeyError('port "{}" already'
+                           ' exists'.format(port.name))
+        self.ports[port.name] = port
 
     def dumps(self):
         """Dump summary."""
@@ -205,5 +257,17 @@ class MemoryMappedInterface(object):
                 ret_str += '{: <2}{} -> {}\n'.format(field.permissions,
                                                      field.dumps_slice(),
                                                      field.name)
+
+        ret_str += 'PORTS:\n'
+        for portname, port in self.ports.items():
+            if port.direction == 'out':
+                dir_str = '<-'
+            else:
+                dir_str = '->'
+
+            ret_str += '{} {} {}.{}\n'.format(port.name,
+                                              dir_str,
+                                              port.target_register.name,
+                                              port.target_field)
 
         return ret_str
