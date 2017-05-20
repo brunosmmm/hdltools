@@ -35,6 +35,11 @@ class VerilogCodeGenerator(HDLCodeGenerator):
                                  size,
                                  radix)
 
+    def gen_HDLMacro(self, element, **kwargs):
+        """Generate a define."""
+        value = self.dump_element(element.value, **kwargs)
+        return self.dumps_define(element.name, value)
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
