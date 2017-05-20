@@ -18,7 +18,7 @@ SlaveRegisterField:
   'field' ('source='? source=BitAccessor
            'position='? position=BitField
            'access='? access=AccessPermission
-           'default='? default=PositiveInteger
+           ('default=' default=PositiveInteger)?
            properties*=RegisterProperty)#;
 SlavePort:
   SlaveOutput | SlaveInput;
@@ -261,9 +261,10 @@ class MemoryMappedInterface(object):
             # dump field information
             for field in sorted(register.fields,
                                 key=lambda x: x.reg_slice[0]):
-                ret_str += '{: <2}{} -> {}\n'.format(field.permissions,
-                                                     field.dumps_slice(),
-                                                     field.name)
+                ret_str += '{: <2}{} -> {} ({})\n'.format(field.permissions,
+                                                          field.dumps_slice(),
+                                                          field.name,
+                                                          field.default_value)
 
         ret_str += 'PORTS:\n'
         for portname, port in self.ports.items():
