@@ -4,7 +4,7 @@
 import argparse
 import os
 from hdltools.mmap import MemoryMappedInterface
-from hdltools.verilog.codegen import dumps_define, dumps_vector
+from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 
 
@@ -33,18 +33,41 @@ if __name__ == "__main__":
     tmp = HDLTemplateParser()
     tmp.parse_file(DEFAULT_TEMPLATE)
 
+    # bit field declarations
     bits_loc = tmp.find_template_tag('REGISTER_BITS')
     if bits_loc is None:
         raise ValueError('invalid template file')
 
     # prepare contents and insert
-    define_list = []
+    define_list = ['/* REGISTER BIT FIELD DEFINITIONS */']
     for name, reg in mmap.registers.items():
         for field in reg.fields:
             def_name = '{}_{}_INDEX'.format(name, field.name)
             def_value = field.get_range()[0]
-            define_list.append(dumps_define(def_name, def_value))
+            define_list.append(VerilogCodeGenerator.dumps_define(def_name,
+                                                                 def_value))
 
     tmp.insert_contents(bits_loc, '\n'.join(define_list))
 
-    #print(tmp._dumps_templated())
+    # ports
+    port_loc = tmp.find_template_tag('USER_PORTS')
+    if port_loc is None:
+        raise ValueError('invalid template file')
+
+    port_list = ['/* FIELD DEPENDENT PORTS */']
+    for name, port in mmap.ports.items():
+        port_list.append(VerilogCodeGenerator.dumps_port(
+            port.direction,
+            port.name,
+            port.vector.evaluate()))
+    tmp.insert_contents(port_loc, '\n'.join(port_list))
+
+    # registers
+    reg_signal_loc = tmp.find_template_tag('REGISTER_DECL')
+    if reg_signal_loc is None:
+        raise ValueError('invalid template file')
+
+    for name, reg in mmap.registers.items():
+        pass
+
+    print(tmp._dumps_templated())

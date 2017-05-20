@@ -1,29 +1,29 @@
-from hdltools.verilog.codegen import dumps_vector, dumps_define
+from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 from hdltools.mmap import MemoryMappedInterface
 import os
 
 def test_vec():
 
-    print(dumps_vector(1, 32, 'h'))
-    print(dumps_vector(1, 32, 'd'))
-    print(dumps_vector(1, 32, 'b'))
+    print(VerilogCodeGenerator.dumps_vector(1, 32, 'h'))
+    print(VerilogCodeGenerator.dumps_vector(1, 32, 'd'))
+    print(VerilogCodeGenerator.dumps_vector(1, 32, 'b'))
 
     try:
-        vec = dumps_vector(256, 8, 'b')
+        vec = VerilogCodeGenerator.dumps_vector(256, 8, 'b')
         raise
     except ValueError:
         pass
 
     try:
-        vec = dumps_vector(256, 8, 'x')
+        vec = VerilogCodeGenerator.dumps_vector(256, 8, 'x')
         raise
     except ValueError:
         pass
 
 def test_define():
 
-    print(dumps_define('NAME', 'VALUE'))
+    print(VerilogCodeGenerator.dumps_define('NAME', 'VALUE'))
 
 def test_template():
 
@@ -58,7 +58,7 @@ def test_mmap():
     //outputs from register bits
     output IRQ_EN source=control.IRQEN;
     output STOP_ON_ERR source=control.STOP_ON_ERROR;
-    output UNKNOWN source=unknown.UNKNOWN;
+    //output UNKNOWN source=unknown.UNKNOWN;
     """
 
     mmap = MemoryMappedInterface()
