@@ -1,7 +1,7 @@
 """Generate Verilog Statements."""
 
 import math
-from ..codegen import HDLCodeGenerator
+from ..abshdl.codegen import HDLCodeGenerator
 
 
 class VerilogCodeGenerator(HDLCodeGenerator):

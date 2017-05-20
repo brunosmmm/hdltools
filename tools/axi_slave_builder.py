@@ -3,7 +3,7 @@
 """Build AXI MM Slaves from specification files."""
 import argparse
 import os
-from hdltools.mmap import MemoryMappedInterface
+from hdltools.abshdl.mmap import MemoryMappedInterface
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 
