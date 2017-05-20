@@ -2,7 +2,7 @@
 
 from . import HDLObject, HDLIntegerConstant
 from .expr import HDLExpression
-from .signal import HDLSignal
+from .signal import HDLSignal, HDLSignalSlice
 
 
 class HDLAssignment(HDLObject):
@@ -10,12 +10,19 @@ class HDLAssignment(HDLObject):
 
     def __init__(self, signal, value):
         """Initialize."""
-        if not isinstance(signal, HDLSignal):
-            raise TypeError('only HDLSignal can be assigned')
+        if not isinstance(signal, (HDLSignal, HDLSignalSlice)):
+            raise TypeError('only HDLSignal, HDLSignalSlice can be assigned')
 
-        self.signal = signal
+        if isinstance(signal, HDLSignal):
+            self.signal = signal
+            self._slice = None
+        else:
+            self.signal = signal.signal
+            self._slice = signal.vector
 
-        if isinstance(value, (HDLIntegerConstant, HDLSignal, HDLExpression)):
+        if isinstance(value, (HDLIntegerConstant,
+                              HDLSignal, HDLExpression,
+                              HDLSignalSlice)):
             self.value = value
         elif isinstance(value, int):
             self.value = HDLIntegerConstant(value)
