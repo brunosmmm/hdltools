@@ -148,7 +148,7 @@ class MemoryMappedInterface(object):
                     reg_addr = self.next_available_address()
 
                 register = HDLRegister(statement.name,
-                                       size=declared_reg_size,
+                                       size=self.reg_size,
                                        addr=reg_addr)
 
                 # add properties
