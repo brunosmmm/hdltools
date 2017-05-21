@@ -13,7 +13,7 @@ module /*! MODULE_NAME !*/
 	  // Width of S_AXI data bus
 	  parameter integer C_S_AXI_DATA_WIDTH = 32,
 	  // Width of S_AXI address bus
-	  parameter integer C_S_AXI_ADDR_WIDTH = /*! ADDR_WIDTH *!/
+	  parameter integer C_S_AXI_ADDR_WIDTH = /*! <ADDR_WIDTH !*/
 	  )
 	 (
 		// Users to add ports here
@@ -128,10 +128,7 @@ module /*! MODULE_NAME !*/
 	 // de-asserted when reset is low.
 
    //USER LOGIC
-   wire [C_S_AXI_DATA_WIDTH-1:0]              CTL_REG_WRITE_MASK_ALL = 32'h00000003;
-   wire [C_S_AXI_DATA_WIDTH-1:0]              CTL_REG_WRITE_MASK_RST = 32'h00000001;
-   wire                                       IRQ_FLAG;
-   assign IRQ_FLAG = IRQ_EOL_LATE || IRQ_EOL_EARLY || IRQ_SOF_EARLY || IRQ_SOF_LATE;
+   /*! USER_LOGIC !*/
 
 	 always @( posedge S_AXI_ACLK )
 	   begin
@@ -217,24 +214,11 @@ module /*! MODULE_NAME !*/
 	   begin
 	      if ( S_AXI_ARESETN == 1'b0 )
 	        begin
-	           slv_reg0 <= 32'h00000008; //control register   - RW
-	           slv_reg1 <= 1920;         //FRAME WIDTH REGISTER - RW
-	           slv_reg2 <= 1080;         //FRAME HEIGHT REGISTER - RW
-	           slv_reg3 <= 0;            //status register    - R
-	           slv_reg4 <= 0;            //Scratch register - RW
-	           slv_reg5 <= 0;
-	           slv_reg6 <= 0;
-	           slv_reg7 <= 0;
-
-             IRQ_ACK <= 0;
+             /*! LOGIC_RESET !*/
 	        end
 	      else begin
 
-           IRQ_ACK <= 0;
-
-           //reset logic: if BRESET is set, then unset it the next cycle automatically
-           if (slv_reg0[`CTL_BRESET_INDEX] && BRESET_ACK)
-             slv_reg0[`CTL_BRESET_INDEX] <= 0;
+           /*! MISC_LOGIC !*/
 
 	         if (slv_reg_wren)
 	           begin
@@ -245,14 +229,7 @@ module /*! MODULE_NAME !*/
 	                       // Respective byte enables are asserted as per write strobes
 	                       // Slave register 0 - Control
 
-                         //disable DONE if setting BRESET
-                         //not so pretty
-                         if (S_AXI_WDATA[0]) begin
-	                          slv_reg0[(byte_index*8) +: 8] <= (S_AXI_WDATA[(byte_index*8) +: 8] & CTL_REG_WRITE_MASK_RST[(byte_index*8) +: 8]);
-                         end
-                         else begin
-                            slv_reg0[(byte_index*8) +: 8] <= (S_AXI_WDATA[(byte_index*8) +: 8] & CTL_REG_WRITE_MASK_ALL[(byte_index*8) +: 8]);
-                         end
+
 	                    end
 	                4'h1:
 	                  for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -285,14 +262,7 @@ module /*! MODULE_NAME !*/
 	                       slv_reg4[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 	                    end
 	                default : begin
-	                   slv_reg0 <= slv_reg0;
-	                   slv_reg1 <= slv_reg1;
-	                   slv_reg2 <= slv_reg2;
-	                   slv_reg3 <= slv_reg3;
-	                   slv_reg4 <= slv_reg4;
-	                   slv_reg5 <= slv_reg5;
-	                   slv_reg6 <= slv_reg6;
-	                   slv_reg7 <= slv_reg7;
+                     /*! REGISTER_HOLD !*/
 	                end
 	              endcase
 	           end
@@ -376,15 +346,9 @@ module /*! MODULE_NAME !*/
 	        begin
 	           axi_rvalid <= 0;
 	           axi_rresp  <= 0;
-             STATUS_CLR_REQ <= 0;
 	        end
 	      else
 	        begin
-
-             //Release flag automatically
-             if (STATUS_CLR_REQ)
-               STATUS_CLR_REQ <= 0;
-
 	           if (axi_arready && S_AXI_ARVALID && ~axi_rvalid)
 	             begin
 	                // Valid read data is available at the read data bus
@@ -395,29 +359,10 @@ module /*! MODULE_NAME !*/
 	             begin
 	                // Read data is accepted by the master
 	                axi_rvalid <= 1'b0;
-
-                  if (axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] == 4'h3)
-                    STATUS_CLR_REQ <= 1;
+                  /*! EVENTS_ON_READ !*/
 	             end
 	        end
 	   end // always @ ( posedge S_AXI_ACLK )
-
-   //generate persistent flags --- only cleared when user reads them
-   reg WAIT_FLAG, STATUS_CLR_REQ;
-   always @(posedge S_AXI_ACLK)
-     begin
-        if (!S_AXI_ARESETN) begin
-           WAIT_FLAG <= 0;
-        end
-        else begin
-           if (WAIT) begin
-              WAIT_FLAG <= 1;
-           end
-           else if (STATUS_CLR_REQ || slv_reg0[`CTL_BRESET_INDEX]) begin
-              WAIT_FLAG <= 0;
-           end
-        end
-     end
 
 	 // Implement memory mapped register select and read logic generation
 	 // Slave register read enable is asserted when valid address is available
@@ -433,16 +378,7 @@ module /*! MODULE_NAME !*/
 	        begin
 	           // Address decoding for reading registers
 	           case ( axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
-	             4'h0   : reg_data_out <= slv_reg0;
-	             4'h1   : reg_data_out <= slv_reg1;
-	             4'h2   : reg_data_out <= slv_reg2;
-	             4'h3   : reg_data_out <= {23'h0, WAIT_SOF, IRQ_FLAG, IRQ_EOL_LATE, IRQ_EOL_EARLY, IRQ_SOF_LATE, IRQ_SOF_EARLY, WAIT_FLAG, RUN, ERROR};
-	             4'h4   : reg_data_out <= slv_reg4;
-	             4'h5   : reg_data_out <= slv_reg5;
-	             4'h6   : reg_data_out <= slv_reg6;
-	             4'h7   : reg_data_out <= slv_reg7;
-               //debug
-               4'h8 : reg_data_out <= DEBUG_FILL;
+               /*! READ_REGISTERS !*/
 	             default : reg_data_out <= 0;
 	           endcase
 	        end
@@ -468,12 +404,7 @@ module /*! MODULE_NAME !*/
 	   end
 
 	 // Add user logic here
-   assign FRAME_W = slv_reg1;
-   assign FRAME_H = slv_reg2;
-   assign DONE = slv_reg0[`CTL_DONE_INDEX];
-   assign BRESET = slv_reg0[`CTL_BRESET_INDEX];
-   assign IGNORE_UPSTREAM_ERR = slv_reg0[`CTL_IGNORE_UP_ERR_INDEX];
-   assign STOP_ON_ERR = slv_reg0[`CTL_STOP_ON_ERR_INDEX];
+   /*! ASSIGN_LOGIC !*/
 	 // User logic ends
 
 endmodule
