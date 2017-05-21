@@ -126,3 +126,13 @@ class HDLRegister(object):
                 wr_mask |= (1 << bit)
 
         return wr_mask
+
+    def get_default_value(self):
+        """Get register default value."""
+        val = 0
+        for field in self.fields:
+            field_offset = field.get_range()[0]
+
+            val |= (field.default_value << field_offset)
+
+        return val
