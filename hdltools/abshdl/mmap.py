@@ -166,7 +166,7 @@ class MemoryMappedInterface(object):
                                      ' "{}"'.format(source_reg))
 
                 if statement.default is not None:
-                    defval = statement.default
+                    defval = int(statement.default)
                 else:
                     defval = 0
 
