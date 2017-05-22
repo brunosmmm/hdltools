@@ -37,7 +37,7 @@ class HDLSignal(HDLObject):
 
     def __getitem__(self, key):
         """Slice of signal."""
-        pass
+        return HDLSignalSlice(self, key)
 
     def __repr__(self, eval_scope=None):
         """Get readable representation."""
@@ -72,6 +72,21 @@ class HDLSignalSlice(HDLObject):
             self.vector = hdl.vector.HDLVectorDescriptor(*slic)
         elif isinstance(slic, hdl.vector.HDLVectorDescriptor):
             self.vector = slic
+        elif isinstance(slic, slice):
+            if slic.start is None:
+                start = self.signal.vector.left_size
+            else:
+                start = slic.start
+            self.vector = hdl.vector.HDLVectorDescriptor(start, slic.stop)
         else:
-            raise TypeError('size can only be of types: int, list or'
+            raise TypeError('size can only be of types: int, list, slice, or'
                             ' HDLVectorDescriptor')
+
+    def __repr__(self, eval_scope=None):
+        """Get representation."""
+        return '{}{}'.format(self.signal.name,
+                             self.vector.dumps(eval_scope))
+
+    def dumps(self, eval_scope=None):
+        """Alias for __repr__."""
+        return self.__repr__(eval_scope)
