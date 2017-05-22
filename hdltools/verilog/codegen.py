@@ -71,7 +71,25 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLAssignment(self, element, **kwargs):
         """Generate assignments."""
-        pass
+        assign_lhs = self.dump_element(element.signal, assign=True)
+        assign_rhs = self.dump_element(element.value, radix='h')
+        assign_type = element.get_assignment_type()
+        if assign_type == 'parallel':
+            assign_str = 'assign {} = {};'.format(assign_lhs,
+                                                  assign_rhs)
+        elif assign_type == 'series':
+            if element.assign_type == 'block':
+                assign_op = '<='
+            else:
+                assign_op = '='
+            assign_str = '{} {} {};'.format(assign_lhs,
+                                            assign_op,
+                                            assign_rhs)
+        return assign_str
+
+    def gen_HDLExpression(self, element, **kwargs):
+        """Get an expression."""
+        return element.dumps()
 
     @staticmethod
     def dumps_define(name, value):
