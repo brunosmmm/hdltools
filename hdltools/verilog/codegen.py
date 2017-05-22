@@ -60,6 +60,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLSignalSlice(self, element, **kwargs):
         """Generate sliced signal."""
+        kwargs.update({'assign': True})
         signal = self.dump_element(element.signal, **kwargs)
         slic = self.dump_element(element.vector)
 
