@@ -21,10 +21,12 @@ class HDLVectorDescriptor(HDLObject):
         stored_value: int, NoneType
            A stored value
         """
-        if not isinstance(left_size, (int, expr.HDLExpression)):
+        if not isinstance(left_size, (int, HDLIntegerConstant,
+                                      expr.HDLExpression)):
             raise TypeError('only int or HDLExpression allowed as size')
 
-        if not isinstance(right_size, (int, expr.HDLExpression)):
+        if not isinstance(right_size, (int, HDLIntegerConstant,
+                                       expr.HDLExpression)):
             if right_size is None:
                 # take this as zero
                 right_size = 0
@@ -38,12 +40,12 @@ class HDLVectorDescriptor(HDLObject):
         self._check_value(right_size)
         self._check_value(left_size)
 
-        if isinstance(left_size, int):
-            self.left_size = HDLIntegerConstant(left_size)
+        if isinstance(left_size, (int, HDLIntegerConstant)):
+            self.left_size = expr.HDLExpression(left_size)
         else:
             self.left_size = left_size
-        if isinstance(right_size, int):
-            self.right_size = HDLIntegerConstant(right_size)
+        if isinstance(right_size, (int, HDLIntegerConstant)):
+            self.right_size = expr.HDLExpression(right_size)
         else:
             self.right_size = right_size
 
