@@ -33,7 +33,8 @@ class GHMarkDownTable(MarkDownString):
         ret_str += ' | '.join(hyphens) + '\n'
 
         for line in self.lines:
-            ret_str += ' | '.join(line) + '\n'
+            the_line = [str(x) for x in line]
+            ret_str += ' | '.join(the_line) + '\n'
 
         return ret_str
 
