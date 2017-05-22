@@ -191,6 +191,10 @@ class HDLExpression(HDLValue):
         else:
             return self.combine_expressions(rhs, op, self)
 
+    def __int__(self):
+        """Alias for evaluate."""
+        return self.evaluate()
+
     def __add__(self, other):
         """Add expressions.
 
