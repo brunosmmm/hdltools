@@ -75,7 +75,7 @@ class HDLRegister(object):
 
         return bits
 
-    def add_properies(self, **properties):
+    def add_properties(self, **properties):
         """Add a property."""
         self.properties.update(properties)
 
