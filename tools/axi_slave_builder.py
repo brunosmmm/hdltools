@@ -8,6 +8,8 @@ from hdltools.abshdl.macro import HDLMacro
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
+from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.assign import HDLAssignment
 
 
 DEFAULT_TEMPLATE = os.path.join('assets', 'verilog', 'axi_slave.v')
@@ -75,5 +77,19 @@ if __name__ == "__main__":
         signal = HDLSignal('reg', 'REG_'+name, reg.size)
         reg_decl_list.append(vlog.dump_element(signal))
     tmp.insert_contents(reg_signal_loc, '\n'.join(reg_decl_list))
+
+    # register reset value
+    reg_reset_loc = tmp.find_template_tag('LOGIC_RESET')
+    if reg_reset_loc is None:
+        raise ValueError('invalid template file')
+
+    reg_reset_list = ['/* RESET REGISTERS */']
+    for name, reg in mmap.registers.items():
+        signal = HDLSignal('reg', 'REG_'+name, reg.size)
+        value = reg.get_default_value()
+        def_val = HDLIntegerConstant(value)
+        assignment = HDLAssignment(signal, value)
+        reg_reset_list.append(vlog.dump_element(assignment))
+    tmp.insert_contents(reg_reset_loc, '\n'.join(reg_reset_list))
 
     print(tmp._dumps_templated())
