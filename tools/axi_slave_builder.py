@@ -92,4 +92,23 @@ if __name__ == "__main__":
         reg_reset_list.append(vlog.dump_element(assignment))
     tmp.insert_contents(reg_reset_loc, '\n'.join(reg_reset_list))
 
+    # output port assignments
+    assign_logic_loc = tmp.find_template_tag('ASSIGN_LOGIC')
+    if assign_logic_loc is None:
+        raise ValueError('invalid template file')
+
+    assign_list = ['/* OUTPUT FLAG ASSIGNMENTS */']
+    for name, port in mmap.ports.items():
+        if port.direction != 'out':
+            continue
+        # create a proxy signal
+        sig = HDLSignal('comb', name, port.vector)
+        reg_sig = HDLSignal('reg', 'REG_'+port.target_register.name,
+                            port.target_register.size)
+        target_field = port.target_register.get_field(port.target_field)
+        target_bits = target_field.get_slice()
+        assignment = HDLAssignment(sig, reg_sig[target_bits])
+        assign_list.append(vlog.dump_element(assignment))
+    tmp.insert_contents(assign_logic_loc, '\n'.join(assign_list))
+
     print(tmp._dumps_templated())
