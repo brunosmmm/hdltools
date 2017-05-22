@@ -3,8 +3,8 @@
 #addr_mode byte;
 
 //registers
-register CONTROL;
-register STATUS;
+register CONTROL description="Control Register";
+register STATUS description="Status Register";
 
 //register fields
 field CONTROL.IRQEN position=0 access=RW description="Enable Interrupts" default=1;
