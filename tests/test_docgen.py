@@ -2,6 +2,7 @@ from hdltools.docgen.markdown import (MarkDownList, MarkDownHeader,
                                       MarkDownLink, MarkDownQuote,
                                       MarkDownBold, MarkDownItalic,
                                       MarkDownCode, MarkDownDocument)
+from hdltools.docgen.ghmd import GHMarkDownTable
 
 def test_mdlist():
 
@@ -65,3 +66,16 @@ def test_mddoc():
     doc.append(MarkDownList(['An element', 'Another Element']))
 
     print(doc)
+
+def test_ghtable():
+
+    table = GHMarkDownTable(['Name', 'Description', 'Misc'])
+    table.add_line('test', 'A test', '??')
+    print(table)
+
+    # errors
+    try:
+        table.add_line('test')
+        raise Exception
+    except IndexError:
+        pass
