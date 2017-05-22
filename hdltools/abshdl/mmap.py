@@ -153,8 +153,8 @@ class MemoryMappedInterface(object):
 
                 # add properties
                 for prop in statement.properties:
-                    register.add_property(**{prop.name:
-                                             prop.value})
+                    register.add_properties(**{prop.name:
+                                               prop.value})
 
                 self.add_register(register)
             elif statement.__class__.__name__ == 'SlaveRegisterField':
