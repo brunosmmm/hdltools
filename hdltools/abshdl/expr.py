@@ -24,7 +24,7 @@ class HDLExpression(HDLValue):
                   ast.Div: op.truediv, ast.Pow: op.pow,
                   ast.USub: op.neg, ast.LShift: op.lshift,
                   ast.RShift: op.rshift, ast.BitOr: op.or_,
-                  ast.BitAnd: op.and_, ast.BitXor: op.xor_}
+                  ast.BitAnd: op.and_, ast.BitXor: op.xor}
 
     def __init__(self, value):
         """Initialize.
