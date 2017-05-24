@@ -49,8 +49,7 @@ if __name__ == "__main__":
 
     param_list = ['/* USER PARAMETERS */']
     for name, value in mmap.parameters.items():
-        param = HDLModuleParameter(name, None, param_default=value)
-        param_list.append(vlog.dump_element(param))
+        param_list.append(vlog.dump_element(value))
 
     tmp.insert_contents(param_loc, '\n'.join(param_list))
 
