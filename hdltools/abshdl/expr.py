@@ -26,7 +26,7 @@ class HDLExpression(HDLValue):
                   ast.RShift: op.rshift, ast.BitOr: op.or_,
                   ast.BitAnd: op.and_, ast.BitXor: op.xor}
 
-    def __init__(self, value):
+    def __init__(self, value, size=None):
         """Initialize.
 
         Args
@@ -37,10 +37,10 @@ class HDLExpression(HDLValue):
         super(HDLExpression, self).__init__()
         if isinstance(value, str):
             self.tree = ast.parse(value, mode='eval')
-            self.size = None
+            self.size = size
         elif isinstance(value, ast.Expression):
             self.tree = value
-            self.size = None
+            self.size = size
         elif isinstance(value, HDLIntegerConstant):
             self.tree = ast.Expression(body=ast.Num(n=value.value))
             self.size = len(value)
