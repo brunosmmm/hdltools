@@ -152,13 +152,15 @@ class MemoryMappedInterface(object):
             if statement.__class__.__name__ == 'ParameterStatement':
                 if statement.value.hex is not None:
                     val = int(statement.value.hex.strip('0x'), 16)
+                    radix = 'h'
                 elif statement.value.posint is not None:
                     val = int(statement.value.posint)
+                    radix = 'd'
                 elif statement.value.id is not None:
                     raise ValueError('Identifier or expressions not supported')
 
-                hdl_val = HDLIntegerConstant(val)
-                self.add_parameter(statement.name, val)
+                hdl_val = HDLIntegerConstant(val, radix=radix)
+                self.add_parameter(statement.name, hdl_val)
 
         for statement in decl.statements:
             if statement.__class__.__name__ == 'SlaveRegister':
@@ -282,7 +284,11 @@ class MemoryMappedInterface(object):
 
     def dumps(self):
         """Dump summary."""
-        ret_str = 'REGISTERS:\n'
+        ret_str = 'PARAMETERS:\n'
+        for name, value in self.parameters.items():
+            ret_str += '{} = {}\n'.format(name.upper(), value.dumps())
+
+        ret_str += 'REGISTERS:\n'
 
         for regname, register in self.registers.items():
             ret_str += '0x{:02X}: {}\n'.format(register.addr, regname)
