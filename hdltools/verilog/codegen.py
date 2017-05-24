@@ -58,7 +58,12 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             sig_decl = not kwargs['assign']
 
         if sig_decl:
-            return '{} {} {};'.format(st, _slice, element.name)
+            ret_str = '{} {} {}'.format(st, _slice, element.name)
+            if element.sig_type == 'const':
+                ret_str += ' = {};'.format(element.default_val)
+            else:
+                ret_str += ';'
+            return ret_str
         else:
             return '{}'.format(element.name)
 
