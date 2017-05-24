@@ -10,6 +10,15 @@ from hdltools.abshdl.const import HDLIntegerConstant
 import os
 import ast
 
+def test_constants():
+
+    fit = HDLIntegerConstant.value_fits_width(8, 256)
+    if fit is True:
+        raise Exception
+    fit = HDLIntegerConstant.value_fits_width(8, 255)
+    if fit is False:
+        raise Exception
+
 # test HDL primitives
 def test_vector_descriptor():
 
@@ -48,12 +57,6 @@ def test_vector_descriptor():
 
     vec = HDLVectorDescriptor(8, stored_value=256)
     left, right = vec.evaluate()
-    fit = HDLVectorDescriptor.value_fits_width(8, 256)
-    if fit is True:
-        raise Exception
-    fit = HDLVectorDescriptor.value_fits_width(8, 255)
-    if fit is False:
-        raise Exception
 
     try:
         HDLVectorDescriptor(7, stored_value=256)
