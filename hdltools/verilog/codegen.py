@@ -31,7 +31,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         if 'size' in kwargs:
             size = kwargs['size']
         else:
-            size = 32
+            size = element.size
 
         return self.dumps_vector(element.evaluate(),
                                  size,
