@@ -214,7 +214,7 @@ class MemoryMappedInterface(object):
                             #defval = self.parameters[val].value.value
                             #param_min_size = self.parameters[val].value.size
                             param_min_size = 0
-                            defval = HDLExpression(val)
+                            defval = HDLExpression(val, size=slicesize)
                         else:
                             raise ValueError('Unknown'
                                              ' identifier: "{}":'.format(val))
