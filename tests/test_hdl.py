@@ -166,11 +166,6 @@ def test_hdl_expression():
     _ = HDLExpression(my_signal)
     _ = HDLExpression(HDLSignalSlice(my_signal, 1))
     _ = HDLExpression(my_signal[1:0])
-    try:
-        _ = HDLExpression('invalid')
-        raise Exception
-    except TypeError:
-        pass
 
 def test_hdl_signal():
 

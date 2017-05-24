@@ -1,5 +1,8 @@
 """HDL HDLRegister descriptors and actions."""
 
+from .concat import HDLConcatenation
+from .expr import HDLExpression
+
 
 class HDLRegisterField(object):
     """Bitfield inside a register."""
@@ -136,10 +139,26 @@ class HDLRegister(object):
 
     def get_default_value(self):
         """Get register default value."""
-        val = 0
+        # detect field types
+
+        has_expr = False
         for field in self.fields:
-            field_offset = field.get_range()[0]
+            if isinstance(field.default_value, HDLExpression):
+                has_expr = True
+                break
 
-            val |= (field.default_value << field_offset)
+        if has_expr is False:
+            val = 0
+            for field in self.fields:
+                field_offset = field.get_range()[0]
 
-        return val
+                val |= (field.default_value << field_offset)
+
+            return val
+        else:
+            val = HDLConcatenation()
+            for field in sorted(self.fields,
+                                key=lambda x: x.reg_slice[0])[::-1]:
+                val.append(field.default_value)
+
+            return val

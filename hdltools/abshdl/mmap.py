@@ -3,7 +3,8 @@
 from textx.metamodel import metamodel_from_str
 from .registers import HDLRegister, HDLRegisterField
 from .module import HDLModulePort, HDLModuleParameter
-from .const import HDLIntegerConstant
+from .const import HDLIntegerConstant, HDLStringConstant
+from .expr import HDLExpression
 
 MMAP_COMPILER_GRAMMAR = """
 AXIDescription:
@@ -72,7 +73,7 @@ def slice_size(slic):
     if len(slic) > 1:
         return slic[0] - slic[1] + 1
     else:
-        return slic[0]
+        return 1
 
 
 class FlagPort(HDLModulePort):
@@ -210,14 +211,18 @@ class MemoryMappedInterface(object):
                         # search into parameters
                         val = statement.default.id.strip()
                         if val  in self.parameters:
-                            defval = self.parameters[val].value.value
-                            param_min_size = self.parameters[val].value.size
+                            #defval = self.parameters[val].value.value
+                            #param_min_size = self.parameters[val].value.size
+                            param_min_size = 0
+                            defval = HDLExpression(val)
                         else:
                             raise ValueError('Unknown'
                                              ' identifier: "{}":'.format(val))
                     # check if it fits
                     if (slicesize < param_min_size):
-                        raise ValueError('value does not fit field')
+                        raise ValueError('value "{}" does not fit'
+                                         ' field "{}"'.format(defval,
+                                                              statement.source.bit))
                 else:
                     defval = 0
 
