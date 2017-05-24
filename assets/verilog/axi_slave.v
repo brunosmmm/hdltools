@@ -9,7 +9,7 @@ module /*! MODULE_NAME !*/
 
 	  // User parameters ends
 	  // Do not modify the parameters beyond this line
-
+    /*! USER_PARAMS !*/
 	  // Width of S_AXI data bus
 	  parameter integer C_S_AXI_DATA_WIDTH = 32,
 	  // Width of S_AXI address bus
