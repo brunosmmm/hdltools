@@ -95,7 +95,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         return element.dumps()
 
     def gen_HDLModuleParameter(self, element, **kwargs):
-        """Module parameter."""
+        """Generate Module parameter."""
         ret_str = 'parameter '
         if element.ptype is not None:
             ret_str += element.ptype + ' '
@@ -108,6 +108,12 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return ret_str
 
+    def gen_HDLConcatenation(self, element, **kwargs):
+        """Generate concatenation."""
+        ret_str = '{{{}}}'.format(
+            ', '.join([self.dump_element(x) for x in element.items]))
+
+        return ret_str
 
     @staticmethod
     def dumps_define(name, value):
