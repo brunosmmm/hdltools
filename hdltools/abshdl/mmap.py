@@ -67,6 +67,14 @@ def bitfield_pos_to_slice(pos):
     return ret
 
 
+def slice_size(slic):
+    """Get slice size in bits."""
+    if len(slic) > 1:
+        return slic[0] - slic[1] + 1
+    else:
+        return slic[0]
+
+
 class FlagPort(HDLModulePort):
     """A port dependent on a register field."""
 
@@ -189,19 +197,26 @@ class MemoryMappedInterface(object):
                     raise ValueError('unknown register:'
                                      ' "{}"'.format(source_reg))
 
+                slicesize = slice_size(bitfield_pos_to_slice(statement.position))
                 if statement.default is not None:
                     if statement.default.posint is not None:
                         defval = int(statement.default.posint)
+                        param_min_size = HDLIntegerConstant.minimum_value_size(defval)
                     elif statement.default.hex is not None:
                         defval = int(statement.default.hex.strip('0x'), 16)
+                        param_min_size = HDLIntegerConstant.minimum_value_size(defval)
                     elif statement.default.id is not None:
                         # search into parameters
                         val = statement.default.id.strip()
                         if val  in self.parameters:
                             defval = self.parameters[val].value
+                            param_min_size = self.parameters[val].size
                         else:
                             raise ValueError('Unknown'
                                              ' identifier: "{}":'.format(val))
+                    # check if it fits
+                    if (slicesize < param_min_size):
+                        raise ValueError('value does not fit field')
                 else:
                     defval = 0
 
