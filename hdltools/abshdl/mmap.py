@@ -6,9 +6,11 @@ from .module import HDLModulePort
 
 MMAP_COMPILER_GRAMMAR = """
 AXIDescription:
-  static_declarations*=StaticStatement statements*=Statement;
+  static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement;
 StaticStatement:
   '#' var=ID value=StaticValue ';';
+ParameterStatement:
+  'param' name=ID value=StaticValue ';';
 Statement:
   (SlaveRegister | SlaveRegisterField | SlavePort) ';';
 SlaveRegister:
@@ -39,7 +41,7 @@ BitAccessor:
 RegisterProperty:
   name=ID '=' '"' value=/[^"]+/ '"';
 StaticValue:
-  ID | PositiveInteger;
+  ID | PositiveInteger | Hex;
 RegisterAddress:
   Hex | PositiveInteger;
 BitField:
