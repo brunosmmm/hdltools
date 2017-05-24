@@ -48,6 +48,8 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             st = 'wire'
         elif element.sig_type == 'reg':
             st = 'reg'
+        elif element.sig_type == 'const':
+            st = 'localparam'
 
         _slice = self.dump_element(element.vector)
 
