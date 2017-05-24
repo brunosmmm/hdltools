@@ -17,11 +17,14 @@ class HDLExpression(HDLValue):
                      ast.Div: '/',
                      ast.LShift: '<<',
                      ast.RShift: '>>',
-                     ast.BitOr: '|'}
+                     ast.BitOr: '|',
+                     ast.BitAnd: '&',
+                     ast.BitXor: '^'}
     _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
                   ast.Div: op.truediv, ast.Pow: op.pow,
                   ast.USub: op.neg, ast.LShift: op.lshift,
-                  ast.RShift: op.rshift, ast.BitOr: op.or_}
+                  ast.RShift: op.rshift, ast.BitOr: op.or_,
+                  ast.BitAnd: op.and_, ast.BitXor: op.xor_}
 
     def __init__(self, value):
         """Initialize.
@@ -275,6 +278,10 @@ class HDLExpression(HDLValue):
         """Shift operator."""
         return self._new_binop('<<', val, this_lhs=True)
 
+    def __rshift__(self, val):
+        """Shift operator."""
+        return self._new_binop('>>', val, this_lhs=True)
+
     def __or__(self, other):
         """Bitwise OR."""
         return self._new_binop('|', other, this_lhs=True)
@@ -282,6 +289,22 @@ class HDLExpression(HDLValue):
     def __ror__(self, other):
         """Reverse Bitwise OR."""
         return self._new_binop('|', other, this_lhs=False)
+
+    def __and__(self, other):
+        """Bitwise AND."""
+        return self._new_binop('&', other, this_lhs=True)
+
+    def __rand__(self, other):
+        """Reverse Bitwise AND."""
+        return self._new_binop('&', other, this_lhs=False)
+
+    def __xor__(self, other):
+        """Bitwise XOR."""
+        return self._new_binop('^', other, this_lhs=True)
+
+    def __rxor__(self, other):
+        """Reverse Bitwise XOR."""
+        return self._new_binop('^', other, this_lhs=False)
 
     def reduce_expr(self):
         """Reduce expression without evaluating."""
