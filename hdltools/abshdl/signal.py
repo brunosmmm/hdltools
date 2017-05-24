@@ -9,7 +9,7 @@ import hdltools.abshdl as hdl
 class HDLSignal(HDLObject):
     """HDL Signal."""
 
-    _types = ['comb', 'reg']
+    _types = ['comb', 'reg', 'const', 'var']
 
     def __init__(self, sig_type, sig_name, size=1):
         """Initialize."""
@@ -48,6 +48,10 @@ class HDLSignal(HDLObject):
     def dumps(self, eval_scope=None):
         """Alias for __repr__."""
         return self.__repr__(eval_scope)
+
+    def __len__(self):
+        """Get length."""
+        return len(self.vector)
 
 
 class HDLSignalSlice(HDLObject):
@@ -90,3 +94,7 @@ class HDLSignalSlice(HDLObject):
     def dumps(self, eval_scope=None):
         """Alias for __repr__."""
         return self.__repr__(eval_scope)
+
+    def __len__(self):
+        """Get length."""
+        return len(self.vector)
