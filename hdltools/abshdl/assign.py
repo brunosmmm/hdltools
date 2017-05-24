@@ -31,7 +31,7 @@ class HDLAssignment(HDLObject):
 
     def get_assignment_type(self):
         """Get assignment type."""
-        if self.signal.sig_type == 'comb':
+        if self.signal.sig_type in ('comb', 'const'):
             return 'parallel'
         else:
             return 'series'
