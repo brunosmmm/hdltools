@@ -1,6 +1,7 @@
 """Constants."""
 
 from . import HDLValue
+import math
 
 
 class HDLConstant(HDLValue):
@@ -21,7 +22,7 @@ class HDLStringConstant(HDLConstant):
 class HDLIntegerConstant(HDLConstant):
     """A constant value."""
 
-    def __init__(self, value, **kwargs):
+    def __init__(self, value, size=None, **kwargs):
         """Initialize.
 
         Args
@@ -30,6 +31,19 @@ class HDLIntegerConstant(HDLConstant):
             A constant value
         """
         super(HDLIntegerConstant, self).__init__(**kwargs)
+
+        # TODO: if size is not None, test legality, else
+        # calculate minimum size and attribute it
+        if size is not None:
+            # check size
+            if self.value_fits_width(size, value) is True:
+                self.size = size
+            else:
+                raise ValueError('given value does not fit in given size')
+        else:
+            # attribute size
+            self.size = self.minimum_value_size(value)
+
         self.value = value
 
     def evaluate(self, **kwargs):
@@ -108,3 +122,24 @@ class HDLIntegerConstant(HDLConstant):
             return bool(self.value == other.value)
         else:
             raise TypeError
+
+    @staticmethod
+    def value_fits_width(width, value):
+        """Check if a value fits in a vector.
+
+        Args
+        ----
+        width: int
+           Bit Vector width
+        value: int
+           The value
+        """
+        return bool(value <= (int(math.pow(2, width)) - 1))
+
+    @staticmethod
+    def minimum_value_size(value):
+        """Get minimum number of bits needed to store value."""
+        if value == 0:
+            return 1
+        else:
+            return int(math.ceil(math.log2(float(value))))+1

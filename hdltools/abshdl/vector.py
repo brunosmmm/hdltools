@@ -51,7 +51,8 @@ class HDLVectorDescriptor(HDLObject):
 
         # check for value legality
         if stored_value is not None:
-            if self.value_fits_width(len(self), stored_value) is True:
+            if HDLIntegerConstant.value_fits_width(len(self),
+                                                   stored_value) is True:
                 self.stored_value = stored_value
             else:
                 raise ValueError('vector cannot hold passed stored_value')
@@ -92,15 +93,3 @@ class HDLVectorDescriptor(HDLObject):
         """Dump description to string."""
         return self.__repr__(eval_scope)
 
-    @staticmethod
-    def value_fits_width(width, value):
-        """Check if a value fits in a vector.
-
-        Args
-        ----
-        width: int
-           Bit Vector width
-        value: int
-           The value
-        """
-        return bool(value <= (int(math.pow(2, width)) - 1))
