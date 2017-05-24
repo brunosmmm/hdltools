@@ -21,7 +21,7 @@ SlaveRegisterField:
   'field' ('source='? source=BitAccessor
            'position='? position=BitField
            'access='? access=AccessPermission
-           ('default=' default=PositiveInteger)?
+           ('default=' default=StaticValue)?
            properties*=RegisterProperty)#;
 SlavePort:
   SlaveOutput | SlaveInput;
@@ -135,7 +135,8 @@ class MemoryMappedInterface(object):
                     if statement.value.posint is not None:
                         self.set_reg_size(int(statement.value.posint))
                     elif statement.value.hex is not None:
-                        self.set_reg_size(int(statement.value.hex, 18))
+                        self.set_reg_size(int(statement.value.hex.strip('0x'),
+                                              16))
                     elif statement.value.id is not None:
                         raise ValueError('Identifier or expressions not'
                                          ' supported')
@@ -189,7 +190,18 @@ class MemoryMappedInterface(object):
                                      ' "{}"'.format(source_reg))
 
                 if statement.default is not None:
-                    defval = int(statement.default)
+                    if statement.default.posint is not None:
+                        defval = int(statement.default.posint)
+                    elif statement.default.hex is not None:
+                        defval = int(statement.default.hex.strip('0x'), 16)
+                    elif statement.default.id is not None:
+                        # search into parameters
+                        val = statement.default.id.strip()
+                        if val  in self.parameters:
+                            defval = self.parameters[val].value
+                        else:
+                            raise ValueError('Unknown'
+                                             ' identifier: "{}":'.format(val))
                 else:
                     defval = 0
 
