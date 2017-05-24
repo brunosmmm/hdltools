@@ -4,6 +4,7 @@ from . import HDLObject
 from .const import HDLIntegerConstant
 from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
+from .concat import HDLConcatenation
 
 
 class HDLAssignment(HDLObject):
@@ -19,13 +20,14 @@ class HDLAssignment(HDLObject):
 
         if isinstance(value, (HDLIntegerConstant,
                               HDLSignal, HDLExpression,
-                              HDLSignalSlice)):
+                              HDLSignalSlice, HDLConcatenation)):
             self.value = value
         elif isinstance(value, int):
             self.value = HDLIntegerConstant(value)
         else:
-            raise TypeError('only integer, HDLIntegerConstant,'
-                            'HDLSignal, HDLExpression allowed')
+            raise TypeError('only integer, HDLIntegerConstant, '
+                            'HDLSignal, HDLExpression, HDLConcatenation '
+                            'allowed')
 
     def get_assignment_type(self):
         """Get assignment type."""
