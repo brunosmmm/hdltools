@@ -15,8 +15,8 @@ field CONTROL.FREERUN position=1 access=RW description="Free Running Mode";
 field CONTROL.IRQFLAG position=2 access=RW description="Interrupt Flag; write 1 to clear";
 
 //frame size register fields
-field FSIZE.HSIZE position=15..0 access=RW description="Horizontal Size";
-field FSIZE.VSIZE position=31..16 access=RW description="Vertical Size";
+field FSIZE.HSIZE position=15..0 access=RW description="Horizontal Size" default=MAX_HSIZE;
+field FSIZE.VSIZE position=31..16 access=RW description="Vertical Size" default=MAX_VSIZE;
 
 //flag and value outputs
 output IRQ_EN source=CONTROL.IRQEN;
