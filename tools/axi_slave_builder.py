@@ -10,6 +10,7 @@ from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.assign import HDLAssignment
+from hdltools.abshdl.module import HDLModuleParameter
 
 
 DEFAULT_TEMPLATE = os.path.join('assets', 'verilog', 'axi_slave.v')
@@ -40,6 +41,18 @@ if __name__ == "__main__":
     # get template and populate
     tmp = HDLTemplateParser()
     tmp.parse_file(DEFAULT_TEMPLATE)
+
+    # parameters (naive implementation)
+    param_loc = tmp.find_template_tag('USER_PARAMS')
+    if param_loc is None:
+        raise ValueError('invalid template file')
+
+    param_list = ['/* USER PARAMETERS */']
+    for name, value in mmap.parameters.items():
+        param = HDLModuleParameter(name, None, param_default=value)
+        param_list.append(vlog.dump_element(param))
+
+    tmp.insert_contents(param_loc, '\n'.join(param_list))
 
     # bit field declarations
     bits_loc = tmp.find_template_tag('REGISTER_BITS')
