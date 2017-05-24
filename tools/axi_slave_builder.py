@@ -12,6 +12,7 @@ from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.concat import HDLConcatenation
 
 
 DEFAULT_TEMPLATE = os.path.join('assets', 'verilog', 'axi_slave.v')
@@ -104,6 +105,8 @@ if __name__ == "__main__":
             def_val = HDLIntegerConstant(value, size=reg.size)
         elif isinstance(value, HDLExpression):
             raise TypeError('HDLExpression not implemented at this time')
+        elif isinstance(value, HDLConcatenation):
+            def_val = value
         else:
             raise TypeError('Invalid type')
         assignment = HDLAssignment(signal, def_val)
