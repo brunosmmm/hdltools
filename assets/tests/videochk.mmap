@@ -1,0 +1,20 @@
+#register_size 32;
+#addr_mode byte;
+
+//registers
+register CONTROL description="Control Register";
+register FSIZE description="Frame Size Register";
+
+//control register fields
+field CONTROL.IRQEN position=0 access=RW description="Enable Interrupt";
+field CONTROL.FREERUN position=1 access=RW description="Free Running Mode";
+
+//frame size register fields
+field FSIZE.HSIZE position=15..0 access=RW description="Horizontal Size";
+field FSIZE.VSIZE position=31..16 access=RW description="Vertical Size";
+
+//flag and value outputs
+output IRQ_EN source=CONTROL.IRQEN;
+output FREE_RUN source=CONTROL.FREERUN;
+output H_SIZE source=FSIZE.HSIZE;
+output V_SIZE source=FSIZE.VSIZE;
