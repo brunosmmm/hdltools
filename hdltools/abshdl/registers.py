@@ -44,7 +44,7 @@ class HDLRegisterField(object):
     def get_slice(self):
         """Get a slice object."""
         if len(self.reg_slice) > 1:
-            return slice(start=self.reg_slice[1], stop=self.reg_slice[0])
+            return slice(self.reg_slice[1], self.reg_slice[0])
         else:
             return self.reg_slice[0]
 
