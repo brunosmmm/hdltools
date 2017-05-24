@@ -11,13 +11,14 @@ class HDLSignal(HDLObject):
 
     _types = ['comb', 'reg', 'const', 'var']
 
-    def __init__(self, sig_type, sig_name, size=1):
+    def __init__(self, sig_type, sig_name, size=1, default_val=None):
         """Initialize."""
         if sig_type not in self._types:
             raise ValueError('invalid signal type: "{}"'.format(sig_type))
 
         self.sig_type = sig_type
         self.name = sig_name
+        self.default_val = default_val
 
         if isinstance(size, int):
             # default is [size-1:0] / (size-1 downto 0)
