@@ -98,6 +98,7 @@ if __name__ == "__main__":
         raise ValueError('invalid template file')
 
     reg_reset_list = ['/* RESET REGISTERS */']
+    param_buffer_list = []
     for name, reg in mmap.registers.items():
         signal = HDLSignal('reg', 'REG_'+name, reg.size)
         value = reg.get_default_value()
@@ -107,11 +108,38 @@ if __name__ == "__main__":
             raise TypeError('HDLExpression not implemented at this time')
         elif isinstance(value, HDLConcatenation):
             def_val = value
+
+            concat = HDLConcatenation()
+            # build parameter buffers
+            for field in reg.fields:
+                if isinstance(field.default_value, HDLExpression):
+                    param_name = field.default_value.dumps()
+                    if param_name in mmap.parameters:
+                        sig = HDLSignal('const',
+                                        'PRM_'+param_name,
+                                        size=len(field.default_value),
+                                        default_val=param_name)
+                        param_buffer_list.append(vlog.dump_element(sig))
+                        new_expr = HDLExpression('PRM_'+param_name,
+                                                 size=len(field.default_value))
+                        concat.append(new_expr)
+                else:
+                    concat.append(field.default_value)
+
+            def_val = concat
         else:
             raise TypeError('Invalid type')
+
         assignment = HDLAssignment(signal, def_val)
         reg_reset_list.append(vlog.dump_element(assignment))
     tmp.insert_contents(reg_reset_loc, '\n'.join(reg_reset_list))
+
+    # insert parameter buffers
+    logic_loc = tmp.find_template_tag('USER_LOGIC')
+    if logic_loc is None:
+        raise ValueError('invalid template file')
+
+    tmp.insert_contents(logic_loc, '\n'.join(param_buffer_list))
 
     # output port assignments
     assign_logic_loc = tmp.find_template_tag('ASSIGN_LOGIC')
