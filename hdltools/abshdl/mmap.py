@@ -3,7 +3,8 @@
 from textx.metamodel import metamodel_from_str
 from .registers import HDLRegister, HDLRegisterField
 from .module import HDLModulePort, HDLModuleParameter
-from .const import HDLIntegerConstant
+from .const import HDLIntegerConstant, HDLStringConstant
+from .expr import HDLExpression
 
 MMAP_COMPILER_GRAMMAR = """
 AXIDescription:
@@ -210,8 +211,10 @@ class MemoryMappedInterface(object):
                         # search into parameters
                         val = statement.default.id.strip()
                         if val  in self.parameters:
-                            defval = self.parameters[val].value.value
-                            param_min_size = self.parameters[val].value.size
+                            #defval = self.parameters[val].value.value
+                            #param_min_size = self.parameters[val].value.size
+                            param_min_size = 0
+                            defval = HDLExpression(val)
                         else:
                             raise ValueError('Unknown'
                                              ' identifier: "{}":'.format(val))
