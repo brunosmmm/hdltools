@@ -37,14 +37,19 @@ class HDLExpression(HDLValue):
         super(HDLExpression, self).__init__()
         if isinstance(value, str):
             self.tree = ast.parse(value, mode='eval')
+            self.size = None
         elif isinstance(value, ast.Expression):
             self.tree = value
+            self.size = None
         elif isinstance(value, HDLIntegerConstant):
             self.tree = ast.Expression(body=ast.Num(n=value.value))
+            self.size = len(value)
         elif isinstance(value, int):
             self.tree = ast.Expression(body=ast.Num(n=value))
+            self.size = HDLIntegerConstant.minimum_value_size(value)
         elif isinstance(value, signal.HDLSignal):
             self.tree = ast.Expression(body=ast.Name(id=value.name))
+            self.size = len(value)
         elif isinstance(value, signal.HDLSignalSlice):
             name = ast.Name(id=value.signal.name)
             if len(value.vector) > 1:
@@ -55,8 +60,13 @@ class HDLExpression(HDLValue):
                 _slice = ast.Index(value=value.vector.left_size.tree)
             self.tree = ast.Expression(body=ast.Subscript(value=name,
                                                           slice=_slice))
+            self.size = len(value)
         else:
             raise TypeError('invalid type provided')
+
+    def __len__(self):
+        """Get width, if known."""
+        return self.size
 
     def evaluate(self, **kwargs):
         """Evaluate current expression.

@@ -148,3 +148,7 @@ class HDLIntegerConstant(HDLConstant):
             return 1
         else:
             return int(math.ceil(math.log2(float(value))))+1
+
+    def __len__(self):
+        """Get size."""
+        return self.size

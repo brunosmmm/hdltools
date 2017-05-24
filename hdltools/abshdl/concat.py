@@ -42,3 +42,15 @@ class HDLConcatenation(HDLObject):
     def append(self, item):
         """Add item."""
         self.items.append(self._check_item(item))
+
+    def __len__(self):
+        """Get length."""
+        total_length = 0
+        for item in self.items:
+            item_length = len(item)
+            if item_length is None:
+                raise ValueError('cannot determine total length')
+
+            total_length += item_length
+
+        return total_length
