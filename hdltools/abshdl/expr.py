@@ -66,7 +66,10 @@ class HDLExpression(HDLValue):
 
     def __len__(self):
         """Get width, if known."""
-        return self.size
+        if self.size is None:
+            raise ValueError('cannot determine total length')
+        else:
+            return self.size
 
     def evaluate(self, **kwargs):
         """Evaluate current expression.
