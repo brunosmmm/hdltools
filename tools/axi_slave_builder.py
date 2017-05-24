@@ -100,8 +100,8 @@ if __name__ == "__main__":
     for name, reg in mmap.registers.items():
         signal = HDLSignal('reg', 'REG_'+name, reg.size)
         value = reg.get_default_value()
-        def_val = HDLIntegerConstant(value)
-        assignment = HDLAssignment(signal, value)
+        def_val = HDLIntegerConstant(value, size=reg.size)
+        assignment = HDLAssignment(signal, def_val)
         reg_reset_list.append(vlog.dump_element(assignment))
     tmp.insert_contents(reg_reset_loc, '\n'.join(reg_reset_list))
 
