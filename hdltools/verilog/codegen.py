@@ -22,6 +22,8 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         # check for format
         if 'radix' in kwargs:
             radix = kwargs['radix']
+        elif 'radix' in element.optional_args:
+            radix = element.optional_args['radix']
         else:
             radix = 'b'
 
