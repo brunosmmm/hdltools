@@ -2,7 +2,8 @@
 
 from textx.metamodel import metamodel_from_str
 from .registers import HDLRegister, HDLRegisterField
-from .module import HDLModulePort
+from .module import HDLModulePort, HDLModuleParameter
+from .const import HDLIntegerConstant
 
 MMAP_COMPILER_GRAMMAR = """
 AXIDescription:
@@ -41,7 +42,7 @@ BitAccessor:
 RegisterProperty:
   name=ID '=' '"' value=/[^"]+/ '"';
 StaticValue:
-  ID | PositiveInteger | Hex;
+  id=ID | posint=PositiveInteger | hex=Hex;
 RegisterAddress:
   Hex | PositiveInteger;
 BitField:
@@ -85,6 +86,7 @@ class MemoryMappedInterface(object):
         """Initialize."""
         self.registers = {}
         self.ports = {}
+        self.parameters = {}
         self.current_reg_addr = 0
         self.set_reg_addr_offset(4)
         self.set_reg_size(32)
@@ -130,16 +132,33 @@ class MemoryMappedInterface(object):
         for statement in decl.static_declarations:
             if statement.__class__.__name__ == 'StaticStatement':
                 if statement.var == 'register_size':
-                    if statement.value is not None:
-                        self.set_reg_size(int(statement.value))
+                    if statement.value.posint is not None:
+                        self.set_reg_size(int(statement.value.posint))
+                    elif statement.value.hex is not None:
+                        self.set_reg_size(int(statement.value.hex, 18))
+                    elif statement.value.id is not None:
+                        raise ValueError('Identifier or expressions not'
+                                         ' supported')
                 elif statement.var == 'addr_mode':
-                    if statement.value == 'byte':
+                    if statement.value.id == 'byte':
                         self.set_reg_addr_offset(int(self.reg_size/8))
-                    elif statement.value == 'word':
+                    elif statement.value.id == 'word':
                         self.set_reg_addr_offset(1)
-                    elif statement.value is not None:
+                    elif statement.value.id is not None:
                         raise ValueError('addr_mode can only be "byte" or'
                                          '"word"')
+
+        for statement in decl.params:
+            if statement.__class__.__name__ == 'ParameterStatement':
+                if statement.value.hex is not None:
+                    val = int(statement.value.hex.strip('0x'), 16)
+                elif statement.value.posint is not None:
+                    val = int(statement.value.posint)
+                elif statement.value.id is not None:
+                    raise ValueError('Identifier or expressions not supported')
+
+                hdl_val = HDLIntegerConstant(val)
+                self.add_parameter(statement.name, val)
 
         for statement in decl.statements:
             if statement.__class__.__name__ == 'SlaveRegister':
@@ -253,6 +272,13 @@ class MemoryMappedInterface(object):
             raise KeyError('port "{}" already'
                            ' exists'.format(port.name))
         self.ports[port.name] = port
+
+    def add_parameter(self, name, value):
+        """Add a parameter."""
+        if name in self.parameters:
+            raise KeyError('parameter "{}" already exists'.format(name))
+
+        self.parameters[name] = value
 
     def dumps(self):
         """Dump summary."""
