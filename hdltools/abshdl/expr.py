@@ -282,3 +282,77 @@ class HDLExpression(HDLValue):
     def __ror__(self, other):
         """Reverse Bitwise OR."""
         return self._new_binop('|', other, this_lhs=False)
+
+    def reduce_expr(self):
+        """Reduce expression without evaluating."""
+        new_tree = self._reduce_binop(self.tree.body)
+
+        # replace tree
+        self.tree.body = new_tree
+
+    @staticmethod
+    def _reduce_binop(binop):
+        if not isinstance(binop, ast.BinOp):
+            raise TypeError('only BinOp allowed')
+
+        # unwrap Expressions
+        if isinstance(binop.right, ast.Expression):
+            right = binop.right.body
+        else:
+            right = binop.right
+
+        if isinstance(binop.left, ast.Expression):
+            left = binop.left.body
+        else:
+            left = binop.left
+
+        # BinOp recursion
+        if isinstance(right, ast.BinOp):
+            right = HDLExpression._reduce_binop(right)
+
+        if isinstance(left, ast.BinOp):
+            left = HDLExpression._reduce_binop(left)
+
+        if isinstance(binop.op, (ast.Add, ast.Sub,
+                                 ast.LShift, ast.RShift,
+                                 ast.BitOr, ast.BitXor)):
+            if isinstance(left, ast.Num):
+                prune_left = bool(left.n == 0)
+            else:
+                prune_left = False
+
+            if isinstance(right, ast.Num):
+                prune_right = bool(right.n == 0)
+            else:
+                prune_right = False
+        elif isinstance(binop.op, (ast.Mult, ast.Div)):
+            if isinstance(left, ast.Num):
+                if left.n == 0:
+                    return ast.Num(n=0)
+                prune_left = bool(left.n == 1)
+            else:
+                prune_left = False
+
+            if isinstance(right, ast.Num):
+                if right.n == 0:
+                    if isinstance(right, ast.Mult):
+                        return ast.Num(n=0)
+                    else:
+                        raise ValueError('division by zero')
+                prune_right = bool(right.n == 1)
+            else:
+                prune_right = False
+        else:
+            prune_left = False
+            prune_right = False
+
+        # prune
+        if prune_left is True and prune_right is True:
+            # doesn't do anything
+            return ast.Num(n=0)
+        elif prune_left is True:
+            return right
+        elif prune_right is True:
+            return left
+        else:
+            return ast.BinOp(left, binop.op, right)
