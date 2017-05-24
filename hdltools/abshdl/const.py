@@ -6,7 +6,10 @@ from . import HDLValue
 class HDLConstant(HDLValue):
     """Abstract class from which other constants inherit."""
 
-    pass
+    def __init__(self, **kwargs):
+        """Initialize."""
+        # save kwargs
+        self.optional_args = kwargs
 
 
 class HDLStringConstant(HDLConstant):
@@ -18,7 +21,7 @@ class HDLStringConstant(HDLConstant):
 class HDLIntegerConstant(HDLConstant):
     """A constant value."""
 
-    def __init__(self, value):
+    def __init__(self, value, **kwargs):
         """Initialize.
 
         Args
@@ -26,6 +29,7 @@ class HDLIntegerConstant(HDLConstant):
         value: int
             A constant value
         """
+        super(HDLIntegerConstant, self).__init__(**kwargs)
         self.value = value
 
     def evaluate(self, **kwargs):
