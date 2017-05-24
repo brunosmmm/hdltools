@@ -73,7 +73,7 @@ def slice_size(slic):
     if len(slic) > 1:
         return slic[0] - slic[1] + 1
     else:
-        return slic[0]
+        return 1
 
 
 class FlagPort(HDLModulePort):
@@ -220,7 +220,9 @@ class MemoryMappedInterface(object):
                                              ' identifier: "{}":'.format(val))
                     # check if it fits
                     if (slicesize < param_min_size):
-                        raise ValueError('value does not fit field')
+                        raise ValueError('value "{}" does not fit'
+                                         ' field "{}"'.format(defval,
+                                                              statement.source.bit))
                 else:
                     defval = 0
 
