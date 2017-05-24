@@ -92,6 +92,21 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         """Get an expression."""
         return element.dumps()
 
+    def gen_HDLModuleParameter(self, element, **kwargs):
+        """Module parameter."""
+        ret_str = 'parameter '
+        if element.ptype is not None:
+            ret_str += element.ptype + ' '
+
+        ret_str += element.name + ' '
+        if element.value is not None:
+            ret_str += '= {},'.format(self.dump_element(element.value))
+        else:
+            ret_str += ','
+
+        return ret_str
+
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
