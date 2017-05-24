@@ -14,10 +14,14 @@ class HDLExpression(HDLValue):
     _ast_op_names = {ast.Sub: '-',
                      ast.Add: '+',
                      ast.Mult: '*',
-                     ast.Div: '/'}
+                     ast.Div: '/',
+                     ast.LShift: '<<',
+                     ast.RShift: '>>',
+                     ast.BitOr: '|'}
     _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
                   ast.Div: op.truediv, ast.Pow: op.pow,
-                  ast.USub: op.neg}
+                  ast.USub: op.neg, ast.LShift: op.lshift,
+                  ast.RShift: op.rshift, ast.BitOr: op.or_}
 
     def __init__(self, value):
         """Initialize.
@@ -28,7 +32,9 @@ class HDLExpression(HDLValue):
             Expression tree
         """
         super(HDLExpression, self).__init__()
-        if isinstance(value, ast.Expression):
+        if isinstance(value, str):
+            self.tree = ast.parse(value, mode='eval')
+        elif isinstance(value, ast.Expression):
             self.tree = value
         elif isinstance(value, HDLIntegerConstant):
             self.tree = ast.Expression(body=ast.Num(n=value.value))
@@ -264,3 +270,15 @@ class HDLExpression(HDLValue):
            Value to be used as right-hand side
         """
         return self._new_binop('/', other)
+
+    def __lshift__(self, val):
+        """Shift operator."""
+        return self._new_binop('<<', val, this_lhs=True)
+
+    def __or__(self, other):
+        """Bitwise OR."""
+        return self._new_binop('|', other, this_lhs=True)
+
+    def __ror__(self, other):
+        """Reverse Bitwise OR."""
+        return self._new_binop('|', other, this_lhs=False)
