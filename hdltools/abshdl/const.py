@@ -16,7 +16,14 @@ class HDLConstant(HDLValue):
 class HDLStringConstant(HDLConstant):
     """String constant value."""
 
-    pass
+    def __init__(self, value, **kwargs):
+        """Initialize."""
+        super(HDLStringConstant, self).__init__(**kwargs)
+        self.value = value
+
+    def dumps(self):
+        """Representation."""
+        return self.value
 
 
 class HDLIntegerConstant(HDLConstant):
@@ -32,8 +39,6 @@ class HDLIntegerConstant(HDLConstant):
         """
         super(HDLIntegerConstant, self).__init__(**kwargs)
 
-        # TODO: if size is not None, test legality, else
-        # calculate minimum size and attribute it
         if size is not None:
             # check size
             if self.value_fits_width(size, value) is True:
