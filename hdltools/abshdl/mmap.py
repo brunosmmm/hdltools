@@ -169,7 +169,8 @@ class MemoryMappedInterface(object):
                     raise ValueError('Identifier or expressions not supported')
 
                 hdl_val = HDLIntegerConstant(val, radix=radix)
-                self.add_parameter(statement.name, hdl_val)
+                param = HDLModuleParameter(statement.name, 'integer', hdl_val)
+                self.add_parameter(statement.name, param)
 
         for statement in decl.statements:
             if statement.__class__.__name__ == 'SlaveRegister':
@@ -209,8 +210,8 @@ class MemoryMappedInterface(object):
                         # search into parameters
                         val = statement.default.id.strip()
                         if val  in self.parameters:
-                            defval = self.parameters[val].value
-                            param_min_size = self.parameters[val].size
+                            defval = self.parameters[val].value.value
+                            param_min_size = self.parameters[val].value.size
                         else:
                             raise ValueError('Unknown'
                                              ' identifier: "{}":'.format(val))
@@ -313,7 +314,7 @@ class MemoryMappedInterface(object):
         """Dump summary."""
         ret_str = 'PARAMETERS:\n'
         for name, value in self.parameters.items():
-            ret_str += '{} = {}\n'.format(name.upper(), value.dumps())
+            ret_str += '{} = {}\n'.format(name.upper(), value.value.dumps())
 
         ret_str += 'REGISTERS:\n'
 
