@@ -11,6 +11,7 @@ from hdltools.template import HDLTemplateParser
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.module import HDLModuleParameter
+from hdltools.abshdl.expr import HDLExpression
 
 
 DEFAULT_TEMPLATE = os.path.join('assets', 'verilog', 'axi_slave.v')
@@ -99,7 +100,12 @@ if __name__ == "__main__":
     for name, reg in mmap.registers.items():
         signal = HDLSignal('reg', 'REG_'+name, reg.size)
         value = reg.get_default_value()
-        def_val = HDLIntegerConstant(value, size=reg.size)
+        if isinstance(value, (HDLIntegerConstant, int)):
+            def_val = HDLIntegerConstant(value, size=reg.size)
+        elif isinstance(value, HDLExpression):
+            raise TypeError('HDLExpression not implemented at this time')
+        else:
+            raise TypeError('Invalid type')
         assignment = HDLAssignment(signal, def_val)
         reg_reset_list.append(vlog.dump_element(assignment))
     tmp.insert_contents(reg_reset_loc, '\n'.join(reg_reset_list))
