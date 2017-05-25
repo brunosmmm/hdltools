@@ -218,12 +218,57 @@ def test_hdl_expression():
     print(bool_and.dumps())
     print(bool_or.dumps())
 
+    _ = hdl_expr_1 & 0x1
+    _ = 0x1 | hdl_expr_1
+    _ = 0x1 & hdl_expr_1
+    _ = 0x1 ^ hdl_expr_1
+    _ = hdl_expr_1 ^ 0x1
+
     my_signal = HDLSignal('reg', 'signal_a', size=2)
     _ = HDLExpression(HDLIntegerConstant(1))
     _ = HDLExpression(1)
     _ = HDLExpression(my_signal)
     _ = HDLExpression(HDLSignalSlice(my_signal, 1))
     _ = HDLExpression(my_signal[1:0])
+
+    # test reduction
+    expr_a = HDLExpression('value_a')
+    expr_b = HDLExpression('value_b')
+    full_expr = expr_a<<0 | expr_b<<16 | HDLExpression(0)
+
+    case_1 = ast.BinOp(left=ast.Num(n=0),
+                       op=ast.BitOr(),
+                       right=ast.Name(id='VAR'))
+
+    case_2 = ast.BinOp(left=ast.Num(n=1),
+                       op=ast.Mult(),
+                       right=ast.Name(id='VAR'))
+
+    case_3 = ast.BinOp(left=ast.Num(n=0),
+                       op=ast.Mult(),
+                       right=ast.Name(id='VAR'))
+
+    hdl_expr = HDLExpression(ast.Expression(body=case_1))
+    hdl_expr_2 = HDLExpression(ast.Expression(body=case_2))
+    hdl_expr_3 = HDLExpression(ast.Expression(body=case_3))
+    print(hdl_expr.dumps())
+    print(hdl_expr_2.dumps())
+
+    reduced_1 = HDLExpression._reduce_binop(case_1)
+    hdl_expr = HDLExpression(ast.Expression(body=reduced_1))
+    print(hdl_expr.dumps())
+
+    reduced_2 = HDLExpression._reduce_binop(case_2)
+    hdl_expr_2 = HDLExpression(ast.Expression(body=reduced_2))
+    print(hdl_expr_2.dumps())
+
+    reduced_3 = HDLExpression._reduce_binop(case_3)
+    hdl_expr_3 = HDLExpression(ast.Expression(body=reduced_3))
+    print(hdl_expr_3.dumps())
+
+    print(full_expr.dumps())
+    full_expr.reduce_expr()
+    print(full_expr.dumps())
 
 def test_hdl_signal():
 
