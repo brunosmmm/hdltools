@@ -22,6 +22,11 @@ class HDLScope(HDLObject):
         if not isinstance(element, HDLStatement):
             raise TypeError('only HDLStatement allowed')
 
+        # check legality
+        if element.stmt_type != self.scope_type:
+            raise ValueError('cannot add sequential statements '
+                             'in parallel scopes and vice versa')
+
         self.statements.append(element)
 
     def __len__(self):
