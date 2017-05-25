@@ -19,12 +19,16 @@ class HDLExpression(HDLValue):
                      ast.RShift: '>>',
                      ast.BitOr: '|',
                      ast.BitAnd: '&',
-                     ast.BitXor: '^'}
+                     ast.BitXor: '^',
+                     ast.Or: '||',
+                     ast.And: '&&'}
     _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
                   ast.Div: op.truediv, ast.Pow: op.pow,
                   ast.USub: op.neg, ast.LShift: op.lshift,
                   ast.RShift: op.rshift, ast.BitOr: op.or_,
-                  ast.BitAnd: op.and_, ast.BitXor: op.xor}
+                  ast.BitAnd: op.and_, ast.BitXor: op.xor,
+                  ast.Or: lambda x, y: bool(x or y),
+                  ast.And: lambda x, y: bool(x and y)}
 
     def __init__(self, value, size=None):
         """Initialize.
@@ -102,7 +106,7 @@ class HDLExpression(HDLValue):
                 return kwargs[node.id]
             else:
                 raise KeyError(node.id)
-        elif isinstance(node, ast.BinOp):
+        elif isinstance(node, (ast.BinOp, ast.BoolOp)):
             return self._operators[type(node.op)](self._evaluate(node.left,
                                                                  **kwargs),
                                                   self._evaluate(node.right,
@@ -139,6 +143,10 @@ class HDLExpression(HDLValue):
         # TODO: eliminate unnecessary parentheses
         if isinstance(node, ast.Expression):
             return self._get_expr(node.body)
+        elif isinstance(node, ast.BoolOp):
+            op_str = '{}'.format(self._ast_op_names[node.op.__class__])
+            values = [self._get_expr(val) for val in node.values]
+            return '({})'.format(op_str.join(values))
         elif isinstance(node, ast.BinOp):
             left_expr = self._get_expr(node.left)
             right_expr = self._get_expr(node.right)
@@ -220,6 +228,10 @@ class HDLExpression(HDLValue):
     def __int__(self):
         """Alias for evaluate."""
         return self.evaluate()
+
+    def __truth__(self):
+        """Boolean value."""
+        return bool(self.evaluate() != 0)
 
     def __add__(self, other):
         """Add expressions.
