@@ -24,11 +24,6 @@ class HDLModuleParameter(HDLObject):
         self.name = param_name
         self.ptype = param_type
         self.value = param_default
-        self.scope = HDLScope(scope_type='par')
-
-    def add(self, *items):
-        """Add to scope."""
-        self.scope.add(*items)
 
     def __repr__(self):
         """Get readable representation."""
@@ -39,8 +34,6 @@ class HDLModuleParameter(HDLObject):
             ret_str = '#{}'.format(self.name.upper())
         if self.value is not None:
             ret_str += ' ({})'.format(self.value)
-
-        # TODO dump scope
 
         return ret_str
 
@@ -118,6 +111,11 @@ class HDLModule(HDLObject):
             self.add_parameters(params)
         if ports is not None:
             self.add_ports(ports)
+        self.scope = HDLScope(scope_type='par')
+
+    def add(self, *items):
+        """Add to scope."""
+        self.scope.add(*items)
 
     def add_ports(self, ports):
         """Add ports to module.
@@ -189,6 +187,9 @@ class HDLModule(HDLObject):
             ret_str += '    {}\n'.format(port.dumps(eval_scope=eval_scope))
 
         ret_str += '}'
+
+        # TODO dump scope
+
         return ret_str
 
     def dumps(self, evaluate=False):
