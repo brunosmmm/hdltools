@@ -1,5 +1,7 @@
 """HDL Code generation."""
 
+from .stmt import HDLStatement
+
 
 class HDLCodeGenerator(object):
     """Abstract class for code generators."""
@@ -15,6 +17,11 @@ class HDLCodeGenerator(object):
         """Get code representation for an element."""
         cls_name = element.__class__.__name__
         gen_method_name = 'gen_{}'.format(cls_name)
+
+        # check statement validity
+        if isinstance(element, HDLStatement):
+            if element.is_legal() is False:
+                raise ValueError('illegal statement passed')
 
         # aliases
         if cls_name in self.class_aliases:

@@ -14,3 +14,8 @@ class HDLStatement(HDLObject):
             raise KeyError('invalid statement type')
 
         self.stmt_type = stmt_type
+
+    def is_legal(self):
+        """Validate statement."""
+        # Must be implemented in subclasses or will fail
+        return False
