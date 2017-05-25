@@ -19,7 +19,7 @@ class HDLStringConstant(HDLConstant):
     def __init__(self, value, **kwargs):
         """Initialize."""
         super(HDLStringConstant, self).__init__(**kwargs)
-        self.value = value
+        self.value = str(value)
 
     def dumps(self):
         """Representation."""
@@ -147,7 +147,7 @@ class HDLIntegerConstant(HDLConstant):
         if value == 0:
             return 1
         else:
-            return int(math.ceil(math.log2(float(value))))+1
+            return int(math.ceil(math.log2(float(abs(value)))))+1
 
     def __len__(self):
         """Get size."""
