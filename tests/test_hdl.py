@@ -156,11 +156,14 @@ def test_hdl_module():
         pass
 
 def test_hdl_expression():
-
+    print('*TEST_EXPR*')
     expr_1 = 'PARAM-2'
     expr_2 = 'PARAM_X+1'
+    expr_3 = 'a and b'
     hdl_expr_1 = HDLExpression(ast.parse(expr_1, mode='eval'))
     hdl_expr_2 = HDLExpression(ast.parse(expr_2, mode='eval'))
+    hdl_expr_3 = HDLExpression(expr_3)
+    print(hdl_expr_3.dumps())
     sum = hdl_expr_1 + hdl_expr_2
     print(sum.dumps())
 
