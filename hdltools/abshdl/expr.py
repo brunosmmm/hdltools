@@ -233,6 +233,15 @@ class HDLExpression(HDLValue):
         else:
             return self.combine_expressions(rhs, op, self)
 
+    def _new_unop(self, op):
+        op_mapping = self._get_reverse_operator_mapping()
+        if op not in op_mapping:
+            raise ValueError('illegal operator: "{}"'.format(op))
+
+        new_op = ast.UnaryOp(op=op_mapping[op](),
+                             operand=copy.copy(self.tree))
+        return HDLExpression(ast.Expression(body=new_op))
+
     def __int__(self):
         """Alias for evaluate."""
         return self.evaluate()
@@ -342,6 +351,14 @@ class HDLExpression(HDLValue):
     def __rxor__(self, other):
         """Reverse Bitwise XOR."""
         return self._new_binop('^', other, this_lhs=False)
+
+    def __invert__(self):
+        """Bitwise negation."""
+        return self._new_unop('~')
+
+    def bool_neg(self):
+        """Boolean negation."""
+        return self._new_unop('!')
 
     def reduce_expr(self):
         """Reduce expression without evaluating."""
