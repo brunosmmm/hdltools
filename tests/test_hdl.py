@@ -6,7 +6,7 @@ from hdltools.abshdl.module import (HDLModulePort,
                                     HDLModuleParameter)
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
-from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.const import (HDLIntegerConstant, HDLStringConstant)
 from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
 from hdltools.abshdl.seq import HDLSequentialBlock
 from hdltools.abshdl.assign import HDLAssignment
@@ -16,12 +16,55 @@ import ast
 
 def test_constants():
 
-    fit = HDLIntegerConstant.value_fits_width(8, 256)
-    if fit is True:
+    try:
+        fit_1 = HDLIntegerConstant(256, size=8)
         raise Exception
-    fit = HDLIntegerConstant.value_fits_width(8, 255)
-    if fit is False:
+    except ValueError:
+        pass
+
+    fit_1 = HDLIntegerConstant(255, size=8)
+    fit_2 = HDLIntegerConstant(128, size=9)
+
+    ret = 3 - fit_1
+    ret = fit_1 - fit_2
+    ret = fit_2 - fit_1
+    ret = fit_1 + fit_2
+    ret = 2 + fit_1
+    ret = 2*fit_1
+    ret = fit_1*2
+
+    try:
+        _ = HDLIntegerConstant(2) - '123'
         raise Exception
+    except TypeError:
+        pass
+
+    try:
+        _ = HDLIntegerConstant(2) + '123'
+        raise Exception
+    except TypeError:
+        pass
+
+    try:
+        _ = HDLIntegerConstant(2)*1.0
+        raise Exception
+    except TypeError:
+        pass
+
+    ret = HDLIntegerConstant(2) == 2
+    if ret is False:
+        raise Exception
+
+    try:
+        _ = HDLIntegerConstant(2) == 'x'
+        raise Exception
+    except TypeError:
+        pass
+
+    x = abs(HDLIntegerConstant(-1))
+
+    s = HDLStringConstant(value='some_value')
+    print(s.dumps())
 
 # test HDL primitives
 def test_vector_descriptor():
