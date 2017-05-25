@@ -7,6 +7,7 @@ from hdltools.abshdl.module import (HDLModulePort,
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
 import os
 import ast
 
@@ -211,13 +212,12 @@ def test_hdl_signal():
     except TypeError:
         pass
 
-def test_verilog_parser():
+def test_sens():
 
-    # bitstrings
-    width, value = verilog_bitstring_to_int("4'b0011")
-    print('{}, {}'.format(width, value))
+    some_signal = HDLSignal('reg', 'signal', size=1)
+    sens_1 = HDLSensitivityDescriptor(sens_type='rise', sig=some_signal)
 
-    parser = VerilogModuleParser(os.path.join('assets',
-                                              'verilog',
-                                              'test.v'))
-    model = parser.get_module()
+    sens_list = HDLSensitivityList()
+    sens_list.add(sens_1)
+
+    print(sens_list.dumps())
