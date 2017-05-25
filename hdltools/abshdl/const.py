@@ -105,6 +105,10 @@ class HDLIntegerConstant(HDLConstant):
         """Reverse add. Uses __add__."""
         return self.__add__(other)
 
+    def __rsub__(self, other):
+        """Reverse sub."""
+        return self.__sub__(other)
+
     def __mul__(self, other):
         """Multiply two constants."""
         if isinstance(other, (int, HDLIntegerConstant)):
@@ -112,6 +116,10 @@ class HDLIntegerConstant(HDLConstant):
         else:
             raise TypeError('can only multiply int and'
                             ' HDLIntegerConstant types')
+
+    def __rmul__(self, other):
+        """Reverse mult."""
+        return self.__mul__(other)
 
     def __eq__(self, other):
         """Equality test.
