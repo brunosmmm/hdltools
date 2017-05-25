@@ -44,3 +44,8 @@ class HDLAssignment(HDLStatement):
             return 'parallel'
         else:
             return 'series'
+
+    def is_legal(self):
+        """Determine legality."""
+        # always return True for now.
+        return True

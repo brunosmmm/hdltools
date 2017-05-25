@@ -44,6 +44,13 @@ class HDLSwitch(HDLStatement):
         ret_str += 'END\n'
         return ret_str
 
+    def is_legal(self):
+        """Determine legality."""
+        if len(self.cases) == 0:
+            return False
+
+        return True
+
 
 class HDLCase(HDLObject):
     """Switch case."""

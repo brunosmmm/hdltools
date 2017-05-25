@@ -42,3 +42,10 @@ class HDLIfElse(HDLStatement):
             ret_str += 'END\n'
 
         return ret_str
+
+    def is_legal(self):
+        """Determine if legal."""
+        if len(self.if_scope) == 0:
+            return False
+
+        return True
