@@ -30,15 +30,6 @@ class HDLConcatenation(HDLObject):
 
         return arg_expr
 
-    def __getitem__(self, _slice):
-        pass
-
-    def __delitem__(self, _slice):
-        pass
-
-    def __setitem__(self, _slice):
-        pass
-
     def append(self, item):
         """Add item."""
         self.items.append(self._check_item(item))
