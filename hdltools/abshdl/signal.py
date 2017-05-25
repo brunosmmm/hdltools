@@ -40,15 +40,19 @@ class HDLSignal(HDLObject):
         """Slice of signal."""
         return HDLSignalSlice(self, key)
 
-    def __repr__(self, eval_scope=None):
+    def __repr__(self, eval_scope=None, decl=True):
         """Get readable representation."""
-        return '{} {}{}'.format(self.sig_type.upper(),
-                                self.name,
-                                self.vector.dumps(eval_scope))
+        if decl is True:
+            ret_str = '{} '.format(self.sig_type.upper())
+        else:
+            ret_str = ''
+        return ret_str + '{}{}'.format(self.name,
+                                       self.vector.dumps(eval_scope))
 
-    def dumps(self, eval_scope=None):
+    def dumps(self, eval_scope=None, decl=True):
         """Alias for __repr__."""
-        return self.__repr__(eval_scope)
+        return self.__repr__(eval_scope=eval_scope,
+                             decl=decl)
 
     def __len__(self):
         """Get length."""
