@@ -40,4 +40,4 @@ class HDLScope(HDLObject):
 
     def dumps(self):
         """Get intermediate representation."""
-        return '\n'.join([x.dumps() for x in self.statements])
+        return '\n'.join([x.dumps()+';' for x in self.statements])
