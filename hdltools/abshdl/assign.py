@@ -17,6 +17,13 @@ class HDLAssignment(HDLStatement):
 
         self.assign_type = assign_type
         self.signal = signal
+        if signal.sig_type in ('comb', 'const'):
+            stmt_type = 'par'
+        elif signal.sig_type in ('reg', 'var'):
+            stmt_type = 'seq'
+        else:
+            raise ValueError('unknown signal '
+                             'type: "{}"'.format(signal.sig_type))
 
         if isinstance(value, (HDLIntegerConstant,
                               HDLSignal, HDLExpression,
@@ -28,6 +35,8 @@ class HDLAssignment(HDLStatement):
             raise TypeError('only integer, HDLIntegerConstant, '
                             'HDLSignal, HDLExpression, HDLConcatenation '
                             'allowed')
+
+        super(HDLAssignment, self).__init__(stmt_type=stmt_type)
 
     def get_assignment_type(self):
         """Get assignment type."""
