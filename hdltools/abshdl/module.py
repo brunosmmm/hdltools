@@ -3,6 +3,7 @@
 from . import HDLObject
 from .vector import HDLVectorDescriptor
 from .builtin import HDLBuiltins
+from .scope import HDLScope
 
 
 class HDLModuleParameter(HDLObject):
@@ -23,6 +24,11 @@ class HDLModuleParameter(HDLObject):
         self.name = param_name
         self.ptype = param_type
         self.value = param_default
+        self.scope = HDLScope(scope_type='par')
+
+    def add(self, *items):
+        """Add to scope."""
+        self.scope.add(*items)
 
     def __repr__(self):
         """Get readable representation."""
@@ -33,6 +39,8 @@ class HDLModuleParameter(HDLObject):
             ret_str = '#{}'.format(self.name.upper())
         if self.value is not None:
             ret_str += ' ({})'.format(self.value)
+
+        # TODO dump scope
 
         return ret_str
 
