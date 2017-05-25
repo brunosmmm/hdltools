@@ -213,9 +213,14 @@ class HDLExpression(HDLValue):
         if op not in op_mapping:
             raise ValueError('illegal operator: "{}"'.format(op))
 
-        new_op = ast.BinOp(left=copy.copy(lhs.tree),
-                           op=op_mapping[op](),
-                           right=copy.copy(rhs.tree))
+        if op in ('||', '&&'):
+            new_op = ast.BoolOp(op=op_mapping[op](),
+                                values=[copy.copy(lhs.tree),
+                                        copy.copy(rhs.tree)])
+        else:
+            new_op = ast.BinOp(left=copy.copy(lhs.tree),
+                               op=op_mapping[op](),
+                               right=copy.copy(rhs.tree))
         return HDLExpression(ast.Expression(body=new_op))
 
     def _new_binop(self, op, other, this_lhs=True):
@@ -359,6 +364,14 @@ class HDLExpression(HDLValue):
     def bool_neg(self):
         """Boolean negation."""
         return self._new_unop('!')
+
+    def bool_and(self, other):
+        """Boolean AND."""
+        return self._new_binop('&&', other)
+
+    def bool_or(self, other):
+        """Boolean OR."""
+        return self._new_binop('||', other)
 
     def reduce_expr(self):
         """Reduce expression without evaluating."""

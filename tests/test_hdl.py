@@ -159,13 +159,21 @@ def test_hdl_expression():
     print('*TEST_EXPR*')
     expr_1 = 'PARAM-2'
     expr_2 = 'PARAM_X+1'
-    expr_3 = 'a and b'
+    expr_3 = 'a and ~b'
     hdl_expr_1 = HDLExpression(ast.parse(expr_1, mode='eval'))
     hdl_expr_2 = HDLExpression(ast.parse(expr_2, mode='eval'))
     hdl_expr_3 = HDLExpression(expr_3)
     print(hdl_expr_3.dumps())
     sum = hdl_expr_1 + hdl_expr_2
+    neg = ~sum
+    bool_neg = sum.bool_neg()
+    bool_and = hdl_expr_1.bool_and(hdl_expr_2)
+    bool_or = hdl_expr_1.bool_or(hdl_expr_2)
     print(sum.dumps())
+    print(neg.dumps())
+    print(bool_neg.dumps())
+    print(bool_and.dumps())
+    print(bool_or.dumps())
 
     my_signal = HDLSignal('reg', 'signal_a', size=2)
     _ = HDLExpression(HDLIntegerConstant(1))
