@@ -13,6 +13,7 @@ class HDLSwitch(HDLStatement):
 
     def __init__(self, what):
         """Initialize."""
+        super(HDLSwitch, self).__init__(stmt_type='seq')
         self.cases = {}
         if not isinstance(what, (HDLExpression, HDLSignal, HDLSignalSlice)):
             raise TypeError('only HDLExpression, HDLSignal,'
