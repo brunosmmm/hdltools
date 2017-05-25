@@ -127,7 +127,7 @@ class HDLModule(HDLObject):
                 if not isinstance(port, HDLModulePort):
                     raise TypeError('list may only contain HDLModulePort'
                                     ' instances')
-                self.ports.extend(ports)
+            self.ports.extend(ports)
         else:
             raise TypeError('ports must be a list or HDLModulePort')
 
