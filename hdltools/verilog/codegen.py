@@ -122,6 +122,23 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return ret_str
 
+    def gen_HDLIfElse(self, element, **kwargs):
+        """Generate if-else statement."""
+        ret_str = 'if ({}) begin\n'.format(self.dump_element(element.condition))
+        ret_str += self.dump_element(element.if_scope)
+        ret_str += '\nend'
+
+        if len(element.else_scope):
+            ret_str += '\nelse begin\n'
+            ret_str += self.dump_element(element.else_scope)
+            ret_str += '\nend'
+
+        return ret_str
+
+    def gen_HDLScope(self, element, **kwargs):
+        """Generate several assignments."""
+        return '\n'.join([self.dump_element(x) for x in element])
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
