@@ -15,7 +15,8 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         """Generate port."""
         return self.dumps_port(element.direction,
                                element.name,
-                               element.vector.evaluate())
+                               element.vector.evaluate(),
+                               **kwargs)
 
     def gen_HDLIntegerConstant(self, element, **kwargs):
         """Generate an integer constant."""
@@ -107,11 +108,17 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         if element.ptype is not None:
             ret_str += element.ptype + ' '
 
+        sep_str = ','
+        if 'last' in kwargs:
+            if kwargs['last'] is True:
+                sep_str = ''
+
         ret_str += element.name + ' '
         if element.value is not None:
-            ret_str += '= {},'.format(self.dump_element(element.value))
+            ret_str += '= {}{}'.format(self.dump_element(element.value),
+                                       sep_str)
         else:
-            ret_str += ','
+            ret_str += sep_str
 
         return ret_str
 
@@ -155,7 +162,8 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLSensitivityList(self, element, **kwargs):
         """Generate always sensitivity list."""
-        return '@({})'.format(','.join([self.dump_element(x) for x in element]))
+        return '@({})'.format(','.join([self.dump_element(x) for
+                                        x in element]))
 
     def gen_HDLSequentialBlock(self, element, **kwargs):
         """Generate always block."""
@@ -170,7 +178,25 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return ret_str
 
-    @staticmethod
+    def gen_HDLModule(self, element, **kwargs):
+        """Generate module declaration."""
+        ret_str = 'module {}\n'.format(element.name)
+
+        if len(element.params) > 0:
+            ret_str += '#(\n'
+            ret_str += ',\n'.join([self.dump_element(p, last=True) for
+                                   p in element.params])
+            ret_str += '\n)\n'
+
+        ret_str += '(\n'
+        if len(element.ports) > 0:
+            ret_str += ',\n'.join([self.dump_element(p, last=True) for
+                                   p in element.ports])
+
+        ret_str += '\n);'
+
+        return ret_str
+
     def dumps_define(name, value):
         """Dump a define macro."""
         return '`define {} {}'.format(name, value)
@@ -206,7 +232,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         return '[{}:{}]'.format(left, right)
 
     @staticmethod
-    def dumps_port(direction, name, extents, last_port=False):
+    def dumps_port(direction, name, extents, last=False):
         """Dump port declation."""
         if direction not in VerilogCodeGenerator.VERILOG_PORT_DIRECTION:
             raise ValueError('illegal port direction: "{}"'.format(direction))
@@ -221,7 +247,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         else:
             ext_str = ''
         ret_str = '{} {} {}'.format(port_direction, ext_str, name)
-        if last_port is False:
+        if last is False:
             ret_str += ','
 
         return ret_str

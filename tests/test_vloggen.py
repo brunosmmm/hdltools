@@ -7,7 +7,10 @@ from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
 from hdltools.abshdl.seq import HDLSequentialBlock
+from hdltools.abshdl.module import HDLModule, HDLModulePort, HDLModuleParameter
+from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.verilog.codegen import VerilogCodeGenerator
+
 
 def test_ifelse():
 
@@ -52,3 +55,18 @@ def test_always():
     seq.add(ifelse)
 
     print(gen.dump_element(seq))
+
+def test_module():
+
+    gen = VerilogCodeGenerator()
+
+    inp = HDLModulePort(direction='in', name='an_input', size=4)
+    out = HDLModulePort(direction='out', name='an_output', size=1)
+    prm = HDLModuleParameter(param_name='a_parameter',
+                             param_type='integer',
+                             param_default=HDLIntegerConstant(0))
+
+    mod = HDLModule(module_name='my_module', ports=[inp, out],
+                    params=[prm])
+
+    print(gen.dump_element(mod))
