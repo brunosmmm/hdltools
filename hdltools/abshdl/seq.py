@@ -8,13 +8,14 @@ from .sens import HDLSensitivityList
 class HDLSequentialBlock(HDLStatement):
     """Sequential block."""
 
-    def __init__(self, sensitivity_list):
+    def __init__(self, sensitivity_list=None):
         """Initialize."""
         super(HDLSequentialBlock, self).__init__(stmt_type='seq')
         self.scope = HDLScope(scope_type='seq')
 
         # parse sensitivity list?
-        if not isinstance(sensitivity_list, HDLSensitivityList):
+        if not isinstance(sensitivity_list, (HDLSensitivityList,
+                                             type(None))):
             raise TypeError('only HDLSensitivityList allowed')
 
         self.sens_list = sensitivity_list
@@ -33,7 +34,7 @@ class HDLSequentialBlock(HDLStatement):
 
     def is_legal(self):
         """Check legality."""
-        if len(self.scope) == 0 or len(self.sens_list) == 0:
+        if len(self.scope) == 0:
             return False
 
         return True
