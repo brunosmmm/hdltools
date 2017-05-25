@@ -8,6 +8,8 @@ from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
+from hdltools.abshdl.seq import HDLSequentialBlock
+from hdltools.abshdl.assign import HDLAssignment
 import os
 import ast
 
@@ -221,3 +223,20 @@ def test_sens():
     sens_list.add(sens_1)
 
     print(sens_list.dumps())
+
+def test_seq():
+
+    some_signal = HDLSignal('reg', 'signal', size=1)
+    sens_1 = HDLSensitivityDescriptor(sens_type='rise', sig=some_signal)
+
+    sens_list = HDLSensitivityList()
+    sens_list.add(sens_1)
+
+    ass_sig = HDLSignal('reg', 'counter', size=2)
+    ass_expr = HDLExpression(ass_sig) + 1
+    assign = HDLAssignment(ass_sig, ass_expr)
+
+    seq = HDLSequentialBlock(sens_list)
+    seq.add(assign)
+
+    print(seq.dumps())
