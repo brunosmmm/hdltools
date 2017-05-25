@@ -46,7 +46,11 @@ class HDLExpression(HDLValue):
             self.size = len(value)
         elif isinstance(value, int):
             self.tree = ast.Expression(body=ast.Num(n=value))
-            self.size = HDLIntegerConstant.minimum_value_size(value)
+            if size not None:
+                # automatically generate size
+                self.size = HDLIntegerConstant.minimum_value_size(value)
+            else:
+                self.size = size
         elif isinstance(value, signal.HDLSignal):
             self.tree = ast.Expression(body=ast.Name(id=value.name))
             self.size = len(value)
