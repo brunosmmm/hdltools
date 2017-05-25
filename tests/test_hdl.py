@@ -10,6 +10,7 @@ from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
 from hdltools.abshdl.seq import HDLSequentialBlock
 from hdltools.abshdl.assign import HDLAssignment
+from hdltools.abshdl.concat import HDLConcatenation
 import os
 import ast
 
@@ -253,6 +254,22 @@ def test_assign():
     # test fail cases
     try:
         _ = HDLAssignment('not_allowed', 0)
+        raise Exception
+    except TypeError:
+        pass
+
+def test_concat():
+    print('*TEST CONCAT*')
+    sig = HDLSignal('comb', 'my_signal', size=4)
+    concat = HDLConcatenation(sig, HDLExpression(0x0c, size=8))
+    if len(concat) != 12:
+        raise ValueError
+
+    concat.append(HDLExpression(0x1, size=1))
+
+    # failures
+    try:
+        _ = HDLConcatenation(sig, 'not_allowed')
         raise Exception
     except TypeError:
         pass
