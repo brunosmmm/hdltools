@@ -7,9 +7,15 @@ from .stmt import HDLStatement
 class HDLScope(HDLObject):
     """Scope."""
 
-    def __init__(self):
+    _scope_types = ['seq', 'par']
+
+    def __init__(self, scope_type):
         """Initialize."""
         self.statements = []
+        if scope_type not in self._scope_types:
+            raise KeyError('invalid scope type')
+
+        self.scope_type = scope_type
 
     def add(self, element):
         """Add elements to scope."""
