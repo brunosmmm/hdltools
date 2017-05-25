@@ -57,7 +57,7 @@ class HDLCase(HDLObject):
             raise TypeError('type "{}" '
                             'not supported'.format(value.__class__.__name__))
 
-        self.scope = HDLScope()
+        self.scope = HDLScope(scope_type='seq')
 
     def add_to_scope(self, element):
         """Add statement to scope."""

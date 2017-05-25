@@ -11,8 +11,8 @@ class HDLIfElse(HDLStatement):
 
     def __init__(self, condition):
         """Initialize."""
-        self.if_scope = HDLScope()
-        self.else_scope = HDLScope()
+        self.if_scope = HDLScope(scope_type='seq')
+        self.else_scope = HDLScope(scope_type='seq')
         if not isinstance(condition, (HDLExpression, HDLSignal,
                                       HDLSignalSlice)):
             raise TypeError('only HDLEXpression, HDLSignal,'
