@@ -1,13 +1,13 @@
 """Assignment."""
 
-from . import HDLObject
 from .const import HDLIntegerConstant
 from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
 from .concat import HDLConcatenation
+from .stmt import HDLStatement
 
 
-class HDLAssignment(HDLObject):
+class HDLAssignment(HDLStatement):
     """Signal assignment."""
 
     def __init__(self, signal, value, assign_type='block'):
