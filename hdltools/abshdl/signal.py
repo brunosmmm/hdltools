@@ -43,11 +43,13 @@ class HDLSignal(HDLObject):
     def __repr__(self, eval_scope=None, decl=True):
         """Get readable representation."""
         if decl is True:
-            ret_str = '{} '.format(self.sig_type.upper())
+            ret_str = '{} {}{} '.format(self.sig_type.upper(),
+                                        self.name,
+                                        self.vector.dumps(eval_scope))
         else:
-            ret_str = ''
-        return ret_str + '{}{}'.format(self.name,
-                                       self.vector.dumps(eval_scope))
+            ret_str = self.name
+
+        return ret_str
 
     def dumps(self, eval_scope=None, decl=True):
         """Alias for __repr__."""
