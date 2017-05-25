@@ -139,6 +139,37 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         """Generate several assignments."""
         return '\n'.join([self.dump_element(x) for x in element])
 
+    def gen_HDLSensitivityDescriptor(self, element, **kwargs):
+        """Generate always sensitivity elements."""
+        if element.sens_type == 'rise':
+            sens_str = 'posedge'
+        elif element.sens_type == 'fall':
+            sens_str = 'negedge'
+        elif element.sens_type == 'both':
+            raise ValueError('not synthesizable')
+        elif element.sens_type == 'any':
+            sens_str = ''
+
+        return sens_str+' {}'.format(self.dump_element(element.signal,
+                                                       assign=True))
+
+    def gen_HDLSensitivityList(self, element, **kwargs):
+        """Generate always sensitivity list."""
+        return '@({})'.format(','.join([self.dump_element(x) for x in element]))
+
+    def gen_HDLSequentialBlock(self, element, **kwargs):
+        """Generate always block."""
+        if element.sens_list is None:
+            sens_list = ''
+        else:
+            sens_list = self.dump_element(element.sens_list)
+        ret_str = 'always {} begin\n'.format(sens_list)
+
+        ret_str += self.dump_element(element.scope)
+        ret_str += '\nend\n'
+
+        return ret_str
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
