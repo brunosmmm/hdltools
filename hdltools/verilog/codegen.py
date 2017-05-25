@@ -193,7 +193,16 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             ret_str += ',\n'.join([self.dump_element(p, last=True) for
                                    p in element.ports])
 
-        ret_str += '\n);'
+        ret_str += '\n);\n'
+
+        # dump only declaration
+        if 'decl_only' in kwargs:
+            if kwargs['decl_only'] is True:
+                return ret_str
+
+        ret_str += self.dump_element(element.scope)
+
+        ret_str += 'endmodule\n'
 
         return ret_str
 
