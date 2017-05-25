@@ -45,6 +45,17 @@ class HDLAssignment(HDLStatement):
         else:
             return 'series'
 
+    def dumps(self):
+        """Get representation."""
+        ret_str = self.signal.dumps(decl=False)
+        if self.signal.sig_type in ('comb', 'const'):
+            ret_str += ' = '
+        else:
+            ret_str += ' <= '
+        ret_str += self.value.dumps()
+
+        return ret_str
+
     def is_legal(self):
         """Determine legality."""
         # always return True for now.
