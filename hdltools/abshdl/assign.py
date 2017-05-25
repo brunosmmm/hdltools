@@ -21,9 +21,6 @@ class HDLAssignment(HDLStatement):
             stmt_type = 'par'
         elif signal.sig_type in ('reg', 'var'):
             stmt_type = 'seq'
-        else:
-            raise ValueError('unknown signal '
-                             'type: "{}"'.format(signal.sig_type))
 
         if isinstance(value, (HDLIntegerConstant,
                               HDLSignal, HDLExpression,
