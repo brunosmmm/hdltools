@@ -21,14 +21,17 @@ class HDLExpression(HDLValue):
                      ast.BitAnd: '&',
                      ast.BitXor: '^',
                      ast.Or: '||',
-                     ast.And: '&&'}
+                     ast.And: '&&',
+                     ast.Invert: '~',
+                     ast.Not: '!'}
     _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
                   ast.Div: op.truediv, ast.Pow: op.pow,
                   ast.USub: op.neg, ast.LShift: op.lshift,
                   ast.RShift: op.rshift, ast.BitOr: op.or_,
                   ast.BitAnd: op.and_, ast.BitXor: op.xor,
                   ast.Or: lambda x, y: bool(x or y),
-                  ast.And: lambda x, y: bool(x and y)}
+                  ast.And: lambda x, y: bool(x and y),
+                  ast.Invert: op.invert, ast.Not: op.not_}
 
     def __init__(self, value, size=None):
         """Initialize.
@@ -147,6 +150,11 @@ class HDLExpression(HDLValue):
             op_str = '{}'.format(self._ast_op_names[node.op.__class__])
             values = [self._get_expr(val) for val in node.values]
             return '({})'.format(op_str.join(values))
+        elif isinstance(node, ast.UnaryOp):
+            if isinstance(node.op, (ast.UAdd, ast.USub)):
+                raise TypeError('operator not supported')
+            op_str = self._ast_op_names[node.op.__class__]
+            return '{}{}'.format(op_str, self._get_expr(node.operand))
         elif isinstance(node, ast.BinOp):
             left_expr = self._get_expr(node.left)
             right_expr = self._get_expr(node.right)
