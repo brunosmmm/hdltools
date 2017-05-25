@@ -240,3 +240,19 @@ def test_seq():
     seq.add(assign)
 
     print(seq.dumps())
+
+def test_assign():
+
+    # this module is extensively tested already, being used as a support
+    # class for many others. here we test whatever is missing
+
+    sig = HDLSignal('comb', 'my_signal')
+    assign = HDLAssignment(signal=sig, value=0)
+    print(assign.dumps())
+
+    # test fail cases
+    try:
+        _ = HDLAssignment('not_allowed', 0)
+        raise Exception
+    except TypeError:
+        pass
