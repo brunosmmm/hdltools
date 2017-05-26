@@ -29,7 +29,7 @@ class HDLSwitch(HDLStatement):
 
         # ideally want to detect duplicate but this could be difficult
         # with HDLExpression
-        expr_repr = case.value.dumps()
+        expr_repr = case.case_value.dumps()
         if expr_repr in self.cases:
             raise KeyError('trying to add duplicate case')
 
@@ -57,7 +57,7 @@ class HDLCase(HDLObject):
 
     def __init__(self, value):
         """Initialize."""
-        if isinstance(value, (HDLIntegerConstant, int)):
+        if isinstance(value, (HDLIntegerConstant, int, str)):
             self.case_value = HDLExpression(value)
         elif isinstance(value, HDLExpression):
             self.case_value = value
