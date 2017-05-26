@@ -24,7 +24,8 @@ class HDLScope(HDLObject):
                 raise TypeError('only HDLStatement allowed')
 
             # check legality
-            if element.stmt_type != self.scope_type:
+            if element.stmt_type != self.scope_type\
+               and element.stmt_type != 'null':
                 raise ValueError('cannot add sequential statements '
                                  'in parallel scopes and vice versa')
 

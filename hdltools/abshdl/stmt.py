@@ -6,7 +6,7 @@ from . import HDLObject
 class HDLStatement(HDLObject):
     """Program statement."""
 
-    _stmt_types = ['seq', 'par']
+    _stmt_types = ['seq', 'par', 'null']
 
     def __init__(self, stmt_type, tag=None):
         """Initialize."""
