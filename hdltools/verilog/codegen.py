@@ -206,6 +206,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return ret_str
 
+    @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
         return '`define {} {}'.format(name, value)
