@@ -2,6 +2,7 @@
 
 from . import HDLObject
 from .stmt import HDLStatement
+from .comment import make_comment
 
 
 class HDLScope(HDLObject):
@@ -17,11 +18,16 @@ class HDLScope(HDLObject):
 
         self.scope_type = scope_type
 
-    def add(self, *elements):
+    def add(self, elements):
         """Add elements to scope."""
         for element in elements:
+            if isinstance(element, str):
+                self.statements.append(make_comment(element))
+                continue
             if not isinstance(element, HDLStatement):
-                raise TypeError('only HDLStatement allowed')
+                print (element)
+                raise TypeError('only HDLStatement allowed, got: '
+                                '{}'.format(element.__class__.__name__))
 
             # check legality
             if element.stmt_type != self.scope_type\
