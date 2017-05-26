@@ -2,6 +2,7 @@
 
 from . import HDLObject
 from .signal import HDLSignal, HDLSignalSlice
+from .module import HDLModulePort
 
 
 class HDLSensitivityDescriptor(HDLObject):
@@ -14,6 +15,9 @@ class HDLSensitivityDescriptor(HDLObject):
         if sens_type not in self._sens_types:
             raise ValueError('illegal sensitivity'
                              ' type: "{}"'.format(sens_type))
+
+        if isinstance(sig, HDLModulePort):
+            sig = sig.signal
 
         if not isinstance(sig, (HDLSignal, HDLSignalSlice)):
             raise TypeError('sig must be HDLSignal or HDLSignalSlice')
@@ -38,9 +42,10 @@ class HDLSensitivityDescriptor(HDLObject):
 class HDLSensitivityList(HDLObject):
     """Sensitivity list."""
 
-    def __init__(self):
+    def __init__(self, *descrs):
         """Initialize."""
         self.items = []
+        self.add(*descrs)
 
     def add(self, *descrs):
         """Add descriptors."""
