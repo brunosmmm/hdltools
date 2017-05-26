@@ -72,18 +72,28 @@ class HDLExpression(HDLValue):
                 self.size = size
         elif isinstance(value, signal.HDLSignal):
             self.tree = ast.Expression(body=ast.Name(id=value.name))
-            self.size = len(value)
+            try:
+                self.size = len(value)
+            except TypeError:
+                if value.sig_type in ('const', 'var'):
+                    self.size = None
+                else:
+                    raise
         elif isinstance(value, signal.HDLSignalSlice):
             name = ast.Name(id=value.signal.name)
-            if len(value.vector) > 1:
-                _slice = ast.Slice(upper=value.vector.left_size.tree,
-                                   lower=value.vector.right_size.tree,
-                                   step=None)
-            else:
-                _slice = ast.Index(value=value.vector.left_size.tree)
+            # if len(value.vector) > 1:
+            _slice = ast.Slice(upper=value.vector.left_size.tree,
+                               lower=value.vector.right_size.tree,
+                               step=None)
+            # else:
+            #    _slice = ast.Index(value=value.vector.left_size.tree)
             self.tree = ast.Expression(body=ast.Subscript(value=name,
                                                           slice=_slice))
-            self.size = len(value)
+            try:
+                self.size = len(value)
+            except KeyError:
+                # could not determine size
+                self.size = None
         else:
             raise TypeError('invalid type provided: '
                             '{}'.format(value.__class__.__name__))
@@ -262,12 +272,10 @@ class HDLExpression(HDLValue):
     def _new_binop(self, op, other, this_lhs=True):
         if isinstance(other, HDLExpression):
             rhs = other
-        elif isinstance(other, HDLIntegerConstant):
-            rhs = HDLExpression(other)
-        elif isinstance(other, int):
+        elif isinstance(other, (HDLIntegerConstant, signal.HDLSignal, int)):
             rhs = HDLExpression(other)
         else:
-            raise TypeError('illegal type: "{}"'.format(type(rhs)))
+            raise TypeError('illegal type: "{}"'.format(type(other)))
         # create new BinOp
         if this_lhs is True:
             return self.combine_expressions(self, op, rhs)
@@ -427,11 +435,11 @@ class HDLExpression(HDLValue):
 
     def __ge__(self, other):
         """Greater or equal."""
-        return self._new_binop('=<', other)
+        return self._new_binop('>=', other)
 
     def __le__(self, other):
         """Less or equal."""
-        return self._new_binop('>=', other)
+        return self._new_binop('=<', other)
 
     def reduce_expr(self):
         """Reduce expression without evaluating."""
