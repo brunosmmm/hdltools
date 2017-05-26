@@ -182,6 +182,28 @@ class HDLModule(HDLObject):
 
         return scope
 
+    def get_port_scope(self):
+        """Get ports as dict."""
+        scope = {}
+        for port in self.ports:
+            scope[port.name] = port
+
+        return scope
+
+    def get_signal_scope(self):
+        """Get signals as dict (includes ports)."""
+        scope = {}
+        port_scope = self.get_port_scope()
+        # access port signals and add to scope
+        for name, port in port_scope.items():
+            scope[name] = -port
+
+        for item in self.scope:
+            if isinstance(item, HDLSignal):
+                scope[item.name] = item
+
+        return scope
+
     def get_full_scope(self):
         """Get scope, including builtins."""
         scope = {}
