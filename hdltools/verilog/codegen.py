@@ -226,6 +226,14 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return ret_str
 
+    def gen_HDLComment(self, element, **kwargs):
+        """Generate single line comments."""
+        return '//{}'.format(element.text)
+
+    def gen_HDLMultiLineComment(self, element, **kwargs):
+        """Generate multi line comments."""
+        return '/* {} */'.format(element.text)
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
