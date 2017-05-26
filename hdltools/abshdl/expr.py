@@ -238,6 +238,10 @@ class HDLExpression(HDLValue):
             new_op = ast.BoolOp(op=op_mapping[op](),
                                 values=[copy.copy(lhs.tree),
                                         copy.copy(rhs.tree)])
+        elif op in ('>', '<', '==', '!=', '>=', '=<'):
+            new_op = ast.Compare(ops=[op_mapping[op]()],
+                                 left=copy.copy(lhs.tree),
+                                 comparators=[copy.copy(rhs.tree)])
         else:
             new_op = ast.BinOp(left=copy.copy(lhs.tree),
                                op=op_mapping[op](),
@@ -393,6 +397,30 @@ class HDLExpression(HDLValue):
     def bool_or(self, other):
         """Boolean OR."""
         return self._new_binop('||', other)
+
+    def __eq__(self, other):
+        """Comparison."""
+        return self._new_binop('==', other)
+
+    def __ne__(self, other):
+        """Not equal."""
+        return self._new_binop('!=', other)
+
+    def __gt__(self, other):
+        """Greater than."""
+        return self._new_binop('>', other)
+
+    def __lt__(self, other):
+        """Less than."""
+        return self._new_binop('<', other)
+
+    def __ge__(self, other):
+        """Greater or equal."""
+        return self._new_binop('=<', other)
+
+    def __le__(self, other):
+        """Less or equal."""
+        return self._new_binop('>=', other)
 
     def reduce_expr(self):
         """Reduce expression without evaluating."""
