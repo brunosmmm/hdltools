@@ -60,7 +60,10 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         elif element.sig_type == 'const':
             st = 'localparam'
 
-        _slice = self.dump_element(element.vector)
+        if element.vector is None:
+            _slice = ''
+        else:
+            _slice = self.dump_element(element.vector)
 
         sig_decl = True
         if 'assign' in kwargs:
@@ -219,7 +222,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         ret_str += self.dump_element(element.scope)
 
-        ret_str += 'endmodule\n'
+        ret_str += '\nendmodule\n'
 
         return ret_str
 
