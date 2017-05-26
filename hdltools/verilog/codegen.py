@@ -236,6 +236,25 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         """Generate multi line comments."""
         return '/* {} */'.format(element.text)
 
+    def gen_HDLSwitch(self, element, **kwargs):
+        """Generate case."""
+        ret_str = 'case ({})\n'.format(self.dump_element(element.switch,
+                                                         evaluate=False))
+        for name, case in element.cases.items():
+            ret_str += self.dump_element(case,
+                                         evaluate=False)
+
+        ret_str += '\nendcase\n'
+        return ret_str
+
+    def gen_HDLCase(self, element, **kwargs):
+        """Generate one case."""
+        ret_str = self.dump_element(element.case_value) + ': begin\n'
+        ret_str += self.dump_element(element.scope)
+        ret_str += '\nend\n'
+
+        return ret_str
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""
