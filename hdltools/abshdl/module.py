@@ -98,6 +98,15 @@ class HDLModulePort(HDLObject):
         """Alias for __repr__."""
         return self.__repr__(eval_scope)
 
+    # HACKY HACKS!!!!!
+    def __pos__(self):
+        """Access internal signal as an expression."""
+        return HDLExpression(self.signal)
+
+    def __neg__(self):
+        """Access internal signal."""
+        return self.signal
+
 
 class HDLModule(HDLObject):
     """HDL Module."""
