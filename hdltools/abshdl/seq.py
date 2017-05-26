@@ -22,7 +22,7 @@ class HDLSequentialBlock(HDLStatement):
 
     def add(self, *items):
         """Add to scope."""
-        self.scope.add(*items)
+        self.scope.add(items)
 
     def dumps(self):
         """Get representation."""

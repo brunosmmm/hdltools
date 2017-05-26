@@ -22,11 +22,11 @@ class HDLIfElse(HDLStatement):
         # Always use HDLExpression
         self.condition = HDLExpression(condition)
 
-    def add_to_if_scope(self, stmt):
+    def add_to_if_scope(self, *stmt):
         """Add to IF scope."""
         self.if_scope.add(stmt)
 
-    def add_to_else_scope(self, stmt):
+    def add_to_else_scope(self, *stmt):
         """Add to ELSE scope."""
         self.else_scope.add(stmt)
 
