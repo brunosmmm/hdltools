@@ -3,6 +3,7 @@
 from . import HDLObject
 import hdltools.abshdl.expr as expr
 from .const import HDLIntegerConstant
+import hdltools.abshdl.signal as signal
 import math
 
 
@@ -22,16 +23,27 @@ class HDLVectorDescriptor(HDLObject):
            A stored value
         """
         if not isinstance(left_size, (int, HDLIntegerConstant,
-                                      expr.HDLExpression)):
+                                      expr.HDLExpression,
+                                      signal.HDLSignal)):
             raise TypeError('only int or HDLExpression allowed as size')
 
         if not isinstance(right_size, (int, HDLIntegerConstant,
-                                       expr.HDLExpression)):
+                                       expr.HDLExpression,
+                                       signal.HDLSignal)):
             if right_size is None:
                 # take this as zero
                 right_size = 0
             else:
                 raise TypeError('only int or HDLExpression allowed as size')
+
+        if isinstance(left_size, signal.HDLSignal):
+            if left_size.sig_type not in ('const', 'var'):
+                raise ValueError('slices can only contain compile-time '
+                                 'determinable values')
+        if isinstance(right_size, signal.HDLSignal):
+            if right_size.sig_type not in ('const', 'var'):
+                raise ValueError('slices can only contain compile-time '
+                                 'determinable values')
 
         if not isinstance(stored_value, (int, (type(None)))):
             raise TypeError('stored_value can only be int or None')
@@ -40,11 +52,11 @@ class HDLVectorDescriptor(HDLObject):
         self._check_value(right_size)
         self._check_value(left_size)
 
-        if isinstance(left_size, (int, HDLIntegerConstant)):
+        if isinstance(left_size, (int, HDLIntegerConstant, signal.HDLSignal)):
             self.left_size = expr.HDLExpression(left_size)
         else:
             self.left_size = left_size
-        if isinstance(right_size, (int, HDLIntegerConstant)):
+        if isinstance(right_size, (int, HDLIntegerConstant, signal.HDLSignal)):
             self.right_size = expr.HDLExpression(right_size)
         else:
             self.right_size = right_size
