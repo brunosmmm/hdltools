@@ -3,6 +3,14 @@
 from .stmt import HDLStatement
 
 
+def make_comment(text):
+    """Make comment."""
+    if len(text.split('\n')) > 1:
+        return HDLMultiLineComment(text)
+    else:
+        return HDLComment(text)
+
+
 class HDLComment(HDLStatement):
     """Comments. Only useful for code generation."""
 
