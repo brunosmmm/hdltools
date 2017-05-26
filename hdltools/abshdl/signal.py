@@ -3,6 +3,7 @@
 from . import HDLObject
 import hdltools.abshdl as hdl
 from .stmt import HDLStatement
+from .const import HDLIntegerConstant
 
 # TODO allow multiple dimensions
 
@@ -12,7 +13,7 @@ class HDLSignal(HDLStatement):
 
     _types = ['comb', 'reg', 'const', 'var']
 
-    def __init__(self, sig_type, sig_name, size=1, default_val=None):
+    def __init__(self, sig_type, sig_name, size=1, default_val=None, **kwargs):
         """Initialize."""
         super(HDLSignal, self).__init__(stmt_type='par')
         if sig_type not in self._types:
@@ -36,6 +37,18 @@ class HDLSignal(HDLStatement):
             self.vector = size
         elif isinstance(size, hdl.expr.HDLExpression):
             self.vector = hdl.vector.HDLVectorDescriptor(size-1)
+        elif size == 'auto':
+            if default_val is not None:
+                eval_def_val = default_val.evaluate(**kwargs)
+            else:
+                raise ValueError('cannot determine size automatically')
+            min_size = HDLIntegerConstant.minimum_value_size(eval_def_val)
+            self.vector = hdl.vector.HDLVectorDescriptor(min_size)
+        elif size is None:
+            # allow this only for constants for now.
+            if sig_type != 'const':
+                raise ValueError('signal must have size')
+            self.vector = None
         else:
             raise TypeError('size can only be of types: int, list or'
                             ' HDLVectorDescriptor')
@@ -47,9 +60,14 @@ class HDLSignal(HDLStatement):
     def __repr__(self, eval_scope=None, decl=True):
         """Get readable representation."""
         if decl is True:
+            if self.vector is None:
+                vec = ''
+            else:
+                vec = self.vector.dumps(eval_scope)
+
             ret_str = '{} {}{} '.format(self.sig_type.upper(),
                                         self.name,
-                                        self.vector.dumps(eval_scope))
+                                        vec)
         else:
             ret_str = self.name
 
