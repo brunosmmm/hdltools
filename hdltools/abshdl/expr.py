@@ -42,7 +42,10 @@ class HDLExpression(HDLValue):
             Expression tree
         """
         super(HDLExpression, self).__init__()
-        if isinstance(value, str):
+        if isinstance(value, HDLExpression):
+            self.tree = copy.copy(value.tree)
+            self.size = value.size
+        elif isinstance(value, str):
             self.tree = ast.parse(value, mode='eval')
             self.size = size
         elif isinstance(value, ast.Expression):
@@ -73,7 +76,8 @@ class HDLExpression(HDLValue):
                                                           slice=_slice))
             self.size = len(value)
         else:
-            raise TypeError('invalid type provided')
+            raise TypeError('invalid type provided: '
+                            '{}'.format(value.__class__.__name__))
 
     def __len__(self):
         """Get width, if known."""
@@ -172,6 +176,8 @@ class HDLExpression(HDLValue):
                 arg_list.append(self._get_expr(arg))
             return '{}({})'.format(node.func.id,
                                    ','.join(arg_list))
+        elif isinstance(node, ast.Compare):
+            raise NotImplementedError('comparisons not implemented yet')
         else:
             raise TypeError('invalid type: "{}"'.format(type(node)))
 
