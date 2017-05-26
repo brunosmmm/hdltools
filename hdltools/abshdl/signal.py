@@ -21,7 +21,12 @@ class HDLSignal(HDLStatement):
 
         self.sig_type = sig_type
         self.name = sig_name
-        self.default_val = default_val
+        if isinstance(default_val, hdl.expr.HDLExpression):
+            self.default_val = default_val
+        elif default_val is None:
+            self.default_val = default_val
+        else:
+            self.default_val = hdl.expr.HDLExpression(default_val)
 
         if isinstance(size, int):
             # default is [size-1:0] / (size-1 downto 0)
