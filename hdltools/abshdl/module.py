@@ -4,6 +4,7 @@ from . import HDLObject
 from .vector import HDLVectorDescriptor
 from .builtin import HDLBuiltins
 from .scope import HDLScope
+from .expr import HDLExpression
 
 
 class HDLModuleParameter(HDLObject):
@@ -76,6 +77,8 @@ class HDLModulePort(HDLObject):
             self.vector = HDLVectorDescriptor(*size)
         elif isinstance(size, HDLVectorDescriptor):
             self.vector = size
+        elif isinstance(size, HDLExpression):
+            self.vector = HDLVectorDescriptor(left_size=size)
         else:
             raise TypeError('size can only be of types: int, list or'
                             ' vector.HDLVectorDescriptor')
