@@ -75,6 +75,11 @@ class HDLVectorDescriptor(HDLObject):
         return (self.evaluate_left(eval_scope),
                 self.evaluate_right(eval_scope))
 
+    def get_bounds(self):
+        """Get bounds."""
+        return (self.left_size,
+                self.right_size)
+
     def __len__(self):
         """Get vector length."""
         return abs(int(self.left_size) - int(self.right_size)) + 1
