@@ -5,6 +5,7 @@ from .vector import HDLVectorDescriptor
 from .builtin import HDLBuiltins
 from .scope import HDLScope
 from .expr import HDLExpression
+from .signal import HDLSignal
 
 
 class HDLModuleParameter(HDLObject):
@@ -83,6 +84,10 @@ class HDLModulePort(HDLObject):
             raise TypeError('size can only be of types: int, list or'
                             ' vector.HDLVectorDescriptor')
 
+        # create internal signal
+        self.signal = HDLSignal(sig_type='comb', sig_name=name,
+                                size=size)
+
     def __repr__(self, eval_scope=None):
         """Get readable representation."""
         return '{} {}{}'.format(self.direction.upper(),
@@ -116,9 +121,9 @@ class HDLModule(HDLObject):
             self.add_ports(ports)
         self.scope = HDLScope(scope_type='par')
 
-    def add(self, *items):
+    def add(self, items):
         """Add to scope."""
-        self.scope.add(*items)
+        self.scope.add(items)
 
     def add_ports(self, ports):
         """Add ports to module.
@@ -206,3 +211,20 @@ class HDLModule(HDLObject):
     def get_port_names(self):
         """Return list of all ports available."""
         return [x.name for x in self.ports]
+
+    def get_port(self, name):
+        """Get port object."""
+        for port in self.ports:
+            if port.name == name:
+                return port
+
+        return None
+
+    def get_signal(self, name):
+        """Get signal."""
+        for element in self.scope:
+            if isinstance(element, HDLSignal):
+                if element.name == name:
+                    return element
+
+        return None
