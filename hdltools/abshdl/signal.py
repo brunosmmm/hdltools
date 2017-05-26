@@ -91,6 +91,158 @@ class HDLSignal(HDLStatement):
         """Check legality."""
         return True
 
+    # TODO rewrite docstrings
+
+    def __add__(self, other):
+        """Add expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return hdl.expr.HDLExpression(self) + other
+
+    def __radd__(self, other):
+        """Add expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
+        return other + hdl.expr.HDLExpression(self)
+
+    def __sub__(self, other):
+        """Subtract expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return hdl.expr.HDLExpression(self) - other
+
+    def __rsub__(self, other):
+        """Subtract expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
+        return other - hdl.expr.HDLExpression(self)
+
+    def __mul__(self, other):
+        """Multiply expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return hdl.expr.HDLExpression(self) * other
+
+    def __rmul__(self, other):
+        """Multiply expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as left-hand side
+        """
+        return other * hdl.expr.HDLExpression(self)
+
+    def __truediv__(self, other):
+        """Divide expressions.
+
+        Args
+        ----
+        other: HDLExpression, HDLIntegerConstant, int
+           Value to be used as right-hand side
+        """
+        return hdl.expr.HDLExpression(self) / other
+
+    def __lshift__(self, val):
+        """Shift operator."""
+        return hdl.expr.HDLExpression(self) << val
+
+    def __rshift__(self, val):
+        """Shift operator."""
+        return hdl.expr.HDLExpression(self) >> val
+
+    def __or__(self, other):
+        """Bitwise OR."""
+        return hdl.expr.HDLExpression(self) | other
+
+    def __ror__(self, other):
+        """Reverse Bitwise OR."""
+        return other | hdl.expr.HDLExpression(self)
+
+    def __and__(self, other):
+        """Bitwise AND."""
+        return hdl.expr.HDLExpression(self) & other
+
+    def __rand__(self, other):
+        """Reverse Bitwise AND."""
+        return other & hdl.expr.HDLExpression(self)
+
+    def __xor__(self, other):
+        """Bitwise XOR."""
+        return hdl.expr.HDLExpression(self) ^ other
+
+    def __rxor__(self, other):
+        """Reverse Bitwise XOR."""
+        return other ^ hdl.expr.HDLExpression(self)
+
+    def __invert__(self):
+        """Bitwise negation."""
+        return ~hdl.expr.HDLExpression(self)
+
+    def bool_neg(self):
+        """Boolean negation."""
+        return hdl.expr.HDLExpression(self).bool_neg()
+
+    def bool_and(self, other):
+        """Boolean AND."""
+        return hdl.expr.HDLExpression(self).bool_and(other)
+
+    def bool_or(self, other):
+        """Boolean OR."""
+        return hdl.expr.HDLExpression(self).bool_or(other)
+
+    def __eq__(self, other):
+        """Comparison."""
+        return hdl.expr.HDLExpression(self) == other
+
+    def __ne__(self, other):
+        """Not equal."""
+        return hdl.expr.HDLExpression(self) != other
+
+    def __gt__(self, other):
+        """Greater than."""
+        return hdl.expr.HDLExpression(self) > other
+
+    def __lt__(self, other):
+        """Less than."""
+        return hdl.expr.HDLExpression(self) < other
+
+    def __ge__(self, other):
+        """Greater or equal."""
+        return hdl.expr.HDLExpression(self) >= other
+
+    def __le__(self, other):
+        """Less or equal."""
+        return hdl.expr.HDLExpression(self) <= other
+
+    def __pos__(self):
+        """Get an expression for the signal."""
+        return hdl.expr.HDLExpression(self)
+
+    def assign(self, value, **kwargs):
+        """Return an assignment."""
+        return hdl.assign.HDLAssignment(self, value, **kwargs)
+
 
 class HDLSignalSlice(HDLObject):
     """Slice of a vector signal."""
