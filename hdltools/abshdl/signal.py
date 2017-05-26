@@ -2,17 +2,19 @@
 
 from . import HDLObject
 import hdltools.abshdl as hdl
+from .stmt import HDLStatement
 
 # TODO allow multiple dimensions
 
 
-class HDLSignal(HDLObject):
+class HDLSignal(HDLStatement):
     """HDL Signal."""
 
     _types = ['comb', 'reg', 'const', 'var']
 
     def __init__(self, sig_type, sig_name, size=1, default_val=None):
         """Initialize."""
+        super(HDLSignal, self).__init__(stmt_type='par')
         if sig_type not in self._types:
             raise ValueError('invalid signal type: "{}"'.format(sig_type))
 
@@ -32,6 +34,8 @@ class HDLSignal(HDLObject):
             self.vector = hdl.vector.HDLVectorDescriptor(*size)
         elif isinstance(size, hdl.vector.HDLVectorDescriptor):
             self.vector = size
+        elif isinstance(size, hdl.expr.HDLExpression):
+            self.vector = hdl.vector.HDLVectorDescriptor(size-1)
         else:
             raise TypeError('size can only be of types: int, list or'
                             ' HDLVectorDescriptor')
@@ -59,6 +63,10 @@ class HDLSignal(HDLObject):
     def __len__(self):
         """Get length."""
         return len(self.vector)
+
+    def is_legal(self):
+        """Check legality."""
+        return True
 
 
 class HDLSignalSlice(HDLObject):
