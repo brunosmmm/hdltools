@@ -8,9 +8,9 @@ from .sens import HDLSensitivityList
 class HDLSequentialBlock(HDLStatement):
     """Sequential block."""
 
-    def __init__(self, sensitivity_list=None):
+    def __init__(self, sensitivity_list=None, **kwargs):
         """Initialize."""
-        super(HDLSequentialBlock, self).__init__(stmt_type='par')
+        super(HDLSequentialBlock, self).__init__(stmt_type='par', **kwargs)
         self.scope = HDLScope(scope_type='seq')
 
         # parse sensitivity list?
