@@ -193,6 +193,17 @@ class HDLExpression(HDLValue):
             return '{} {} {}'.format(left,
                                      self._ast_op_names[node.ops[0].__class__],
                                      comp)
+        elif isinstance(node, ast.Subscript):
+            signal_name = self._get_expr(node.value)
+            _slice = self._get_expr(node.slice)
+            # return string only
+            return signal_name+_slice
+        elif isinstance(node, ast.Index):
+            # NOTICE: THIS IS LANGUAGE DEPENDENT!!!!!!
+            return '[{}]'.format(self._get_expr(node.value))
+        elif isinstance(node, ast.Slice):
+            return '[{}:{}]'.format(self._get_expr(node.upper),
+                                    self._get_expr(node.lower))
         else:
             raise TypeError('invalid type: "{}"'.format(type(node)))
 
