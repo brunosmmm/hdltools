@@ -9,7 +9,7 @@ from .signal import HDLSignal, HDLSignalSlice
 class HDLIfElse(HDLStatement):
     """If-Else statement."""
 
-    def __init__(self, condition):
+    def __init__(self, condition, if_scope=None, else_scope=None):
         """Initialize."""
         super(HDLIfElse, self).__init__(stmt_type='seq')
         self.if_scope = HDLScope(scope_type='seq')
@@ -21,6 +21,11 @@ class HDLIfElse(HDLStatement):
 
         # Always use HDLExpression
         self.condition = HDLExpression(condition)
+
+        if if_scope is not None:
+            self.add_to_if_scope(if_scope)
+        if else_scope is not None:
+            self.add_to_else_scope(else_scope)
 
     def add_to_if_scope(self, *stmt):
         """Add to IF scope."""
