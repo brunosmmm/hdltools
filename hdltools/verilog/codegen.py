@@ -59,6 +59,8 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             st = 'reg'
         elif element.sig_type == 'const':
             st = 'localparam'
+        elif element.sig_type == 'var':
+            st = 'integer'
 
         if element.vector is None:
             _slice = ''

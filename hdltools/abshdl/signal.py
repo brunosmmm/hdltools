@@ -51,7 +51,7 @@ class HDLSignal(HDLStatement):
             self.vector = hdl.vector.HDLVectorDescriptor(min_size)
         elif size is None:
             # allow this only for constants for now.
-            if sig_type != 'const':
+            if sig_type not in ('const', 'var'):
                 raise ValueError('signal must have size')
             self.vector = None
         else:
