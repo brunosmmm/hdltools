@@ -105,7 +105,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
     def gen_HDLAssignment(self, element, **kwargs):
         """Generate assignments."""
         assign_lhs = self.dump_element(element.signal, assign=True)
-        assign_rhs = self.dump_element(element.value, radix='h')
+        assign_rhs = self.dump_element(element.value, radix='h', assign=True)
         assign_type = element.get_assignment_type()
         if assign_type == 'parallel':
             assign_str = 'assign {} = {};'.format(assign_lhs,
