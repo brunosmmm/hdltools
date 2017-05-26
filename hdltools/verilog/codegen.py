@@ -13,9 +13,17 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLModulePort(self, element, **kwargs):
         """Generate port."""
+        if 'evaluate' in kwargs:
+            evaluate = kwargs['evaluate']
+        else:
+            evaluate = False
+
+        vec = self.dump_element(element.vector,
+                                evaluate=evaluate)
+
         return self.dumps_port(element.direction,
                                element.name,
-                               element.vector.evaluate(),
+                               vec,
                                **kwargs)
 
     def gen_HDLIntegerConstant(self, element, **kwargs):
@@ -78,7 +86,16 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLVectorDescriptor(self, element, **kwargs):
         """Generate a vector slice."""
-        return self.dumps_extents(*element.evaluate())
+        if 'evaluate' in kwargs:
+            evaluate = kwargs['evaluate']
+        else:
+            evaluate = False
+
+        if evaluate is True:
+            extents = element.evaluate()
+        else:
+            extents = element.get_bounds()
+        return self.dumps_extents(*extents)
 
     def gen_HDLAssignment(self, element, **kwargs):
         """Generate assignments."""
@@ -253,7 +270,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         else:
             port_direction = direction
         if extents is not None:
-            ext_str = VerilogCodeGenerator.dumps_extents(*extents)
+            ext_str = extents
         else:
             ext_str = ''
         ret_str = '{} {} {}'.format(port_direction, ext_str, name)
