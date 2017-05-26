@@ -78,7 +78,7 @@ class HDLModulePort(HDLObject):
         elif isinstance(size, HDLVectorDescriptor):
             self.vector = size
         elif isinstance(size, HDLExpression):
-            self.vector = HDLVectorDescriptor(left_size=size)
+            self.vector = HDLVectorDescriptor(left_size=size-1)
         else:
             raise TypeError('size can only be of types: int, list or'
                             ' vector.HDLVectorDescriptor')
@@ -156,7 +156,7 @@ class HDLModule(HDLObject):
                 if not isinstance(param, HDLModuleParameter):
                     raise TypeError('list may only contain HDLModuleParameter'
                                     ' instances')
-                self.params.extend(params)
+            self.params.extend(params)
         else:
             raise TypeError('params must be a list or HDLModuleParameter')
 
