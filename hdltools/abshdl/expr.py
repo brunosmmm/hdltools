@@ -23,7 +23,13 @@ class HDLExpression(HDLValue):
                      ast.Or: '||',
                      ast.And: '&&',
                      ast.Invert: '~',
-                     ast.Not: '!'}
+                     ast.Not: '!',
+                     ast.Eq: '==',
+                     ast.NotEq: '!=',
+                     ast.Lt: '<',
+                     ast.Gt: '>',
+                     ast.GtE: '>=',
+                     ast.LtE: '=<'}
     _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
                   ast.Div: op.truediv, ast.Pow: op.pow,
                   ast.USub: op.neg, ast.LShift: op.lshift,
@@ -31,7 +37,10 @@ class HDLExpression(HDLValue):
                   ast.BitAnd: op.and_, ast.BitXor: op.xor,
                   ast.Or: lambda x, y: bool(x or y),
                   ast.And: lambda x, y: bool(x and y),
-                  ast.Invert: op.invert, ast.Not: op.not_}
+                  ast.Invert: op.invert, ast.Not: op.not_,
+                  ast.Eq: op.eq, ast.NotEq: op.ne,
+                  ast.Lt: op.lt, ast.Gt: op.gt,
+                  ast.LtE: op.le, ast.GtE: op.ge}
 
     def __init__(self, value, size=None):
         """Initialize.
@@ -177,7 +186,13 @@ class HDLExpression(HDLValue):
             return '{}({})'.format(node.func.id,
                                    ','.join(arg_list))
         elif isinstance(node, ast.Compare):
-            raise NotImplementedError('comparisons not implemented yet')
+            if len(node.ops) > 1:
+                raise ValueError('multiple inline comparison not supported')
+            left = self._get_expr(node.left)
+            comp = self._get_expr(node.comparators[0])
+            return '{} {} {}'.format(left,
+                                     self._ast_op_names[node.ops[0].__class__],
+                                     comp)
         else:
             raise TypeError('invalid type: "{}"'.format(type(node)))
 
