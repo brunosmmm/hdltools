@@ -11,9 +11,11 @@ from .signal import HDLSignal, HDLSignalSlice
 class HDLSwitch(HDLStatement):
     """Switch Statement."""
 
-    def __init__(self, what):
+    def __init__(self, what, **kwargs):
         """Initialize."""
-        super(HDLSwitch, self).__init__(stmt_type='seq')
+        super(HDLSwitch, self).__init__(stmt_type='seq',
+                                        has_scope=False,
+                                        **kwargs)
         self.cases = {}
         if not isinstance(what, (HDLExpression, HDLSignal, HDLSignalSlice)):
             raise TypeError('only HDLExpression, HDLSignal,'
