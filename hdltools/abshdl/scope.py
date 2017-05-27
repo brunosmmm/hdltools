@@ -18,23 +18,82 @@ class HDLScope(HDLObject):
 
         self.scope_type = scope_type
 
+    def _check_element(self, element):
+        if isinstance(element, str):
+            return make_comment(element)
+
+        if not isinstance(element, HDLStatement):
+            raise TypeError('only HDLStatement allowed, got: '
+                            '{}'.format(element.__class__.__name__))
+
+        # check legality
+        if element.stmt_type != self.scope_type\
+           and element.stmt_type != 'null':
+            raise ValueError('cannot add sequential statements '
+                             'in parallel scopes and vice versa,'
+                             'tried {} into {}'.format(element.stmt_type,
+                                                       self.scope_type))
+
+        return element
+
     def add(self, elements):
         """Add elements to scope."""
         for element in elements:
-            if isinstance(element, str):
-                self.statements.append(make_comment(element))
-                continue
-            if not isinstance(element, HDLStatement):
-                raise TypeError('only HDLStatement allowed, got: '
-                                '{}'.format(element.__class__.__name__))
+            self.statements.append(self._check_element(element))
 
-            # check legality
-            if element.stmt_type != self.scope_type\
-               and element.stmt_type != 'null':
-                raise ValueError('cannot add sequential statements '
-                                 'in parallel scopes and vice versa')
+    def insert(self, where, *elements):
+        """Insert elements."""
+        for index, element in enumerate(elements):
+            self.statements.insert(where+index, self._check_element(element))
 
-            self.statements.append(element)
+    def insert_before(self, tag, *elements):
+        """Insert before tag."""
+        try:
+            scope, element = self.find_by_tag(tag)
+        except (ValueError, TypeError):
+            raise IndexError('could not find tag:'
+                             ' {}'.format(tag))
+
+        self.insert(element[0], *elements)
+
+    def insert_after(self, tag, *elements):
+        """Insert after tag."""
+        try:
+            scope, element = self.find_by_tag(tag)
+        except (ValueError, TypeError):
+            raise IndexError('could not find tag:'
+                             ' {}'.format(tag))
+
+        scope.insert(element[0]+1, *elements)
+
+    def get_tags(self):
+        """Get available tags in this scope."""
+        tags = []
+        for statement in self.statements:
+            if statement.tag is not None:
+                tags.append(statement.tag)
+        return tags
+
+    def find_by_tag(self, tag):
+        """Find element by tag."""
+        for index, element in enumerate(self.statements):
+            if element.tag == tag:
+                return (self, (index, element))
+
+            # recursion
+            scopes = element.get_scope()
+            if isinstance(scopes, HDLScope):
+                # search
+                _element = scopes.find_by_tag(tag)
+                if _element is not None:
+                    return _element
+            elif isinstance(scopes, (list, tuple)):
+                for scope in scopes:
+                    _element = scope.find_by_tag(tag)
+                    if _element is not None:
+                        return _element
+
+        return None
 
     def __len__(self):
         """Get statement count."""
