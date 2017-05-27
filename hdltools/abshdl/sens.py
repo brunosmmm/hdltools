@@ -10,7 +10,7 @@ class HDLSensitivityDescriptor(HDLObject):
 
     _sens_types = ['rise', 'fall', 'both', 'any']
 
-    def __init__(self, sens_type, sig):
+    def __init__(self, sens_type, sig=None):
         """Initialize."""
         if sens_type not in self._sens_types:
             raise ValueError('illegal sensitivity'
@@ -18,8 +18,10 @@ class HDLSensitivityDescriptor(HDLObject):
 
         if isinstance(sig, HDLModulePort):
             sig = sig.signal
+        elif sig is None and sens_type != 'any':
+            raise ValueError('signal cannot be None')
 
-        if not isinstance(sig, (HDLSignal, HDLSignalSlice)):
+        if not isinstance(sig, (HDLSignal, HDLSignalSlice, type(None))):
             raise TypeError('sig must be HDLSignal or HDLSignalSlice')
 
         self.sens_type = sens_type
