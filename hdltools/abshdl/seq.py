@@ -10,7 +10,9 @@ class HDLSequentialBlock(HDLStatement):
 
     def __init__(self, sensitivity_list=None, **kwargs):
         """Initialize."""
-        super(HDLSequentialBlock, self).__init__(stmt_type='par', **kwargs)
+        super(HDLSequentialBlock, self).__init__(stmt_type='par',
+                                                 has_scope=True,
+                                                 **kwargs)
         self.scope = HDLScope(scope_type='seq')
 
         # parse sensitivity list?
@@ -38,3 +40,7 @@ class HDLSequentialBlock(HDLStatement):
             return False
 
         return True
+
+    def get_scope(self):
+        """Get scope."""
+        return self.scope
