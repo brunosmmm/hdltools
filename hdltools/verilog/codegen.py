@@ -181,7 +181,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         elif element.sens_type == 'both':
             raise ValueError('not synthesizable')
         elif element.sens_type == 'any':
-            sens_str = ''
+            return '*'
 
         return sens_str+' {}'.format(self.dump_element(element.signal,
                                                        assign=True))
