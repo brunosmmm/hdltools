@@ -8,13 +8,14 @@ class HDLStatement(HDLObject):
 
     _stmt_types = ['seq', 'par', 'null']
 
-    def __init__(self, stmt_type, tag=None):
+    def __init__(self, stmt_type, tag=None, has_scope=False):
         """Initialize."""
         if stmt_type not in self._stmt_types:
             raise KeyError('invalid statement type')
 
         self.stmt_type = stmt_type
         self.tag = tag
+        self.has_scope = has_scope
 
     def set_tag(self, tag):
         """Set a tag."""
@@ -28,3 +29,7 @@ class HDLStatement(HDLObject):
         """Validate statement."""
         # Must be implemented in subclasses or will fail
         return False
+
+    def get_scope(self):
+        """Get scope if available."""
+        return None
