@@ -6,6 +6,7 @@ from .builtin import HDLBuiltins
 from .scope import HDLScope
 from .expr import HDLExpression
 from .signal import HDLSignal
+from .macro import HDLMacro
 
 
 class HDLModuleParameter(HDLObject):
@@ -124,6 +125,7 @@ class HDLModule(HDLObject):
         self.name = module_name
         self.ports = []
         self.params = []
+        self.constants = []
         if params is not None:
             self.add_parameters(params)
         if ports is not None:
@@ -133,6 +135,14 @@ class HDLModule(HDLObject):
     def add(self, items):
         """Add to scope."""
         self.scope.add(items)
+
+    def insert_before(self, tag, items):
+        """Insert element before tag."""
+        self.scope.insert_before(tag, *items)
+
+    def insert_after(self, tag, items):
+        """Insert element after tag."""
+        self.scope.insert_after(tag, *items)
 
     def add_ports(self, ports):
         """Add ports to module.
@@ -173,6 +183,19 @@ class HDLModule(HDLObject):
             self.params.extend(params)
         else:
             raise TypeError('params must be a list or HDLModuleParameter')
+
+    def add_constants(self, constants):
+        """Add constant declarations (macros)."""
+        if isinstance(constants, HDLMacro):
+            self.constants.append(constants)
+        elif isinstance(constants, (list, tuple)):
+            for constant in constants:
+                if not isinstance(constant, HDLMacro):
+                    raise TypeError('list may only contain HDLMacro instances')
+
+                self.constants.extend(constants)
+        else:
+            raise TypeError('constants must be a list or HDLMacro')
 
     def get_parameter_scope(self):
         """Get parameters as dictionary."""
@@ -218,6 +241,9 @@ class HDLModule(HDLObject):
         else:
             eval_scope = None
         ret_str = '{} {{\n'.format(self.name.upper())
+
+        for constant in self.constants:
+            ret_str += '{}\n'.format(constant.dumps())
 
         for param in self.params:
             ret_str += '{}\n'.format(param.dumps())
