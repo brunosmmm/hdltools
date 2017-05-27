@@ -3,11 +3,46 @@
 from .stmt import HDLStatement
 
 
+def indent(fn):
+    """Indent decorator."""
+    def wrapper(*args):
+        if not isinstance(args[0], HDLCodeGenerator):
+            raise TypeError('decorator can only be used on HDLCodeGenerator '
+                            'objects')
+        # generate indentation
+        args[0].increase_indent()
+        if args[0].indent is True:
+            indent_str = args[0].indent_str
+        else:
+            indent_str = ''
+
+        print(args[0].indent_level)
+        ret = '\n'.join([indent_str + x for x in fn(*args).split('\n')])
+        args[0].decrease_indent()
+        return ret
+    return wrapper
+
+
 class HDLCodeGenerator(object):
     """Abstract class for code generators."""
 
     statements = []
     class_aliases = {}
+
+    def __init__(self, indent=False, indent_str='    '):
+        """Initialize."""
+        self.indent_level = 0
+        self.indent = indent
+        self.indent_str = indent_str
+
+    def increase_indent(self):
+        """Increase indentation level."""
+        self.indent_level += 1
+
+    def decrease_indent(self):
+        """Decrease indentation level."""
+        if self.indent_level > 0:
+            self.indent_level -= 1
 
     def add_class_alias(self, use_as, alias_class):
         """Add class alias."""
