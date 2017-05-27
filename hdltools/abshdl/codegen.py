@@ -16,7 +16,6 @@ def indent(fn):
         else:
             indent_str = ''
 
-        print(args[0].indent_level)
         ret = '\n'.join([indent_str + x for x in fn(*args).split('\n')])
         args[0].decrease_indent()
         return ret
