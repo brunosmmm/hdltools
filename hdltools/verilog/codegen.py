@@ -206,7 +206,11 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLModule(self, element, **kwargs):
         """Generate module declaration."""
-        ret_str = 'module {}\n'.format(element.name)
+        ret_str = ''
+        for constant in element.constants:
+            ret_str += self.dump_element(constant) + '\n'
+
+        ret_str += 'module {}\n'.format(element.name)
 
         if len(element.params) > 0:
             ret_str += '#(\n'
