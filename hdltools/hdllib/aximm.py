@@ -189,7 +189,8 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
                               -rst,
                               'rise',
                               0,
-                              rst_stmts=make_comment('PLACEHOLDER'),
+                              rst_stmts=make_comment('Reset Registers',
+                                                     tag='REG_RESET'),
                               stmts=innerif,
                               tag='reg_write')
 
