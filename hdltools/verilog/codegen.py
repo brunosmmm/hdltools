@@ -1,7 +1,9 @@
 """Generate Verilog Statements."""
 
 import math
-from ..abshdl.codegen import HDLCodeGenerator
+from ..abshdl.codegen import HDLCodeGenerator, indent
+
+_INDENT_STR = '    '
 
 
 class VerilogCodeGenerator(HDLCodeGenerator):
@@ -153,7 +155,8 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLIfElse(self, element, **kwargs):
         """Generate if-else statement."""
-        ret_str = 'if ({}) begin\n'.format(self.dump_element(element.condition))
+        ret_str = 'if ({}) begin\n'.format(
+            self.dump_element(element.condition))
         ret_str += self.dump_element(element.if_scope)
         ret_str += '\nend'
 
@@ -164,6 +167,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return ret_str
 
+    @indent
     def gen_HDLScope(self, element, **kwargs):
         """Generate several assignments."""
         return '\n'.join([self.dump_element(x) for x in element])
