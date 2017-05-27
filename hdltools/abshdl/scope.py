@@ -25,7 +25,6 @@ class HDLScope(HDLObject):
                 self.statements.append(make_comment(element))
                 continue
             if not isinstance(element, HDLStatement):
-                print (element)
                 raise TypeError('only HDLStatement allowed, got: '
                                 '{}'.format(element.__class__.__name__))
 
