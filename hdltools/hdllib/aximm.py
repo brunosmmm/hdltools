@@ -7,7 +7,8 @@ from ..abshdl.comment import HDLComment, make_comment
 from ..abshdl.assign import HDLAssignment
 from ..abshdl.ifelse import HDLIfElse
 from ..abshdl.switch import HDLSwitch, HDLCase
-from .patterns import get_clock_rst_block
+from .patterns import (get_clock_rst_block, get_any_sequential_block,
+                       get_reset_if_else)
 import math
 
 
@@ -116,11 +117,14 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
     axi_wready = mod.get_signal('axi_wready')
     axi_awaddr = mod.get_signal('axi_awaddr')
     slv_reg_wren = mod.get_signal('slv_reg_wren')
+    axi_bvalid = mod.get_signal('axi_bvalid')
     AWVALID = mod.get_port('S_AXI_AWVALID')
     WVALID = mod.get_port('S_AXI_WVALID')
     AWADDR = mod.get_port('S_AXI_AWADDR')
     ADDR_LSB = mod.get_signal('ADDR_LSB')
     OPT_MEM_ADDR_BITS = mod.get_signal('OPT_MEM_ADDR_BITS')
+
+    sig = mod.get_signal_scope()
 
     # inner if-else
     innerifelse = HDLIfElse(
@@ -176,7 +180,6 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
                                  .bool_and(+axi_awready)
                                  .bool_and(+AWVALID))])
 
-
     switch = HDLSwitch(axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB])
     def_case = HDLCase('default')
     switch.add_case(def_case)
@@ -191,5 +194,104 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
                               tag='reg_write')
 
     mod.add([seq])
+
+    # write response logic
+    innerifelse = HDLIfElse((~axi_awready)
+                            .bool_and(+AWVALID)
+                            .bool_and(~axi_bvalid)
+                            .bool_and(axi_wready)
+                            .bool_and(+WVALID),
+                            if_scope=(axi_bvalid.assign(1),
+                                      sig['axi_bresp'].assign(0)),
+                            else_scope=HDLIfElse(
+                                sig['S_AXI_BREADY']
+                                .bool_and(axi_bvalid),
+                                if_scope=axi_bvalid.assign(0)))
+
+    seq = get_clock_rst_block(-clk,
+                              -rst,
+                              'rise',
+                              0,
+                              rst_stmts=(sig['axi_bvalid'].assign(0),
+                                         sig['axi_bresp'].assign(0)),
+                              stmts=innerifelse,
+                              tag='wr_resp_logic')
+
+    mod.add(['Write response logic', seq])
+
+    # arready generation
+    innerifelse = HDLIfElse((~sig['axi_arready'])
+                            .bool_and(sig['S_AXI_ARVALID']),
+                            if_scope=(sig['axi_arready'].assign(1),
+                                      sig['axi_araddr']
+                                      .assign(sig['S_AXI_ARADDR'])),
+                            else_scope=sig['axi_arready'].assign(0))
+
+    seq = get_clock_rst_block(-clk,
+                              -rst,
+                              'rise',
+                              0,
+                              rst_stmts=(sig['axi_arready'].assign(0),
+                                         sig['axi_araddr'].assign(0)),
+                              stmts=innerifelse,
+                              tag='arready_gen')
+
+    mod.add(['axi_arready generation', seq])
+
+    # arvalid generation
+    innerifelse = HDLIfElse(sig['axi_arready']
+                            .bool_and(sig['S_AXI_ARVALID'])
+                            .bool_and(~sig['axi_rvalid']),
+                            if_scope=(sig['axi_rvalid'].assign(1),
+                                      sig['axi_rresp'].assign(0)),
+                            else_scope=HDLIfElse(
+                                sig['axi_rvalid']
+                                .bool_and(sig['S_AXI_RREADY']),
+                                if_scope=sig['axi_rvalid']
+                                .assign(0)))
+
+    seq = get_clock_rst_block(-clk,
+                              -rst,
+                              'rise',
+                              0,
+                              rst_stmts=(sig['axi_rvalid'].assign(0),
+                                         sig['axi_rresp'].assign(0)),
+                              stmts=innerifelse,
+                              tag='arvalid_gen')
+
+    mod.add(['arvalid generation', seq])
+
+    # register selection
+    mod.add(['Register select and read logic',
+             sig['slv_reg_rden'].assign(sig['axi_arready'] &
+                                        sig['S_AXI_ARVALID'] &
+                                        ~sig['axi_rvalid'])])
+
+    innercase = HDLSwitch(sig['axi_araddr']
+                          [ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB])
+    def_case = HDLCase('default',
+                       stmts=[sig['reg_data_out'].assign(0)])
+    innercase.add_case(def_case)
+    seq = get_any_sequential_block(get_reset_if_else(-rst,
+                                                     0,
+                                                     sig['reg_data_out']
+                                                     .assign(0),
+                                                     innercase,
+                                                     tag='reg_select'))
+
+    mod.add([seq])
+
+    # data output
+    innerif = HDLIfElse(sig['slv_reg_rden'],
+                        if_scope=sig['axi_rdata'].assign(sig['reg_data_out']))
+    seq = get_clock_rst_block(-clk,
+                              -rst,
+                              'rise',
+                              0,
+                              rst_stmts=sig['axi_rdata'].assign(0),
+                              stmts=innerif,
+                              tag='data_out')
+
+    mod.add(['data output', seq])
 
     return mod
