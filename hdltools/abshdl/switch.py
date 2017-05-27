@@ -55,7 +55,7 @@ class HDLSwitch(HDLStatement):
 class HDLCase(HDLObject):
     """Switch case."""
 
-    def __init__(self, value):
+    def __init__(self, value, stmts=None):
         """Initialize."""
         if isinstance(value, (HDLIntegerConstant, int, str)):
             self.case_value = HDLExpression(value)
@@ -66,10 +66,13 @@ class HDLCase(HDLObject):
                             'not supported'.format(value.__class__.__name__))
 
         self.scope = HDLScope(scope_type='seq')
+        if stmts is not None:
+            for stmt in stmts:
+                self.add_to_scope(stmt)
 
-    def add_to_scope(self, element):
+    def add_to_scope(self, *elements):
         """Add statement to scope."""
-        self.scope.add(element)
+        self.scope.add(elements)
 
     def dumps(self):
         """Intermediate representation."""
