@@ -3,12 +3,12 @@
 from .stmt import HDLStatement
 
 
-def make_comment(text):
+def make_comment(text, tag=None):
     """Make comment."""
     if len(text.split('\n')) > 1:
-        return HDLMultiLineComment(text)
-    else:
-        return HDLComment(text)
+        return HDLMultiLineComment(text, tag=tag)
+    else:b
+        return HDLComment(text, tag=tag)
 
 
 class HDLComment(HDLStatement):
