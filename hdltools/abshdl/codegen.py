@@ -55,7 +55,8 @@ class HDLCodeGenerator(object):
         # check statement validity
         if isinstance(element, HDLStatement):
             if element.is_legal() is False:
-                raise ValueError('illegal statement passed')
+                raise ValueError('illegal statement passed: {}'
+                                 .format(element))
 
         # aliases
         if cls_name in self.class_aliases:
