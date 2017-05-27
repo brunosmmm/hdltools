@@ -30,6 +30,24 @@ def get_clock_rst_block(clock_signal, rst_signal, clk_edge,
     clk_sens = HDLSensitivityDescriptor(clk_edge, clock_signal)
     sens = HDLSensitivityList(clk_sens)
     seq = HDLSequentialBlock(sens, **kwargs)
+    ifelse = get_reset_if_else(rst_signal, rst_lvl, rst_stmts, stmts, **kwargs)
+    seq.add(ifelse)
+
+    return seq
+
+
+def get_any_sequential_block(*stmts, **kwargs):
+    """Get a block that is sensitive to anything."""
+    any_sens = HDLSensitivityDescriptor('any')
+    sens = HDLSensitivityList(any_sens)
+    seq = HDLSequentialBlock(sens, **kwargs)
+    seq.add(*stmts)
+
+    return seq
+
+
+def get_reset_if_else(rst_signal, rst_lvl, rst_stmts, stmts=None, **kwargs):
+    """Get reset if-else."""
     if rst_lvl == 0:
         rst_cmp = rst_signal == 0
     else:
@@ -37,6 +55,5 @@ def get_clock_rst_block(clock_signal, rst_signal, clk_edge,
     ifelse = HDLIfElse(rst_cmp,
                        if_scope=rst_stmts,
                        else_scope=stmts)
-    seq.add(ifelse)
 
-    return seq
+    return ifelse
