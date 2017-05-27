@@ -38,7 +38,7 @@ class HDLSwitch(HDLStatement):
     def dumps(self):
         """Intermediate representation."""
         ret_str = 'SWITCH {} BEGIN\n'.format(self.switch.dumps())
-        for expr, case in self.cases:
+        for expr, case in self.cases.items():
             ret_str += case.dumps()
 
         ret_str += 'END\n'
