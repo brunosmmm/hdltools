@@ -11,7 +11,9 @@ from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.concat import HDLConcatenation
-from hdltools.hdllib.aximm import get_axi_mm_slave
+from hdltools.abshdl.switch import HDLCase
+from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.hdllib.aximm import get_axi_mm_slave, get_register_write_logic
 
 
 DEFAULT_TEMPLATE = os.path.join('assets', 'verilog', 'axi_slave.v')
@@ -111,5 +113,29 @@ if __name__ == "__main__":
         target_bits = target_field.get_slice()
         assignment = HDLAssignment(sig, reg_sig[target_bits])
         slave.insert_after('OUTPUT_ASSIGN', [assignment])
+
+    # register write
+    slave_signals = slave.get_signal_scope()
+    slave_parameters = slave.get_parameter_scope()
+    data_width = slave_parameters['AXI_DATA_WIDTH']
+    loop_var = slave_signals['byte_index']
+    axi_wstrb = slave_signals['S_AXI_WSTRB']
+    axi_wdata = slave_signals['S_AXI_WDATA']
+    scope, where = slave.find_by_tag('reg_write_case')
+    index, wr_switch = where
+    lsb_bits_sig = slave_signals['ADDR_LSB']
+    lsb_bits = lsb_bits_sig.default_val.evaluate(AXI_DATA_WIDTH=data_width)
+    default_case = wr_switch.get_case('default')
+    for name, reg in mmap.registers.items():
+        reg_sig = slave_signals['REG_'+name]
+        reg_addr = HDLIntegerConstant(reg.addr >> int(lsb_bits),
+                                      size=wr_switch.switch.size,
+                                      radix='h')
+        case = HDLCase(reg_addr,
+                       stmts=[get_register_write_logic(loop_var, data_width,
+                                                       axi_wstrb, reg_sig,
+                                                       axi_wdata)])
+        wr_switch.add_case(case)
+        default_case.add_to_scope(reg_sig.assign(reg_sig))
 
     print(vlog.dump_element(slave))
