@@ -144,6 +144,10 @@ class HDLModule(HDLObject):
         """Insert element after tag."""
         self.scope.insert_after(tag, *items)
 
+    def find_by_tag(self, tag):
+        """Find element by tag."""
+        return self.scope.find_by_tag(tag)
+
     def add_ports(self, ports):
         """Add ports to module.
 
