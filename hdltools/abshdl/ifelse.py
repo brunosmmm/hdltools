@@ -18,8 +18,9 @@ class HDLIfElse(HDLStatement):
         self.else_scope = HDLScope(scope_type='seq')
         if not isinstance(condition, (HDLExpression, HDLSignal,
                                       HDLSignalSlice)):
-            raise TypeError('only HDLEXpression, HDLSignal,'
-                            ' HDLSignalSlice allowed')
+            raise TypeError('only HDLExpression, HDLSignal,'
+                            ' HDLSignalSlice allowed, got:'
+                            ' {}'.format(condition.__class__.__name__))
 
         # Always use HDLExpression
         self.condition = HDLExpression(condition)
