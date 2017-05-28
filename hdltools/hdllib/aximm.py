@@ -295,4 +295,7 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
 
     mod.add(['data output', seq])
 
+    # user logic assignments
+    mod.add([HDLComment('Output assignment', tag='OUTPUT_ASSIGN')])
+
     return mod

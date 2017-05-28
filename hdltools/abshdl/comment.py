@@ -7,7 +7,7 @@ def make_comment(text, tag=None):
     """Make comment."""
     if len(text.split('\n')) > 1:
         return HDLMultiLineComment(text, tag=tag)
-    else:b
+    else:
         return HDLComment(text, tag=tag)
 
 
