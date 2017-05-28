@@ -11,7 +11,7 @@ from .module import HDLModulePort
 class HDLAssignment(HDLStatement):
     """Signal assignment."""
 
-    def __init__(self, signal, value, assign_type='block'):
+    def __init__(self, signal, value, assign_type='block', **kwargs):
         """Initialize."""
         if isinstance(signal, HDLModulePort):
             if signal.direction in ('out', 'inout'):
@@ -24,9 +24,15 @@ class HDLAssignment(HDLStatement):
 
         self.assign_type = assign_type
         self.signal = signal
-        if signal.sig_type in ('comb', 'const'):
+
+        if isinstance(signal, HDLSignal):
+            sig_type = signal.sig_type
+        elif isinstance(signal, HDLSignalSlice):
+            sig_type = signal.signal.sig_type
+
+        if sig_type in ('comb', 'const'):
             stmt_type = 'par'
-        elif signal.sig_type in ('reg', 'var'):
+        elif sig_type in ('reg', 'var'):
             stmt_type = 'seq'
 
         if isinstance(value, (HDLIntegerConstant,
@@ -34,7 +40,7 @@ class HDLAssignment(HDLStatement):
                               HDLSignalSlice, HDLConcatenation)):
             self.value = value
         elif isinstance(value, int):
-            self.value = HDLIntegerConstant(value)
+            self.value = HDLIntegerConstant(value, **kwargs)
         else:
             raise TypeError('only integer, HDLIntegerConstant, '
                             'HDLSignal, HDLExpression, HDLConcatenation '
@@ -44,7 +50,12 @@ class HDLAssignment(HDLStatement):
 
     def get_assignment_type(self):
         """Get assignment type."""
-        if self.signal.sig_type in ('comb', 'const'):
+        if isinstance(self.signal, HDLSignal):
+            sig_type = self.signal.sig_type
+        elif isinstance(self.signal, HDLSignalSlice):
+            sig_type = self.signal.signal.sig_type
+
+        if sig_type in ('comb', 'const'):
             return 'parallel'
         else:
             return 'series'
