@@ -2,6 +2,7 @@
 
 import math
 from ..abshdl.codegen import HDLCodeGenerator, indent
+from ..abshdl.const import HDLIntegerConstant
 
 _INDENT_STR = '    '
 
@@ -44,9 +45,19 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         else:
             size = element.size
 
-        return self.dumps_vector(element.evaluate(),
-                                 size,
-                                 radix)
+        if 'no_size' in kwargs:
+            no_size = kwargs.pop('no_size')
+        elif 'no_size' in element.optional_args:
+            no_size = element.optional_args.pop('no_size')
+        else:
+            no_size = False
+
+        if no_size is False:
+            return self.dumps_vector(element.evaluate(),
+                                     size,
+                                     radix)
+        else:
+            return str(element.evaluate())
 
     def gen_HDLMacro(self, element, **kwargs):
         """Generate a define."""
@@ -107,23 +118,49 @@ class VerilogCodeGenerator(HDLCodeGenerator):
     def gen_HDLAssignment(self, element, **kwargs):
         """Generate assignments."""
         assign_lhs = self.dump_element(element.signal, assign=True)
-        assign_rhs = self.dump_element(element.value, radix='h', assign=True)
+        if element.signal.get_sig_type() == 'var':
+            assign_rhs = self.dump_element(element.value, no_size=True,
+                                           assign=True)
+        else:
+            assign_rhs = self.dump_element(element.value, radix='h',
+                                           assign=True)
         assign_type = element.get_assignment_type()
+
+        if 'no_semi' in kwargs:
+            no_semicolon = kwargs['no_semi']
+        else:
+            no_semicolon = False
+
         if assign_type == 'parallel':
-            assign_str = 'assign {} = {};'.format(assign_lhs,
-                                                  assign_rhs)
+            assign_str = 'assign {} = {}'.format(assign_lhs,
+                                                 assign_rhs)
         elif assign_type == 'series':
             if element.assign_type == 'block':
                 assign_op = '<='
             else:
                 assign_op = '='
-            assign_str = '{} {} {};'.format(assign_lhs,
-                                            assign_op,
-                                            assign_rhs)
+            assign_str = '{} {} {}'.format(assign_lhs,
+                                           assign_op,
+                                           assign_rhs)
+        if no_semicolon is False:
+            assign_str += ';'
         return assign_str
 
     def gen_HDLExpression(self, element, **kwargs):
         """Get an expression."""
+        if 'format' in kwargs:
+            fmt = kwargs.pop('format')
+            if fmt == 'int':
+                try:
+                    return self.dump_element(
+                        HDLIntegerConstant(element.evaluate(),
+                                           element.size,
+                                           **kwargs))
+                except KeyError:
+                    # tried to evaluate an expression which contains
+                    # symbols.
+                    pass
+
         return element.dumps()
 
     def gen_HDLModuleParameter(self, element, **kwargs):
@@ -170,6 +207,10 @@ class VerilogCodeGenerator(HDLCodeGenerator):
     @indent
     def gen_HDLScope(self, element, **kwargs):
         """Generate several assignments."""
+        test = [(x, self.dump_element(x)) for x in element]
+        for x in test:
+            if x[1] is None:
+                raise Exception(x[0])
         return '\n'.join([self.dump_element(x) for x in element])
 
     def gen_HDLSensitivityDescriptor(self, element, **kwargs):
@@ -257,7 +298,25 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLCase(self, element, **kwargs):
         """Generate one case."""
-        ret_str = self.dump_element(element.case_value) + ': begin\n'
+        ret_str = self.dump_element(element.case_value,
+                                    format='int',
+                                    radix='h') + ': begin\n'
+        ret_str += self.dump_element(element.scope)
+        ret_str += '\nend\n'
+
+        return ret_str
+
+    def gen_HDLForLoop(self, element, **kwargs):
+        """Generate For Loop."""
+        ret_str = 'for ({}; {}; {}) begin\n'.format(
+            self.dump_element(element
+                              .init,
+                              no_semi=True),
+            self.dump_element(element
+                              .stop),
+            self.dump_element(element.
+                              after,
+                              no_semi=True))
         ret_str += self.dump_element(element.scope)
         ret_str += '\nend\n'
 
