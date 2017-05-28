@@ -23,7 +23,7 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
     # caculate minimum address width: resolve immediately, do not depend
     # on parameters (could also evaluate lsb_bits with AXI_DATA_WIDTH=32)
     eval_lsb = lsb_bits.evaluate(AXI_DATA_WIDTH=data_width)
-    addr_bits = int(math.ceil(math.log2(register_count)))*int(eval_lsb)
+    addr_bits = int(math.ceil(math.log2(register_count)))+int(eval_lsb)
 
     # create standard parameters
     param_list = [HDLModuleParameter('AXI_DATA_WIDTH', 'integer', data_width),
