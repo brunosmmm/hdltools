@@ -7,9 +7,26 @@ from ..abshdl.comment import HDLComment, make_comment
 from ..abshdl.assign import HDLAssignment
 from ..abshdl.ifelse import HDLIfElse
 from ..abshdl.switch import HDLSwitch, HDLCase
+from ..abshdl.loop import HDLForLoop
 from .patterns import (get_clock_rst_block, get_any_sequential_block,
                        get_reset_if_else)
 import math
+
+
+def get_register_write_logic(loop_variable, data_width, axi_wstrb,
+                             register, axi_wdata):
+    """Get logic for writing with byte strobes."""
+    initial = loop_variable.assign(0)
+    expr = loop_variable <= int(data_width / 8) - 1
+    after = loop_variable.assign(loop_variable + 1)
+    loop = HDLForLoop(initial, expr, after)
+
+    data = axi_wdata[loop_variable*8:(loop_variable - 1)*8]
+    assign = register[loop_variable*8:(loop_variable - 1)*8].assign(data)
+    loop.add_to_scope(HDLIfElse(axi_wstrb[loop_variable] == 1,
+                                if_scope=assign))
+
+    return loop
 
 
 def get_axi_mm_slave(mod_name, data_width, register_count):
@@ -79,7 +96,7 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
         yield HDLSignal('reg', 'axi_rvalid')
         yield HDLSignal('const', 'ADDR_LSB', size=None,
                         default_val=HDLExpression('AXI_DATA_WIDTH/32+1'))
-        yield HDLSignal('const', 'OPT_MEM_ADDR_BITS',
+        yield HDLSignal('const', 'OPT_MEM_ADDR_BITS', size=None,
                         default_val=3)
         yield HDLComment('Register Space', tag='REG_DECL')
         yield HDLSignal('comb', 'slv_reg_rden')
@@ -180,7 +197,8 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
                                  .bool_and(+axi_awready)
                                  .bool_and(+AWVALID))])
 
-    switch = HDLSwitch(axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB])
+    switch = HDLSwitch(axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB],
+                       tag='reg_write_case')
     def_case = HDLCase('default')
     switch.add_case(def_case)
     innerif = HDLIfElse(slv_reg_wren,
