@@ -37,6 +37,13 @@ class HDLSwitch(HDLStatement):
 
         self.cases[expr_repr] = case
 
+    def get_case(self, expr):
+        """Get case object."""
+        if expr in self.cases:
+            return self.cases[expr]
+
+        raise KeyError('case not found: "{}"'.format(expr))
+
     def dumps(self):
         """Intermediate representation."""
         ret_str = 'SWITCH {} BEGIN\n'.format(self.switch.dumps())
