@@ -161,7 +161,9 @@ class VerilogCodeGenerator(HDLCodeGenerator):
                     # symbols.
                     pass
 
-        return element.dumps()
+        # replace operators
+        ret_str = element.dumps().replace('=<', '<=')
+        return ret_str
 
     def gen_HDLModuleParameter(self, element, **kwargs):
         """Generate Module parameter."""
