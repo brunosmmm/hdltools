@@ -3,6 +3,7 @@
 from ..abshdl.seq import HDLSequentialBlock
 from ..abshdl.ifelse import HDLIfElse
 from ..abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
+from ..abshdl.scope import HDLScope
 from functools import wraps
 
 
@@ -143,3 +144,25 @@ class ClockedRstBlock(ClockedBlock):
         rst_if = HDLIfElse(rst == lvl, tag='rst_if')
         seq.add(rst_if)
         return seq
+
+
+class ParallelBlock:
+    """Parallel scope."""
+
+    def __init__(self, *args):
+        """Initialize."""
+        pass
+
+    def __call__(self, fn):
+        """Decorate."""
+        @wraps(fn)
+        def wrapper_ParallelBlock(*args, **kwargs):
+            par = self.get()
+            fn(par, *args, **kwargs)
+            return par
+        return wrapper_ParallelBlock
+
+    @staticmethod
+    def get():
+        """Get a parallel scope."""
+        return HDLScope(scope_type='par')
