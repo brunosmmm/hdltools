@@ -272,7 +272,8 @@ class HDLExpression(HDLValue):
     def _new_binop(self, op, other, this_lhs=True):
         if isinstance(other, HDLExpression):
             rhs = other
-        elif isinstance(other, (HDLIntegerConstant, signal.HDLSignal, int)):
+        elif isinstance(other, (HDLIntegerConstant, signal.HDLSignal,
+                                signal.HDLSignalSlice, int)):
             rhs = HDLExpression(other)
         else:
             raise TypeError('illegal type: "{}"'.format(type(other)))
