@@ -95,6 +95,15 @@ class HDLScope(HDLObject):
 
         return None
 
+    def get_by_type(self, element_type):
+        """Get list of elements by type."""
+        element_list = []
+        for element in self.statements:
+            if isinstance(element, element_type):
+                element_list.append(element)
+
+        return element_list
+
     def __len__(self):
         """Get statement count."""
         return len(self.statements)
