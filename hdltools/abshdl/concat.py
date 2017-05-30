@@ -41,3 +41,11 @@ class HDLConcatenation(HDLObject):
             total_length += len(item)
 
         return total_length
+
+    def dumps(self):
+        """Get representation."""
+        ret_str = '{'
+        ret_str += ','.join([item.dumps() for item in self.items])
+        ret_str += '}'
+
+        return ret_str
