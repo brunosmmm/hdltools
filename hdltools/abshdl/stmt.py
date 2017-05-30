@@ -33,3 +33,22 @@ class HDLStatement(HDLObject):
     def get_scope(self):
         """Get scope if available."""
         return None
+
+    def find_by_tag(self, tag):
+        """Search in scope if available."""
+        if self.has_scope is False:
+            raise TypeError('class {} has no scope'.format(
+                self.__class__.__name__))
+
+        scope = self.get_scope()
+        if isinstance(scope, (tuple, list)):
+            for _scope in scope:
+                # returns just the first
+                element = _scope.find_by_tag(tag)
+                if element is not None:
+                    return element
+            return None
+        else:
+            return scope.find_by_tag(tag)
+
+        return None
