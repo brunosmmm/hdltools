@@ -23,9 +23,6 @@ if __name__ == "__main__":
                            else_scope=counter.assign(counter+1))
         seq.add(ifelse)
 
-        # must return seq
-        return seq
-
     print('*Using SequentialBlock*')
     print(my_counter_manual(clk, rst, counter).dumps())
 
@@ -37,9 +34,6 @@ if __name__ == "__main__":
                            if_scope=counter.assign(0),
                            else_scope=counter.assign(counter+1))
         seq.add(ifelse)
-
-        # must return seq
-        return seq
 
     print('*Using ClockedBlock*')
     print(my_counter_simple(clk, rst, counter).dumps())
@@ -53,9 +47,6 @@ if __name__ == "__main__":
         # populate if-else statement
         ifelse.add_to_if_scope(counter.assign(0))
         ifelse.add_to_else_scope(counter.assign(counter+1))
-
-        # must return seq
-        return seq
 
     print('*Using CLockedRstBlock*')
     print(my_counter(counter).dumps())
