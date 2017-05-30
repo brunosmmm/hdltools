@@ -72,8 +72,8 @@ class SequentialBlock:
         @wraps(fn)
         def wrapper_SequentialBlock(*args):
             seq = self.get(*self.signals)
-            ret = fn(seq, *args)
-            return ret
+            fn(seq, *args)
+            return seq
         return wrapper_SequentialBlock
 
     @staticmethod
@@ -103,8 +103,8 @@ class ClockedBlock(SequentialBlock):
         @wraps(fn)
         def wrapper_ClockedBlock(*args):
             seq = self.get(self.clk, self.edge)
-            ret = fn(seq, *args)
-            return ret
+            fn(seq, *args)
+            return seq
         return wrapper_ClockedBlock
 
     @staticmethod
@@ -132,8 +132,8 @@ class ClockedRstBlock(ClockedBlock):
         def wrapper_ClockedRstBlock(*args, **kwargs):
             # do stuff
             seq = self.get(self.clk, self.rst, self.edge, self.lvl)
-            ret = fn(seq, *args, **kwargs)
-            return ret
+            fn(seq, *args, **kwargs)
+            return seq
         return wrapper_ClockedRstBlock
 
     @staticmethod
