@@ -48,12 +48,12 @@ class HDLIfElse(HDLStatement):
         """Get Intermediate representation."""
         ret_str = 'IF {} BEGIN\n'.format(self.condition.dumps())
         ret_str += self.if_scope.dumps()
-        ret_str += 'END\n'
+        ret_str += '\nEND'
 
         if len(self.else_scope) > 0:
-            ret_str += 'ELSE BEGIN\n'
+            ret_str += '\nELSE BEGIN\n'
             ret_str += self.else_scope.dumps()
-            ret_str += 'END\n'
+            ret_str += '\nEND'
 
         return ret_str
 

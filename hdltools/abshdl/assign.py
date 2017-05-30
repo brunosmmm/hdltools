@@ -67,7 +67,7 @@ class HDLAssignment(HDLStatement):
             ret_str += ' = '
         else:
             ret_str += ' <= '
-        ret_str += self.value.dumps()
+        ret_str += self.value.dumps()+';'
 
         return ret_str
 
