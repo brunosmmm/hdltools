@@ -446,6 +446,10 @@ class HDLSignalSlice(HDLObject):
         """Less or equal."""
         return hdl.expr.HDLExpression(self) <= other
 
+    def __pos__(self):
+        """Get an expression"""
+        return hdl.expr.HDLExpression(self)
+
     def get_sig_type(self):
         """Get signal type."""
         return self.signal.sig_type
