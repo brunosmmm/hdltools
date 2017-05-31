@@ -5,6 +5,7 @@ from hdltools.hdllib.patterns import (ClockedBlock, SequentialBlock,
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.ifelse import HDLIfElse
+from hdltools.abshdl.highlvl import HDLBlock
 
 
 if __name__ == "__main__":
@@ -50,3 +51,17 @@ if __name__ == "__main__":
 
     print('*Using CLockedRstBlock*')
     print(my_counter(counter).dumps())
+
+    # parsing native python syntax to build block
+    @HDLBlock(**locals())
+    @ClockedBlock(clk)
+    def my_counter_pythonic(rst, counter):
+        """Use native python syntax."""
+        if rst == 0:
+            counter = 0
+        else:
+            counter = counter+1
+
+    print('*Using python syntax*')
+    # print(HDLBlockBuilder(my_counter_pythonic, **locals()).get().dumps())
+    print(my_counter_pythonic().dumps())
