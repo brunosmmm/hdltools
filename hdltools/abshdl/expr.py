@@ -300,6 +300,10 @@ class HDLExpression(HDLValue):
         """Boolean value."""
         return bool(self.evaluate() != 0)
 
+    def __bool__(self):
+        """Boolean."""
+        return self.__truth__()
+
     def __add__(self, other):
         """Add expressions.
 
