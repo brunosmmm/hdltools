@@ -3,6 +3,7 @@
 from . import HDLObject
 from .stmt import HDLStatement
 from .comment import make_comment
+import types
 
 
 class HDLScope(HDLObject):
@@ -38,8 +39,21 @@ class HDLScope(HDLObject):
 
     def add(self, elements):
         """Add elements to scope."""
-        for element in elements:
-            self.statements.append(self._check_element(element))
+        if isinstance(elements, (tuple, list, types.GeneratorType)):
+            for element in elements:
+                self.statements.append(self._check_element(element))
+        else:
+            self.statements.append(self._check_element(elements))
+
+    def extend(self, scope):
+        """Extend from another scope."""
+        if not isinstance(scope, HDLScope):
+            raise TypeError('only HDLScope allowed')
+
+        if scope.scope_type != self.scope_type:
+            raise ValueError('cannot extend from different type of scope')
+
+        self.add(scope.statements)
 
     def insert(self, where, *elements):
         """Insert elements."""

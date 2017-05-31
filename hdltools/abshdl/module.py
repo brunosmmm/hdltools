@@ -132,9 +132,21 @@ class HDLModule(HDLObject):
             self.add_ports(ports)
         self.scope = HDLScope(scope_type='par')
 
+    def __call__(self, fn):
+        """Use as decorator."""
+        def wrapper_HDLModule(*args):
+            mod = self
+            fn(mod, *args)
+            return mod
+        return wrapper_HDLModule
+
     def add(self, items):
         """Add to scope."""
         self.scope.add(items)
+
+    def extend(self, scope):
+        """Extend scope."""
+        self.scope.extend(scope)
 
     def insert_before(self, tag, items):
         """Insert element before tag."""
