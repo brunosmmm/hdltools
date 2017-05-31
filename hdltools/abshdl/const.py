@@ -136,6 +136,24 @@ class HDLIntegerConstant(HDLConstant):
         else:
             raise TypeError
 
+    def __lt__(self, other):
+        """Les than."""
+        if isinstance(other, int):
+            return bool(self.value < other)
+        elif isinstance(other, HDLIntegerConstant):
+            return bool(self.value < other.value)
+        else:
+            raise TypeError
+
+    def __gt__(self, other):
+        """Greater than."""
+        if isinstance(other, int):
+            return bool(self.value > other)
+        elif isinstance(other, HDLIntegerConstant):
+            return bool(self.value > other.value)
+        else:
+            raise TypeError
+
     @staticmethod
     def value_fits_width(width, value):
         """Check if a value fits in a vector.
