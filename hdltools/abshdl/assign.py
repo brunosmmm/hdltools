@@ -44,7 +44,8 @@ class HDLAssignment(HDLStatement):
         else:
             raise TypeError('only integer, HDLIntegerConstant, '
                             'HDLSignal, HDLExpression, HDLConcatenation '
-                            'allowed')
+                            'allowed, got: {}'.format(
+                                value.__class__.__name__))
 
         super(HDLAssignment, self).__init__(stmt_type=stmt_type)
 
