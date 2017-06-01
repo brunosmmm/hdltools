@@ -24,16 +24,24 @@ class HDLSimulationLogic:
         return wrapper_HDLSimulationLogic
 
 
+class HDLSimulationPort(HDLObject):
+    """Port representation."""
+
+    def __init__(self, name, size=1):
+        """Initialize."""
+        self.name = name
+        self.size = size
+
+
 class HDLSimulationObject(HDLObject):
     """Abstract class for simulation objects."""
-
-    _outputs = []
-    _inputs = []
 
     def __init__(self, identifier=None):
         """Initialize."""
         self.identifier = identifier
         self._sim_time = HDLIntegerConstant(0)
+        self._outputs = {}
+        self._inputs = {}
 
     @staticmethod
     def _get_constant(value, size=None):
@@ -61,14 +69,14 @@ class HDLSimulationObject(HDLObject):
         """Register output."""
         if name in self._outputs:
             raise ValueError('output already registered: {}'.format(name))
-        self._outputs.append(name)
+        self._outputs[name] = HDLSimulationPort(name, size)
         return HDLIntegerConstant(0, size=size)
 
     def input(self, name, size=1):
         """Register input."""
         if name in self._inputs:
             raise ValueError('input already registered: {}'.format(name))
-        self._inputs.append(name)
+        self._inputs[name] = HDLSimulationPort(name, size)
         return HDLIntegerConstant(0, size=size)
 
     def get_outputs(self, **kwargs):
@@ -85,53 +93,3 @@ class HDLSimulationObject(HDLObject):
     def report_outputs(self, **kwargs):
         """Report registered outputs."""
         return self._outputs
-
-
-class HDLSimulation(HDLObject):
-    """Simulation."""
-
-    def __init__(self):
-        """Initialize."""
-        self.sim_objects = {}
-        self.current_time = 0
-
-    def add_stimulus(self, *stim):
-        """Add stimulus."""
-        for obj in stim:
-            if not isinstance(obj, HDLSimulationObject):
-                raise TypeError('only HDLSimulationObject allowed')
-
-            if obj.identifier is None:
-                identifier = obj.__class__.__name__
-            else:
-                identifier = obj.identifier
-
-            self.sim_objects[identifier] = obj
-
-    def simulate(self, stop_time):
-        """Generate stimulus."""
-        value_dump = []
-        iterator = zip(*[obj.next(prefix=name) for name, obj in
-                         self.sim_objects.items()])
-        for time, values in enumerate(iterator):
-            self.current_time += 1
-            if time == stop_time:
-                break
-            value_dump.append([time, values])
-
-        return value_dump
-
-    def report_signals(self):
-        """Get all identified signals."""
-        reported_signals = []
-        for name, obj in self.sim_objects.items():
-            for out in obj.report_outputs():
-                if obj.identifier is None:
-                    identifier = obj.__class__.__name__
-                else:
-                    identifier = obj.identifier
-
-                reported_signals.append('{}.{}'.format(identifier,
-                                                       out))
-
-        return reported_signals
