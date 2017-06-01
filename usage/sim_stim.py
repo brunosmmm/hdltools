@@ -1,7 +1,9 @@
 """Test some more complex stimuli."""
 
-from hdltools.sim import HDLSimulation, HDLSimulationObject, HDLSimulationLogic
-from hdltools.vcd import VCDGenerator, VCDVariable
+from hdltools.sim import HDLSimulationObject, HDLSimulationLogic
+from hdltools.sim.simulation import HDLSimulation
+from hdltools.vcd import VCDDump
+from hdltools.vcd.generator import VCDGenerator
 from collections import deque
 
 
@@ -44,6 +46,7 @@ class HDLSPIMaster(HDLSimulationObject):
                 # LSB first
                 self._pos = 0
                 self._data = self.queue.pop()
+                self.clk = False
             else:
                 self.ce = False
                 self.do = False
@@ -77,8 +80,11 @@ if __name__ == '__main__':
     sim.add_stimulus(spi)
 
     spi.transmit(0x10, 0xAA)
-    print(sim.report_signals())
     dump = sim.simulate(100)
-    print(dump)
 
+    vcd_dump = VCDDump('spi')
+    vcd_dump.add_variables(**sim.report_signals())
+    vcd_dump.load_dump(dump)
     vcd = VCDGenerator()
+
+    print(vcd.dump_element(vcd_dump))
