@@ -379,8 +379,3 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             ret_str += ','
 
         return ret_str
-
-    @staticmethod
-    def dumps_signal(sig_type, name, extents):
-        """Dump signal declaration (simple)."""
-        pass
