@@ -1,10 +1,11 @@
 """Test some more complex stimuli."""
 
-from hdltools.sim import HDLSimulationObject, HDLSimulationLogic
+from hdltools.sim import HDLSimulationObject
 from hdltools.sim.simulation import HDLSimulation
 from hdltools.vcd import VCDDump
 from hdltools.vcd.generator import VCDGenerator
 from collections import deque
+import sys
 
 
 class HDLSPIMaster(HDLSimulationObject):
@@ -14,9 +15,9 @@ class HDLSPIMaster(HDLSimulationObject):
         """Initialize."""
         super(HDLSPIMaster, self).__init__(identifier)
         # outputs
-        self.ce = self.output('ce')
-        self.clk = self.output('clk')
-        self.do = self.output('do')
+        self.ce = self.output('ce', initial=0)
+        self.clk = self.output('clk', initial=0)
+        self.do = self.output('do', initial=0)
 
         # data buffer
         self.queue = deque()
@@ -26,27 +27,41 @@ class HDLSPIMaster(HDLSimulationObject):
         self.clk_period = clk_period
         self._state = 'idle'
         self._data = None
+        self._size = None
+        self._stop = False
         self._last_clk = 0
 
-    def transmit(self, *data):
-        """Transmit some bytes."""
+    def transmit(self, data, size=None, stop=True):
+        """Transmit one block."""
         # put into queue for transmitting
-        self.queue.extendleft(data)
+        if size is None:
+            size = self.tx_size
+        sys.stderr.write('{} : stop = {}\n'.format(hex(data), stop))
+        self.queue.appendleft([data, size, stop])
 
-    def get_outputs(self, **kwargs):
-        """Get output values."""
-        return super(HDLSPIMaster, self).get_outputs(**kwargs)
+    def transmit_blocks(self, *data, block_size=None, stop=True):
+        """Transmit a few blocks of same size."""
+        if block_size is None:
+            block_size = self.tx_size
+        for index, block in enumerate(data):
+            if stop is True:
+                _stop = bool(index == len(data) - 1)
+            else:
+                _stop = False
+            self.transmit(block, size=block_size, stop=_stop)
 
-    @HDLSimulationLogic(get_outputs)
-    def next(self, **kwargs):
+    def logic(self, input_states, **kwargs):
         """Perform internal logic."""
         if self._state == 'idle':
             if len(self.queue) > 0:
                 self._state = 'transmit'
                 # LSB first
                 self._pos = 0
-                self._data = self.queue.pop()
+                self._data, self._size, stop = self.queue.pop()
                 self.clk = False
+                if self._stop is True:
+                    self.ce = False
+                self._stop = stop
             else:
                 self.ce = False
                 self.do = False
@@ -65,8 +80,9 @@ class HDLSPIMaster(HDLSimulationObject):
                     self.do = bool(self._data & (1 << self._pos))
 
                     self._pos += 1
-                    if self._pos > self.tx_size:
+                    if self._pos > self._size - 1:
                         self._state = 'idle'
+                        #self.ce = False
             else:
                 # wait
                 self._last_clk += 1
@@ -79,7 +95,8 @@ if __name__ == '__main__':
 
     sim.add_stimulus(spi)
 
-    spi.transmit(0x10, 0xAA)
+    spi.transmit_blocks(0x10, 0xAA)
+    spi.transmit_blocks(0x80)
     dump = sim.simulate(100)
 
     vcd_dump = VCDDump('spi')
