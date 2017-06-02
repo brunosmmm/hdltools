@@ -28,7 +28,7 @@ class HDLSimulation(HDLObject):
     def simulate(self, stop_time):
         """Generate stimulus."""
         value_dump = []
-        iterator = zip(*[obj.next(prefix=name) for name, obj in
+        iterator = zip(*[obj.next(None, prefix=name) for name, obj in
                          self.sim_objects.items()])
         for time, values in enumerate(iterator):
             self.current_time += 1

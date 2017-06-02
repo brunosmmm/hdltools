@@ -5,32 +5,14 @@ from ..abshdl.const import HDLIntegerConstant
 from ..abshdl.expr import HDLExpression
 
 
-class HDLSimulationLogic:
-    """Simulation logic wrapper."""
-
-    def __init__(self, output_fn):
-        """Initialize."""
-        self.output_fn = output_fn
-
-    def __call__(self, fn):
-        """Decorate."""
-        def wrapper_HDLSimulationLogic(*args, **kwargs):
-            # infinite iterator
-            for x in iter(int, 1):
-                # process internal logic
-                fn(*args, **kwargs)
-                # generate current output statuses
-                yield self.output_fn(*args, **kwargs)
-        return wrapper_HDLSimulationLogic
-
-
 class HDLSimulationPort(HDLObject):
     """Port representation."""
 
-    def __init__(self, name, size=1):
+    def __init__(self, name, size=1, initial=None):
         """Initialize."""
         self.name = name
         self.size = size
+        self.initial = initial
 
 
 class HDLSimulationObject(HDLObject):
@@ -59,18 +41,26 @@ class HDLSimulationObject(HDLObject):
             raise TypeError('type "{}" not supported'
                             .format(value.__class__.__name__))
 
-    def next(self):
+    def next(self, input_states, **kwargs):
         """Get next value."""
         for x in iter(int, 1):
             self._sim_time += 1
-            yield HDLIntegerConstant(0)
+            self.logic(input_states, **kwargs)
+            yield self.get_outputs(**kwargs)
 
-    def output(self, name, size=1):
+    def logic(self, input_states, **kwargs):
+        """Do internal logic."""
+        pass
+
+    def output(self, name, size=1, initial=None):
         """Register output."""
         if name in self._outputs:
             raise ValueError('output already registered: {}'.format(name))
         self._outputs[name] = HDLSimulationPort(name, size)
-        return HDLIntegerConstant(0, size=size)
+        initial_value = 0
+        if initial is not None:
+            initial_value = initial
+        return HDLIntegerConstant(initial_value, size=size)
 
     def input(self, name, size=1):
         """Register input."""
@@ -81,7 +71,7 @@ class HDLSimulationObject(HDLObject):
 
     def get_outputs(self, **kwargs):
         """Get output states."""
-        outputs = {name: getattr(self, name) for name in self._outputs}
+        outputs = {name: int(getattr(self, name)) for name in self._outputs}
 
         if 'prefix' in kwargs:
             prefix = kwargs.pop('prefix')
