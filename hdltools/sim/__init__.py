@@ -83,29 +83,27 @@ class HDLSimulationObject(HDLObject):
         """Get next value."""
         for x in iter(int, 1):
             self._sim_time += 1
-            self.logic(input_states, **kwargs)
+            self.set_inputs(input_states)
+            self.logic(**kwargs)
             yield self.get_outputs(**kwargs)
 
-    def logic(self, input_states, **kwargs):
+    def logic(self, **kwargs):
         """Do internal logic."""
         pass
 
-    def output(self, name, size=1, initial=None):
+    def output(self, name, size=1, initial=0):
         """Register output."""
         if name in self._outputs:
             raise ValueError('output already registered: {}'.format(name))
-        self._outputs[name] = HDLSimulationPort(name, size)
-        initial_value = 0
-        if initial is not None:
-            initial_value = initial
-        return HDLIntegerConstant(initial_value, size=size)
+        self._outputs[name] = HDLSimulationPort(name, size, initial=initial)
+        return self._outputs[name]
 
     def input(self, name, size=1):
         """Register input."""
         if name in self._inputs:
             raise ValueError('input already registered: {}'.format(name))
-        self._inputs[name] = HDLSimulationPort(name, size)
-        return HDLIntegerConstant(0, size=size)
+        self._inputs[name] = HDLSimulationPort(name, size, initial=0)
+        return self._inputs[name]
 
     def get_outputs(self, **kwargs):
         """Get output states."""
@@ -118,6 +116,48 @@ class HDLSimulationObject(HDLObject):
 
         return outputs
 
+    def set_inputs(self, input_values, **kwargs):
+        """Set input states."""
+        if 'prefix' in kwargs:
+            prefix = kwargs.pop('prefix')
+        else:
+            prefix = None
+
+        for name, value in input_values.items():
+            if prefix is not None:
+                _prefix, _name = name.split('.')
+                if _prefix != prefix:
+                    # ignore
+                    continue
+            else:
+                _name = name
+
+            # set value
+            setattr(self, _name, value)
+
     def report_outputs(self, **kwargs):
         """Report registered outputs."""
         return self._outputs
+
+    def __setattr__(self, name, value):
+        """Set an attribute."""
+        if not hasattr(self, name):
+            super().__setattr__(name, value)
+        else:
+            port = getattr(self, name)
+            if isinstance(port, HDLSimulationPort):
+                # do magic stuff
+                if value is None:
+                    raise ValueError('cannot set port to None')
+                port._value_change(value)
+            else:
+                # do normal stuff
+                super().__setattr__(name, value)
+
+    def __getattribute__(self, name):
+        """Get an attribute."""
+        attr = super().__getattribute__(name)
+        if isinstance(attr, HDLSimulationPort):
+            return attr._value
+        else:
+            return attr
