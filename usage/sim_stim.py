@@ -11,7 +11,8 @@ import sys
 class HDLSPIMaster(HDLSimulationObject):
     """SPI Master."""
 
-    def __init__(self, identifier=None, clk_period=1, tx_size=8):
+    def __init__(self, identifier=None, clk_period=1,
+                 tx_size=8, lsb_first=True):
         """Initialize."""
         super(HDLSPIMaster, self).__init__(identifier)
         # outputs
@@ -22,9 +23,12 @@ class HDLSPIMaster(HDLSimulationObject):
         # data buffer
         self.queue = deque()
 
-        # internal states
+        # default logic behavior
         self.tx_size = tx_size
         self.clk_period = clk_period
+        self.lsb_first = lsb_first
+
+        # internal states
         self._state = 'idle'
         self._data = None
         self._size = None
@@ -59,8 +63,10 @@ class HDLSPIMaster(HDLSimulationObject):
                 self._pos = 0
                 self._data, self._size, stop = self.queue.pop()
                 self.clk = False
+                # check last block's stop
                 if self._stop is True:
                     self.ce = False
+                # store stop state for next block
                 self._stop = stop
             else:
                 self.ce = False
@@ -77,12 +83,15 @@ class HDLSPIMaster(HDLSimulationObject):
 
                 # data output
                 if self.clk is True:
-                    self.do = bool(self._data & (1 << self._pos))
+                    if self.lsb_first is True:
+                        self.do = bool(self._data & (1 << self._pos))
+                    else:
+                        self.do = bool(self._data &
+                                       (1 << (self._size - self._pos - 1)))
 
                     self._pos += 1
                     if self._pos > self._size - 1:
                         self._state = 'idle'
-                        #self.ce = False
             else:
                 # wait
                 self._last_clk += 1
