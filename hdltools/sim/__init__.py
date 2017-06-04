@@ -81,6 +81,10 @@ class HDLSimulationObject(HDLObject):
             raise TypeError('type "{}" not supported'
                             .format(value.__class__.__name__))
 
+    def input_changed(self, which_input, value):
+        """Call on input changed."""
+        pass
+
     def next(self, input_states, **kwargs):
         """Get next value."""
         for x in iter(int, 1):
@@ -104,7 +108,8 @@ class HDLSimulationObject(HDLObject):
         """Register input."""
         if name in self._inputs:
             raise ValueError('input already registered: {}'.format(name))
-        self._inputs[name] = HDLSimulationPort(name, size, initial=0)
+        self._inputs[name] = HDLSimulationPort(name, size, initial=0,
+                                               change_cb=self.input_changed)
         return self._inputs[name]
 
     def get_outputs(self, **kwargs):
