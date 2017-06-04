@@ -10,7 +10,9 @@ class HDLSimulation(HDLObject):
     def __init__(self):
         """Initialize."""
         self.sim_objects = {}
+        self.connection_matrix = {}
         self.current_time = 0
+        self._signals = {}
 
     def add_stimulus(self, *stim):
         """Add stimulus."""
@@ -25,30 +27,64 @@ class HDLSimulation(HDLObject):
 
             self.sim_objects[identifier] = obj
 
-    def simulate(self, stop_time):
-        """Generate stimulus."""
-        value_dump = []
-        iterator = zip(*[obj.next(None, prefix=name) for name, obj in
-                         self.sim_objects.items()])
-        for time, values in enumerate(iterator):
-            self.current_time += 1
-            if time == stop_time:
-                break
-            value_dump.append([time, values])
-
-        return value_dump
-
-    def report_signals(self):
-        """Get all identified signals."""
-        reported_signals = {}
-        for name, obj in self.sim_objects.items():
+            # add signals
             for name, out in obj.report_outputs().items():
                 if obj.identifier is None:
                     identifier = obj.__class__.__name__
                 else:
                     identifier = obj.identifier
 
-                reported_signals['{}.{}'.format(identifier,
-                                                name)] = out
+                self._signals['{}.{}'.format(identifier,
+                                             name)] = out
+            for name, inp in obj.report_inputs().items():
+                if obj.identifier is None:
+                    identifier = obj.__class__.__name__
+                else:
+                    identifier = obj.identifier
 
-        return reported_signals
+                self._signals['{}.{}'.format(identifier,
+                                             name)] = inp
+
+    def simulate(self, stop_time):
+        """Generate stimulus."""
+        value_dump = []
+        iterator = zip(*[obj.next({}, prefix=name) for name, obj in
+                         self.sim_objects.items()])
+        for time, values in enumerate(iterator):
+            self.current_time += 1
+            # propagate
+            self._propagate()
+            if time == stop_time:
+                break
+            value_dump.append([time, values])
+
+        return value_dump
+
+    def _propagate(self):
+        """Propagate values."""
+        for name, signal in self._signals.items():
+            if name not in self.connection_matrix:
+                continue
+
+            if signal.value_changed() is True:
+                connections = self.connection_matrix[name]
+                for connection in connections:
+                    # update
+                    self._signals[connection]._value_change(signal._value)
+
+    def connect(self, outgoing, incoming):
+        """Connect ports."""
+        signals = self.report_signals()
+        if outgoing not in signals:
+            raise IOError('port not found: "{}"'.format(outgoing))
+        if incoming not in signals:
+            raise IOError('port not found: "{}"'.format(incoming))
+
+        if outgoing in self.connection_matrix:
+            self.connection_matrix[outgoing] += [incoming]
+        else:
+            self.connection_matrix[outgoing] = set([incoming])
+
+    def report_signals(self):
+        """Get all identified signals."""
+        return self._signals
