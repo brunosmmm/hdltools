@@ -146,12 +146,17 @@ class HDLSimulationObject(HDLObject):
         """Report registered outputs."""
         return self._outputs
 
+    def report_inputs(self, **kwargs):
+        """Report registered inputs."""
+        return self._inputs
+
     def __setattr__(self, name, value):
         """Set an attribute."""
         if not hasattr(self, name):
             super().__setattr__(name, value)
         else:
-            port = getattr(self, name)
+            # do not use getattr directly
+            port = super().__getattribute__(name)
             if isinstance(port, HDLSimulationPort):
                 # do magic stuff
                 if value is None:
