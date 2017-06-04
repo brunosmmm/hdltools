@@ -8,7 +8,7 @@ from ..abshdl.expr import HDLExpression
 class HDLSimulationPort(HDLObject):
     """Port representation."""
 
-    def __init__(self, name, size=1, initial=0):
+    def __init__(self, name, size=1, initial=0, change_cb=None):
         """Initialize."""
         self.name = name
         self.size = size
@@ -16,6 +16,7 @@ class HDLSimulationPort(HDLObject):
         self._value = initial
         self._edge = None
         self._changed = False
+        self._change_cb = change_cb
 
     def _value_change(self, value):
         """Record value change."""
@@ -30,6 +31,10 @@ class HDLSimulationPort(HDLObject):
                 self._edge = None
         else:
             self._changed = bool(self._value != value)
+
+        if self._value != value:
+            if self._change_cb is not None:
+                self._change_cb(self.name, self._value)
 
         self._value = value
 
@@ -47,10 +52,7 @@ class HDLSimulationPort(HDLObject):
 
     def value_changed(self):
         """Get value changed or not."""
-        if self._edge is not None:
-            return True
-
-        return self._changed
+        return bool(self._edge is not None or self._changed is True)
 
 
 class HDLSimulationObject(HDLObject):
