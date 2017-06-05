@@ -135,12 +135,13 @@ if __name__ == "__main__":
     scope, where = slave.find_by_tag('reg_write_case')
     index, wr_switch = where
     lsb_bits_sig = slave_signals['ADDR_LSB']
+    addr_width = slave_signals['OPT_MEM_ADDR_BITS'].default_val.evaluate()
     lsb_bits = lsb_bits_sig.default_val.evaluate(AXI_DATA_WIDTH=data_width)
     default_case = wr_switch.get_case('default')
     for name, reg in mmap.registers.items():
         reg_sig = slave_signals['REG_'+name]
         reg_addr = HDLIntegerConstant(reg.addr >> int(lsb_bits),
-                                      size=wr_switch.switch.size,
+                                      size=addr_width,
                                       radix='h')
         case = HDLCase(reg_addr,
                        stmts=[get_register_write_logic(loop_var, data_width,
