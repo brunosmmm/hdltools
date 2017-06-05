@@ -188,6 +188,9 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         # replace operators
         ret_str = element.dumps().replace('=<', '<=')
+        # replace constants
+        ret_str = ret_str.replace('True', '1')
+        ret_str = ret_str.replace('False', '0')
         return ret_str
 
     def gen_HDLModuleParameter(self, element, **kwargs):
@@ -235,6 +238,14 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             ret_str += self.dump_element(element.else_scope)
             ret_str += '\nend'
 
+        return ret_str
+
+    def gen_HDLIfExp(self, element, **kwargs):
+        """Generate one-line if-else."""
+        ret_str = '({}) ? {} : {}'.format(
+            self.dump_element(element.condition),
+            self.dump_element(element.if_value),
+            self.dump_element(element.else_value))
         return ret_str
 
     @indent
