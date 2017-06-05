@@ -108,7 +108,9 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         if sig_decl:
             ret_str = '{} {} {}'.format(st, _slice, element.name)
             if element.sig_type == 'const':
-                ret_str += ' = {};'.format(element.default_val)
+                ret_str += ' = {};'.format(self.dump_element(
+                    element.default_val,
+                    format='int'))
             else:
                 ret_str += ';'
             return ret_str
@@ -169,6 +171,8 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLExpression(self, element, **kwargs):
         """Get an expression."""
+        # insert more stuff into kwargs
+        kwargs.update(element.optional_args)
         if 'format' in kwargs:
             fmt = kwargs.pop('format')
             if fmt == 'int':
