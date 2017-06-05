@@ -361,7 +361,6 @@ class HDLSimulationObjectScheduler(HDLObject):
 
         if comb_only is True:
             # just generate a simple module
-            print('Function is combinatorial')
             # create signals
             inputs = {inp.name: HDLSignal('comb', inp.name, inp.size)
                       for name, inp in self._obj.report_inputs().items()}
@@ -379,7 +378,6 @@ class HDLSimulationObjectScheduler(HDLObject):
             inputs.update(outputs)
             block = HDLBlock(**inputs)
             block.apply_on_ast(tree)
-            print(block.get())
-
+            return block.get()
         else:
-            print('Function has sequential elements')
+            raise NotImplementedError('sequential scheduling not implemented')
