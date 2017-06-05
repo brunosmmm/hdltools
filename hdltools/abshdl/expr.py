@@ -189,6 +189,8 @@ class HDLExpression(HDLValue):
             return str(node.n)
         elif isinstance(node, ast.Name):
             return node.id
+        elif isinstance(node, ast.NameConstant):
+            return node.value
         elif isinstance(node, ast.Call):
             arg_list = []
             for arg in node.args:
