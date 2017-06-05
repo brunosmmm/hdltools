@@ -287,7 +287,8 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
                                         ~sig['axi_rvalid'])])
 
     innercase = HDLSwitch(sig['axi_araddr']
-                          [ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB])
+                          [ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB],
+                          tag='reg_read_switch')
     def_case = HDLCase('default',
                        stmts=[sig['reg_data_out'].assign(0)])
     innercase.add_case(def_case)
