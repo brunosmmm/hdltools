@@ -4,6 +4,9 @@ from . import HDLSimulationObject
 from ..abshdl import HDLObject
 from ..abshdl.expr import HDLExpression
 from ..abshdl.seq import HDLSequentialBlock
+from ..hdllib.patterns import get_module, ParallelBlock
+from ..abshdl.signal import HDLSignal
+from ..abshdl.highlvl import HDLBlock
 import ast
 import inspect
 import textwrap
@@ -19,13 +22,14 @@ class IllegalCodeError(Exception):
 class CombinatorialChecker(ast.NodeVisitor):
     """Checks if the logic is purely combinatorial."""
 
-    def __init__(self, obj):
+    def __init__(self, obj, if_seq=True):
         """Initialize."""
         # internal state
         self._state = 'normal'
         self._assign_target = None
         self._is_comb = True
         self._assign_target_list = []
+        self._if_seq = if_seq
 
         # get source, parse
         self.sim_obj = obj
@@ -46,6 +50,11 @@ class CombinatorialChecker(ast.NodeVisitor):
 
     def visit_If(self, node, manual_visit=False):
         """Visit an If node."""
+        if self._if_seq is True:
+            # do not analyze if statements. Ony IfExp will be considered
+            # concurrent.
+            self._is_comb = False
+            return
         if_assigned_stmts = []
         else_assigned_stmts = []
         prev_state = self._state
@@ -200,7 +209,10 @@ class CombinatorialChecker(ast.NodeVisitor):
     def visit_AugAssign(self, node):
         """Visits an augmented assignment."""
         # augmented assignmens imply memory of a past state -> sequential
-        self._is_comb = False
+        if isinstance(node, ast.Attribute):
+            if node.value.id == 'self':
+                self._is_comb = False
+        # gets ignored in local variables
         self.generic_visit(node)
 
     def is_combinatorial_only(self):
@@ -282,7 +294,10 @@ class LogicSanitizer(ast.NodeTransformer):
 
     def __init__(self, obj):
         """Initialize."""
-        self.tree = ast.parse(textwrap.dedent(obj), mode='exec')
+        self._globals = set()
+        self._obj = obj
+        self.logic_src = inspect.getsource(self._obj.logic)
+        self.tree = ast.parse(textwrap.dedent(self.logic_src), mode='exec')
         self.visit(self.tree)
 
     def visit_Print(self, node):
@@ -297,9 +312,26 @@ class LogicSanitizer(ast.NodeTransformer):
         """Visit and remove assert statements."""
         return None
 
+    def visit_Attribute(self, node):
+        """Remove attributes."""
+        if node.value.id == 'self':
+            self._globals.add(node.attr)
+            return ast.Name(id=node.attr,
+                            ctx=node.ctx)
+
+        return node
+
     def get_sanitized(self):
         """Get sanitized tree."""
-        return self.tree
+        # build exterior function
+        arg_list = []
+        for arg in self._globals:
+            arg_list.append(ast.arg(arg, None))
+        root_args = ast.arguments(arg_list, None, [], None, [], [])
+        root = ast.FunctionDef(name=self._obj.identifier,
+                               args=root_args,
+                               body=self.tree.body[0].body)
+        return root
 
 
 class HDLSimulationObjectScheduler(HDLObject):
@@ -325,11 +357,29 @@ class HDLSimulationObjectScheduler(HDLObject):
         comb_only = CombinatorialChecker(self._obj).is_combinatorial_only()
 
         # sanitize
-        tree = LogicSanitizer(src).get_sanitized()
+        tree = LogicSanitizer(self._obj).get_sanitized()
 
         if comb_only is True:
-            # just generate a ParallelBlock
-            #indented(tree)
+            # just generate a simple module
             print('Function is combinatorial')
+            # create signals
+            inputs = {inp.name: HDLSignal('comb', inp.name, inp.size)
+                      for name, inp in self._obj.report_inputs().items()}
+            outputs = {out.name: HDLSignal('comb', out.name, out.size)
+                       for name, out in self._obj.report_outputs().items()}
+
+            # apply decorator
+            tree.decorator_list = [ast.Call(func=ast.Name(id='ParallelBlock',
+                                                          ctx=ast.Load()),
+                                            args=[],
+                                            keywords=[],
+                                            starargs=None)]
+
+            # now use HDLBlock
+            inputs.update(outputs)
+            block = HDLBlock(**inputs)
+            block.apply_on_ast(tree)
+            print(block.get())
+
         else:
             print('Function has sequential elements')
