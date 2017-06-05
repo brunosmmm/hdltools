@@ -55,15 +55,19 @@ class HDLExpression(HDLValue):
         if isinstance(value, HDLExpression):
             self.tree = copy.copy(value.tree)
             self.size = value.size
+            self.from_type = 'expr'
         elif isinstance(value, str):
             self.tree = ast.parse(value, mode='eval')
             self.size = size
+            self.from_type = 'const'
         elif isinstance(value, ast.Expression):
             self.tree = value
             self.size = size
+            self.from_type = 'expr'
         elif isinstance(value, HDLIntegerConstant):
             self.tree = ast.Expression(body=ast.Num(n=value.value))
             self.size = len(value)
+            self.from_type = 'const'
         elif isinstance(value, int):
             self.tree = ast.Expression(body=ast.Num(n=value))
             if size is None:
@@ -71,6 +75,7 @@ class HDLExpression(HDLValue):
                 self.size = HDLIntegerConstant.minimum_value_size(value)
             else:
                 self.size = size
+            self.from_type = 'const'
         elif isinstance(value, signal.HDLSignal):
             self.tree = ast.Expression(body=ast.Name(id=value.name))
             try:
@@ -80,6 +85,7 @@ class HDLExpression(HDLValue):
                     self.size = None
                 else:
                     raise
+            self.from_type = 'signal'
         elif isinstance(value, signal.HDLSignalSlice):
             name = ast.Name(id=value.signal.name)
             # if len(value.vector) > 1:
@@ -95,6 +101,7 @@ class HDLExpression(HDLValue):
             except KeyError:
                 # could not determine size
                 self.size = None
+            self.from_type = 'signal'
         else:
             raise TypeError('invalid type provided: '
                             '{}'.format(value.__class__.__name__))
