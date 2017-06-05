@@ -7,7 +7,7 @@ from . import HDLObject
 from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
 from .assign import HDLAssignment
-from .ifelse import HDLIfElse
+from .ifelse import HDLIfElse, HDLIfExp
 from ..hdllib.patterns import ClockedBlock, ParallelBlock
 from .concat import HDLConcatenation
 from .vector import HDLVectorDescriptor
@@ -195,7 +195,10 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def visit_IfExp(self, node):
         """Visit If expression."""
-        raise NotImplementedError('missing IfExp implementation.')
+        ifexp = HDLIfExp(HDLExpression(ast.Expression(body=node.test)),
+                         if_value=self.visit(node.body),
+                         else_value=self.visit(node.orelse))
+        return ifexp
 
     def visit_UnaryOp(self, node):
         """Visit Unary operations."""
