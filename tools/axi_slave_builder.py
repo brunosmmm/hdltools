@@ -156,5 +156,44 @@ if __name__ == "__main__":
     # input signal and not from the register. This will also happen if
     # the field is read only. If a field is write only, then the read
     # always gets the default value.
+    reg_data_out = slave_signals['reg_data_out']
+    where, (_, reg_select) = slave.find_by_tag('reg_read_switch')
+    for name, reg in mmap.registers.items():
+        # register signal
+        reg_sig = slave_signals['REG_'+name]
+        reg_addr = HDLIntegerConstant(reg.addr >> int(lsb_bits),
+                                      size=addr_width,
+                                      radix='h')
+        reg_read = HDLConcatenation(size=reg.size)
+        for field in sorted(reg.fields, key=lambda x: min(x.get_range())):
+            done = False
+            for name, port in mmap.ports.items():
+                if port.direction == 'out':
+                    continue
+                if port.target_field == field.name:
+                    # print('found input target')
+                    reg_read.insert(+port, min(field.get_range()))
+                    done = True
+            if done is True:
+                continue
+
+            # write-only bits
+            if field.permissions == 'W':
+                # put default value or zero?
+                reg_read.insert(field.default_value, min(field.get_range()))
+                continue
+            elif field.permissions == 'RW':
+                # since not overriden by a target input, read from register
+                reg_read.insert(reg_sig[field.get_slice()],
+                                min(field.get_range()))
+            else:
+                # doesn't make sense!
+                reg_read.insert(field.default_value, min(field.get_range()))
+
+        # insert case
+        this_case = HDLCase(reg_addr,
+                            stmts=[HDLAssignment(reg_data_out,
+                                                 reg_read.pack())])
+        reg_select.add_case(this_case)
 
     print(vlog.dump_element(slave))
