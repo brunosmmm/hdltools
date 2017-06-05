@@ -6,6 +6,7 @@ from .signal import HDLSignal, HDLSignalSlice
 from .concat import HDLConcatenation
 from .stmt import HDLStatement
 from .module import HDLModulePort
+from .ifelse import HDLIfExp
 
 
 class HDLAssignment(HDLStatement):
@@ -37,13 +38,15 @@ class HDLAssignment(HDLStatement):
 
         if isinstance(value, (HDLIntegerConstant,
                               HDLSignal, HDLExpression,
-                              HDLSignalSlice, HDLConcatenation)):
+                              HDLSignalSlice, HDLConcatenation,
+                              HDLIfExp)):
             self.value = value
         elif isinstance(value, int):
             self.value = HDLIntegerConstant(value, **kwargs)
         else:
             raise TypeError('only integer, HDLIntegerConstant, '
-                            'HDLSignal, HDLExpression, HDLConcatenation '
+                            'HDLSignal, HDLExpression, HDLConcatenation, '
+                            'HDLIfExp '
                             'allowed, got: {}'.format(
                                 value.__class__.__name__))
 
