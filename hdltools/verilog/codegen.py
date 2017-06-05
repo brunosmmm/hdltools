@@ -21,12 +21,24 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         else:
             evaluate = False
 
-        vec = self.dump_element(element.vector,
-                                evaluate=evaluate)
+        if element.vector is None:
+            _slice = ''
+        else:
+            size = None
+            try:
+                size = len(element.vector)
+            except:
+                pass
+
+            if size == 1:
+                _slice = ''
+            else:
+                _slice = self.dump_element(element.vector,
+                                           evaluate=evaluate)
 
         return self.dumps_port(element.direction,
                                element.name,
-                               vec,
+                               _slice,
                                **kwargs)
 
     def gen_HDLIntegerConstant(self, element, **kwargs):
@@ -78,7 +90,16 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         if element.vector is None:
             _slice = ''
         else:
-            _slice = self.dump_element(element.vector)
+            size = None
+            try:
+                size = len(element.vector)
+            except:
+                pass
+
+            if size == 1:
+                _slice = ''
+            else:
+                _slice = self.dump_element(element.vector)
 
         sig_decl = True
         if 'assign' in kwargs:
@@ -98,14 +119,14 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         """Generate sliced signal."""
         kwargs.update({'assign': True})
         signal = self.dump_element(element.signal, **kwargs)
-        slic = self.dump_element(element.vector)
+        slic = self.dump_element(element.vector, simplify_extents=True)
 
         return '{}{}'.format(signal, slic)
 
     def gen_HDLVectorDescriptor(self, element, **kwargs):
         """Generate a vector slice."""
         if 'evaluate' in kwargs:
-            evaluate = kwargs['evaluate']
+            evaluate = kwargs.pop('evaluate')
         else:
             evaluate = False
 
@@ -113,7 +134,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             extents = element.evaluate()
         else:
             extents = element.get_bounds()
-        return self.dumps_extents(*extents)
+        return self.dumps_extents(*extents, **kwargs)
 
     def gen_HDLAssignment(self, element, **kwargs):
         """Generate assignments."""
@@ -357,9 +378,12 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         return ret_str
 
     @staticmethod
-    def dumps_extents(left, right):
+    def dumps_extents(left, right, simplify_extents=False):
         """Dump a vector extents."""
-        return '[{}:{}]'.format(left, right)
+        if repr(left) != repr(right) or simplify_extents is False:
+            return '[{}:{}]'.format(left, right)
+        else:
+            return '[{}]'.format(left)
 
     @staticmethod
     def dumps_port(direction, name, extents, last=False):

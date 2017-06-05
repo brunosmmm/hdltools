@@ -107,6 +107,7 @@ if __name__ == "__main__":
 
         slave.insert_after('REG_RESET', [signal.assign(def_val)])
 
+    # output assignments
     for name, port in mmap.ports.items():
         if port.direction != 'out':
             continue

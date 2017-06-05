@@ -109,4 +109,3 @@ class HDLVectorDescriptor(HDLObject):
     def dumps(self, eval_scope=None):
         """Dump description to string."""
         return self.__repr__(eval_scope)
-
