@@ -58,12 +58,15 @@ class HDLSimulationPort(HDLObject):
 class HDLSimulationObject(HDLObject):
     """Abstract class for simulation objects."""
 
+    _sequential_methods = ['rising_edge', 'falling_edge']
+
     def __init__(self, identifier=None):
         """Initialize."""
         self.identifier = identifier
         self._sim_time = HDLIntegerConstant(0)
         self._outputs = {}
         self._inputs = {}
+        self._attrs = {}
 
     @staticmethod
     def _get_constant(value, size=None):
@@ -97,19 +100,23 @@ class HDLSimulationObject(HDLObject):
         """Do internal logic."""
         pass
 
-    def output(self, name, size=1, initial=0):
+    def output(self, name, size=1, initial=0, attrs=None):
         """Register output."""
         if name in self._outputs:
             raise ValueError('output already registered: {}'.format(name))
         self._outputs[name] = HDLSimulationPort(name, size, initial=initial)
+        if attrs is not None:
+            self.set_attrs(name, attrs)
         return self._outputs[name]
 
-    def input(self, name, size=1):
+    def input(self, name, size=1, attrs=None):
         """Register input."""
         if name in self._inputs:
             raise ValueError('input already registered: {}'.format(name))
         self._inputs[name] = HDLSimulationPort(name, size, initial=0,
                                                change_cb=self.input_changed)
+        if attrs is not None:
+            self.set_attrs(name, attrs)
         return self._inputs[name]
 
     def get_outputs(self, **kwargs):
@@ -173,3 +180,21 @@ class HDLSimulationObject(HDLObject):
             return attr._value
         else:
             return attr
+
+    def set_attrs(self, port, attrs):
+        """Set special attributes."""
+        self._attrs[port] = attrs
+
+    def rising_edge(self, input_name):
+        """Get if rising edge."""
+        if input_name not in self._inputs:
+            raise KeyError('invalid input: {}'.format(input_name))
+
+        return self._inputs[input_name].rising_edge()
+
+    def falling_edge(self, input_name):
+        """Get if falling edge."""
+        if input_name not in self._inputs:
+            raise KeyError('invalid input: {}'.format(input_name))
+
+        return self._inputs[input_name].falling_edge()
