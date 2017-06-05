@@ -41,6 +41,11 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             return self.get()
         return wrapper_BlockBuilder
 
+    def apply_on_ast(self, tree):
+        """Do procedures directly on AST."""
+        self.tree = tree
+        self.visit(self.tree)
+
     def _signal_lookup(self, sig_name):
         """Signal lookup."""
         if self.signal_scope is not None:
@@ -187,6 +192,10 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 raise
         # find out where to insert statement
         self.current_scope.add(*assignments)
+
+    def visit_IfExp(self, node):
+        """Visit If expression."""
+        raise NotImplementedError('missing IfExp implementation.')
 
     def visit_UnaryOp(self, node):
         """Visit Unary operations."""
