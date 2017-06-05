@@ -96,6 +96,11 @@ if __name__ == "__main__":
                 else:
                     concat.append(field.default_value)
 
+            # check if size matches register size
+            if len(concat) < reg.size:
+                # fill with zeroes on left side.
+                fill_size = reg.size - len(concat)
+                concat.appendleft(HDLIntegerConstant(0, size=fill_size))
             def_val = concat
         else:
             raise TypeError('Invalid type')
@@ -137,5 +142,12 @@ if __name__ == "__main__":
                                                        axi_wdata)])
         wr_switch.add_case(case)
         default_case.add_to_scope(reg_sig.assign(reg_sig))
+
+    # to generate register read, we must consider several aspects.
+    # If a register field has both a flag input and an output pointing
+    # to it, then the read will actually output the value from the
+    # input signal and not from the register. This will also happen if
+    # the field is read only. If a field is write only, then the read
+    # always gets the default value.
 
     print(vlog.dump_element(slave))
