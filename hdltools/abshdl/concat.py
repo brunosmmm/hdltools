@@ -9,9 +9,17 @@ from .const import HDLIntegerConstant
 class HDLConcatenation(HDLObject):
     """Concatenation of HDLObjects."""
 
-    def __init__(self, *args):
+    def __init__(self, *args, size=None, direction='rl'):
         """Initialize."""
         self.items = []
+        self.size = size
+        self.direction = direction
+
+        if self.size is not None:
+            # fill with zeros
+            for i in range(size):
+                self.append(HDLIntegerConstant(0, size=1,
+                                               radix='b'))
 
         # HDLExpression is unconstrained!
         for arg in args:
@@ -39,6 +47,30 @@ class HDLConcatenation(HDLObject):
         _item = [self._check_item(item)]
         _item.extend(self.items)
         self.items = _item
+
+    def insert(self, item, offset, size=None):
+        """Add item with location offset."""
+        if self.size is None:
+            raise ValueError('cannot insert into offset without '
+                             'predetermined concatenation size')
+
+        _item = self._check_item(item)
+        try:
+            item_size = len(_item)
+        except:
+            item_size = None
+
+        if item_size is None:
+            if size is None:
+                raise ValueError('could not determine item size '
+                                 'and manual size not provided')
+            else:
+                item_size = size
+
+        # remove placeholders
+        del self.items[offset:offset+item_size-1]
+        # insert item
+        self.items[offset] = _item
 
     def __len__(self):
         """Get length."""
