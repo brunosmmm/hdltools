@@ -43,7 +43,7 @@ class HDLExpression(HDLValue):
                   ast.Lt: op.lt, ast.Gt: op.gt,
                   ast.LtE: op.le, ast.GtE: op.ge, ast.Is: op.eq}
 
-    def __init__(self, value, size=None):
+    def __init__(self, value, size=None, **kwargs):
         """Initialize.
 
         Args
@@ -98,6 +98,9 @@ class HDLExpression(HDLValue):
         else:
             raise TypeError('invalid type provided: '
                             '{}'.format(value.__class__.__name__))
+
+        # store kwargs
+        self.optional_args = kwargs
 
     def __len__(self):
         """Get width, if known."""
