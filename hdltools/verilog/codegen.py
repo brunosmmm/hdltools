@@ -187,8 +187,10 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLConcatenation(self, element, **kwargs):
         """Generate concatenation."""
+        # force constants to be dumped with size
         ret_str = '{{{}}}'.format(
-            ', '.join([self.dump_element(x) for x in element.items]))
+            ', '.join([self.dump_element(x, format='int')
+                       for x in element.items]))
 
         return ret_str
 
