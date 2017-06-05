@@ -67,3 +67,36 @@ class HDLIfElse(HDLStatement):
     def get_scope(self):
         """Get Scope."""
         return (self.if_scope, self.else_scope)
+
+
+class HDLIfExp(HDLStatement):
+    """One line if-else expressions."""
+
+    def __init__(self, condition, if_value, else_value, **kwargs):
+        """Initialize."""
+        super().__init__(stmt_type='par', **kwargs)
+        self.condition = condition
+        self.if_value = if_value
+        self.else_value = else_value
+
+        if not isinstance(condition, (HDLExpression, HDLSignal,
+                                      HDLSignalSlice)):
+            raise TypeError('only HDLExpression, HDLSignal,'
+                            ' HDLSignalSlice allowed, got:'
+                            ' {}'.format(condition.__class__.__name__))
+
+        self.condition = HDLExpression(condition)
+
+    def is_legal(self):
+        """Determine if legal."""
+        if self.if_value is None or self.else_value is None:
+            return False
+
+        return True
+
+    def dumps(self):
+        """Get representation."""
+        ret_str = '{} ? {} else {}'.format(self.condition.dumps(),
+                                           self.if_value,
+                                           self.else_value)
+        return ret_str
