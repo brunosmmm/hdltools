@@ -42,10 +42,10 @@ class VCDGenerator(HDLCodeGenerator):
                 ret_str += '{}{}\n'.format(value,
                                            element.variable_identifiers[name])
 
-        ret_str += '$dumpoff\n'
-        for name, value in element.initial.items():
-            ret_str += 'x{}\n'.format(element.variable_identifiers[name])
-        ret_str += '$end'
+        #ret_str += '$dumpoff\n'
+        #for name, value in element.initial.items():
+        #ret_str += 'x{}\n'.format(element.variable_identifiers[name])
+        #ret_str += '$end'
 
         return ret_str
 
