@@ -213,9 +213,13 @@ class VerilogCodeGenerator(HDLCodeGenerator):
     def gen_HDLConcatenation(self, element, **kwargs):
         """Generate concatenation."""
         # force constants to be dumped with size
+        if element.direction == 'rl':
+            items = element.items[::-1]
+        else:
+            items = element.items
         ret_str = '{{{}}}'.format(
             ', '.join([self.dump_element(x, format='int')
-                       for x in element.items]))
+                       for x in items]))
 
         return ret_str
 
