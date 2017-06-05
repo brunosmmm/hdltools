@@ -48,6 +48,14 @@ class HDLConcatenation(HDLObject):
         _item.extend(self.items)
         self.items = _item
 
+    def _find_offset(self, offset):
+        """Find actual offset in item list."""
+        _offset = 0
+        for index, item in enumerate(self.items):
+            if _offset == offset:
+                return index
+            _offset += len(item)
+
     def insert(self, item, offset, size=None):
         """Add item with location offset."""
         if self.size is None:
@@ -68,9 +76,12 @@ class HDLConcatenation(HDLObject):
                 item_size = size
 
         # remove placeholders
-        del self.items[offset:offset+item_size-1]
+        actual_offset = self._find_offset(offset)
+        if actual_offset is None:
+            raise ValueError('could not determine insertion offset')
+        del self.items[actual_offset:actual_offset+item_size-1]
         # insert item
-        self.items[offset] = _item
+        self.items[actual_offset] = _item
 
     def __len__(self):
         """Get length."""
