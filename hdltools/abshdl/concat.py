@@ -34,6 +34,12 @@ class HDLConcatenation(HDLObject):
         """Add item."""
         self.items.append(self._check_item(item))
 
+    def appendleft(self, item):
+        """Add item on the left side."""
+        _item = [self._check_item(item)]
+        _item.extend(self.items)
+        self.items = _item
+
     def __len__(self):
         """Get length."""
         total_length = 0
