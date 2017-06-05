@@ -4,6 +4,7 @@ from ..abshdl.seq import HDLSequentialBlock
 from ..abshdl.ifelse import HDLIfElse
 from ..abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
 from ..abshdl.scope import HDLScope
+from ..abshdl.module import HDLModule, HDLModulePort
 from functools import wraps
 
 
@@ -59,6 +60,18 @@ def get_reset_if_else(rst_signal, rst_lvl, rst_stmts, stmts=None, **kwargs):
                        else_scope=stmts)
 
     return ifelse
+
+
+def get_module(name, inputs=None, outputs=None):
+    """Get a module."""
+    module_ports = []
+    for inp in inputs:
+        module_ports.append(HDLModulePort('in', *inp))
+    for out in outputs:
+        module_ports.append(HDLModulePort('out', *out))
+
+    mod = HDLModule(name, ports=module_ports)
+    return mod
 
 
 class SequentialBlock:
