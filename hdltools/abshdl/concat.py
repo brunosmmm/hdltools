@@ -80,10 +80,47 @@ class HDLConcatenation(HDLObject):
 
         return total_length
 
+    def pack(self):
+        """Pack constants together."""
+        items = []
+        last_item = None
+        current_pos = 0
+        for item in self.items:
+            if item.from_type != 'const':
+                if current_pos != 0:
+                    items.append(HDLExpression(last_item,
+                                               size=current_pos,
+                                               radix='b'))
+                current_pos = 0
+                last_item = None
+                # append item also
+                items.append(item)
+            else:
+                if last_item is None:
+                    last_item = item.evaluate()
+                    current_pos = 1
+                else:
+                    last_item |= item.evaluate() << current_pos
+                    current_pos += 1
+
+        if current_pos != 0:
+            items.append(HDLExpression(last_item,
+                                       size=current_pos,
+                                       radix='b'))
+
+        return HDLConcatenation(*items)
+
     def dumps(self):
         """Get representation."""
+        if self.direction == 'rl':
+            items = self.items[::-1]
+        elif self.direction == 'lr':
+            items = self.items
+        else:
+            raise ValueError('undefined order')
+
         ret_str = '{'
-        ret_str += ','.join([item.dumps() for item in self.items])
+        ret_str += ','.join([item.dumps() for item in items])
         ret_str += '}'
 
         return ret_str
