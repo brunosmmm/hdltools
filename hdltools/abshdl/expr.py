@@ -29,7 +29,8 @@ class HDLExpression(HDLValue):
                      ast.Lt: '<',
                      ast.Gt: '>',
                      ast.GtE: '>=',
-                     ast.LtE: '=<'}
+                     ast.LtE: '=<',
+                     ast.Is: '=='}
     _operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
                   ast.Div: op.truediv, ast.Pow: op.pow,
                   ast.USub: op.neg, ast.LShift: op.lshift,
@@ -40,7 +41,7 @@ class HDLExpression(HDLValue):
                   ast.Invert: op.invert, ast.Not: op.not_,
                   ast.Eq: op.eq, ast.NotEq: op.ne,
                   ast.Lt: op.lt, ast.Gt: op.gt,
-                  ast.LtE: op.le, ast.GtE: op.ge}
+                  ast.LtE: op.le, ast.GtE: op.ge, ast.Is: op.eq}
 
     def __init__(self, value, size=None):
         """Initialize.
