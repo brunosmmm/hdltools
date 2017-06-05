@@ -66,7 +66,12 @@ if __name__ == "__main__":
         signal = HDLSignal('reg', 'REG_'+name, reg.size)
         # TODO: fixme: allow only to insert list, because
         # signal will be iterated and bad things will happen
-        slave.insert_after('REG_DECL', [signal])
+        # generate write mask parameter
+        wrmask = HDLSignal('const', 'WRMASK_'+name, reg.size,
+                           default_val=HDLExpression(reg.get_write_mask(),
+                                                     size=reg.size,
+                                                     radix='h'))
+        slave.insert_after('REG_DECL', [signal, wrmask])
 
     param_buffer_list = []
     for name, reg in mmap.registers.items():
