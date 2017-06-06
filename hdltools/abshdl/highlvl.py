@@ -8,7 +8,7 @@ from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
 from .assign import HDLAssignment
 from .ifelse import HDLIfElse, HDLIfExp
-from ..hdllib.patterns import ClockedBlock, ParallelBlock
+from ..hdllib.patterns import ClockedBlock, ParallelBlock, SequentialBlock
 from .concat import HDLConcatenation
 from .vector import HDLVectorDescriptor
 
@@ -74,7 +74,23 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             raise RuntimeError('must be used in conjunction with a HDL block'
                                ' decorator, like ClockedBlock, ParallelBlock')
         for decorator in decorator_list:
-            if decorator.func.id == 'ClockedBlock':
+            if decorator.func.id == 'SequentialBlock':
+                # sequential block.
+                args = []
+                for arg in decorator.args:
+                    _arg = self._signal_lookup(arg.id)
+                    if _arg is None:
+                        continue
+                    args.append(_arg)
+                block = SequentialBlock.get(*args)
+                if self.block is None:
+                    self.block = block
+                    self.scope = self.block.scope
+                    self.current_scope = self.scope
+                else:
+                    self.scope.add(block)
+                    self.current_scope = block.scope
+            elif decorator.func.id == 'ClockedBlock':
                 # a clocked block.
                 # rebuild args
                 args = []
