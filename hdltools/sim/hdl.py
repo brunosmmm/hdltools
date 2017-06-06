@@ -30,6 +30,7 @@ class CombinatorialChecker(ast.NodeVisitor):
         self._is_comb = True
         self._assign_target_list = []
         self._if_seq = if_seq
+        self._inferred_sequential_blocks = []
 
         # get source, parse
         self.sim_obj = obj
@@ -37,7 +38,7 @@ class CombinatorialChecker(ast.NodeVisitor):
         self.tree = ast.parse(textwrap.dedent(self.logic_src), mode='exec')
         self.visit(self.tree)
 
-    def _record_assignment(self, assign_node):
+    def _record_assignment(self, assign_node, infer_register=False):
         """Record assignment."""
         if isinstance(assign_node, ast.Attribute):
             # "globals"
@@ -46,19 +47,77 @@ class CombinatorialChecker(ast.NodeVisitor):
                                        'cannot be assigned '
                                        'more than once in a cycle.'
                                        .format(assign_node.lineno))
-        self._assign_target_list.append(assign_node.attr)
+            self._assign_target_list.append([assign_node.attr, 'global',
+                                             infer_register])
+        elif isinstance(assign_node, ast.Name):
+            self._assign_target_list.append([assign_node.id, 'local',
+                                             False])
+        else:
+            raise TypeError('unsupported type for assignment: {}'
+                            .format(assign_node.__class__.__name__))
 
-    def visit_If(self, node, manual_visit=False):
+    def visit_If(self, node, manual_visit=False, if_level=0):
         """Visit an If node."""
+        prev_state = self._state
+        self._state = 'ifelse'
         if self._if_seq is True:
             # do not analyze if statements. Ony IfExp will be considered
             # concurrent.
             self._is_comb = False
+
+            if if_level == 0:
+                # ignore sequential inferring.
+                # visit node.test manually
+                if isinstance(node.test, ast.Call):
+                    # check if we are calling rising_edge or falling_edge
+                    if isinstance(node.test.func, ast.Attribute):
+                        if node.test.func.value.id == 'self' and\
+                           node.test.func.attr in ['rising_edge',
+                                                   'falling_edge']:
+                            # will infer a sequential block
+                            self._inferred_sequential_blocks.append(
+                                [node.test.func.attr, node.test.args,
+                                 node.body])
+                        else:
+                            raise IllegalCodeError(
+                                'unknown function: {}'
+                                .format(node.test.func.attr))
+                    else:
+                        raise IllegalCodeError('function calls not allowed')
+                elif isinstance(node.test, ast.Compare):
+                    # infer sensitivity list
+                    self._inferred_sequential_blocks.append(
+                        [None, node.test, node.body])
+                else:
+                    raise IllegalCodeError('cannot infer sequential block: '
+                                           'unsupported pattern')
+
+            # visit children manually
+            for child in node.body:
+                if isinstance(child, ast.If):
+                    # visit manually.
+                    self.visit_If(child, manual_visit=True,
+                                  if_level=if_level+1)
+                else:
+                    self.visit(child)
+
+            if if_level > 0:
+                for child in node.orelse:
+                    if isinstance(child, ast.If):
+                        self.visit_If(child, manual_visit=True,
+                                      if_level=if_level+1)
+                    else:
+                        self.visit(child)
+            else:
+                if len(node.orelse) > 0:
+                    raise IllegalCodeError(
+                        'top-level if cannot have else clause')
+
+            self._state = prev_state
             return
+
         if_assigned_stmts = []
         else_assigned_stmts = []
-        prev_state = self._state
-        self._state = 'ifelse'
         # visit manually
         for stmt in node.body:
             if isinstance(stmt, ast.Assign):
@@ -155,20 +214,26 @@ class CombinatorialChecker(ast.NodeVisitor):
                        target.attr in self.sim_obj._outputs:
                         # will not imply a register directly
                         # however, we must check
-                        pass
+                        # base on current and last state
+                        if prev_state == 'ifelse':
+                            # inside if statement
+                            infer_register = True
+                        else:
+                            infer_register = False
                     else:
                         # will imply a register.
                         self._is_comb = False
-                        break
+                        infer_register = True
                     # record assignments of ports / globals
                     if manual_visit is False:
-                        self._record_assignment(target)
+                        self._record_assignment(target, infer_register)
                     else:
-                        assigned_globals.append(target)
+                        assigned_globals.append(target, infer_register)
             elif isinstance(target, ast.Name):
-                # a local variable. check if implies register
-                # must visit child nodes.
-                pass
+                # locals are taken as combinatorial assignments.
+                # signal must be created before passing through
+                # high level constructor. May be impossible to determine size!
+                self._record_assignment(target)
 
         self.generic_visit(node)
         self._state = prev_state
@@ -209,9 +274,10 @@ class CombinatorialChecker(ast.NodeVisitor):
     def visit_AugAssign(self, node):
         """Visits an augmented assignment."""
         # augmented assignmens imply memory of a past state -> sequential
-        if isinstance(node, ast.Attribute):
+        if isinstance(node.value, ast.Attribute):
             if node.value.id == 'self':
                 self._is_comb = False
+                self._record_assignment(node.value, True)
         # gets ignored in local variables
         self.generic_visit(node)
 
