@@ -14,4 +14,6 @@ Includes (everything is a WIP):
 * Generate HDL representation / code usign pure python syntax (hdltools.abshdl.highlvl)
 * Generate exhaustively used HDL patterns easily (hdltools.hdllib.patterns)
 * AXI Memory-mapped slave model using Intermediate Representation (hdltools.hdllib.aximm)
+* Simple simulation framework (hdltools.sim.*)
+* Simulation model HDL Compiler (hdltools.sim.hdl)
 
