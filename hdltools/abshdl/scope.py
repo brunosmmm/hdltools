@@ -32,8 +32,9 @@ class HDLScope(HDLObject):
            and element.stmt_type != 'null':
             raise ValueError('cannot add sequential statements '
                              'in parallel scopes and vice versa,'
-                             'tried {} into {}'.format(element.stmt_type,
-                                                       self.scope_type))
+                             'tried {} into {} ({})'.format(element.stmt_type,
+                                                            self.scope_type,
+                                                            element.dumps()))
 
         return element
 
