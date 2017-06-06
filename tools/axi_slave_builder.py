@@ -12,8 +12,8 @@ from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.concat import HDLConcatenation
 from hdltools.abshdl.switch import HDLCase
-from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.hdllib.aximm import get_axi_mm_slave, get_register_write_logic
+import sys
 
 
 DEFAULT_TEMPLATE = os.path.join('assets', 'verilog', 'axi_slave.v')
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # parse file
     mmap.parse_file(args.model)
 
-    print(mmap.dumps())
+    sys.stderr.write(mmap.dumps())
 
     # code generator
     vlog = VerilogCodeGenerator(indent=True)
