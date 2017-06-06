@@ -147,9 +147,17 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 return HDLSignalSlice(signal,
                                       vec)
             elif isinstance(node.slice, ast.Slice):
+                if isinstance(node.slice.upper, ast.Num):
+                    upper = node.slice.upper.n
+                else:
+                    upper = node.slice.upper
+                if isinstance(node.slice.lower, ast.Num):
+                    lower = node.slice.lower.n
+                else:
+                    lower = node.slice.lower
                 return HDLSignalSlice(signal,
-                                      [node.slice.upper,
-                                       node.slice.lower])
+                                      [upper,
+                                       lower])
             else:
                 raise TypeError('type {} not supported'.format(
                     node.slice.__class__.__name__))
@@ -194,7 +202,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             for assignee in assignees:
                 assignments.append(
                     HDLAssignment(self._signal_lookup(assignee),
-                                  HDLConcatenation(*items)))
+                                  HDLConcatenation(*items[::-1])))
         else:
             try:
                 expr = self.visit(node.value)
