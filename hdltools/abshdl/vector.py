@@ -4,7 +4,6 @@ from . import HDLObject
 import hdltools.abshdl.expr as expr
 from .const import HDLIntegerConstant
 import hdltools.abshdl.signal as signal
-import math
 
 
 class HDLVectorDescriptor(HDLObject):
@@ -25,7 +24,8 @@ class HDLVectorDescriptor(HDLObject):
         if not isinstance(left_size, (int, HDLIntegerConstant,
                                       expr.HDLExpression,
                                       signal.HDLSignal)):
-            raise TypeError('only int or HDLExpression allowed as size')
+            raise TypeError('only int or HDLExpression allowed as size,'
+                            ' got: {}'.format(left_size.__class__.__name__))
 
         if not isinstance(right_size, (int, HDLIntegerConstant,
                                        expr.HDLExpression,
