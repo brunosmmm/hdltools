@@ -460,19 +460,28 @@ class HDLSimulationObjectScheduler(HDLObject):
             raise RuntimeError('Illegal code detected')
 
         # determine if it is puerely combinatorial
-        comb_only = CombinatorialChecker(self._obj).is_combinatorial_only()
+        comb_check = CombinatorialChecker(self._obj)
+        comb_only = comb_check.is_combinatorial_only()
 
         # sanitize
         tree = LogicSanitizer(self._obj).get_sanitized()
 
+        inputs = {inp.name: HDLSignal('comb', inp.name, inp.size)
+                  for name, inp in self._obj.report_inputs().items()}
+        outputs = {out.name: HDLSignal('comb', out.name, out.size)
+                   for name, out in self._obj.report_outputs().items()}
+        signals = {name: HDLSignal('comb', name)
+                   for name in comb_check.get_assigned_locals()}
+
+        signals.update(inputs)
+        signals.update(outputs)
+
+        ports = {}
+        ports.update(inputs)
+        ports.update(outputs)
+
         if comb_only is True:
             # just generate a simple module
-            # create signals
-            inputs = {inp.name: HDLSignal('comb', inp.name, inp.size)
-                      for name, inp in self._obj.report_inputs().items()}
-            outputs = {out.name: HDLSignal('comb', out.name, out.size)
-                       for name, out in self._obj.report_outputs().items()}
-
             # apply decorator
             tree.decorator_list = [ast.Call(func=ast.Name(id='ParallelBlock',
                                                           ctx=ast.Load()),
@@ -481,9 +490,58 @@ class HDLSimulationObjectScheduler(HDLObject):
                                             starargs=None)]
 
             # now use HDLBlock
-            inputs.update(outputs)
-            block = HDLBlock(**inputs)
+            block = HDLBlock(**signals)
             block.apply_on_ast(tree)
             return block.get()
         else:
-            raise NotImplementedError('sequential scheduling not implemented')
+            # build inferred blocks
+            block_num = 0
+            sequential_blocks = []
+            arg_list = []
+            for name, signal in ports.items():
+                arg_list.append(ast.arg(name, None))
+            args = ast.arguments(arg_list, None, [], [], [], [])
+            for edge, sig, body in comb_check._inferred_sequential_blocks:
+                arg_list_inner = []
+                for name, signal in signals.items():
+                    if name != sig[0].s:
+                        arg_list_inner.append(ast.arg(name, None))
+                args_inner = ast.arguments(arg_list_inner,
+                                           None, [], [], [], [])
+                seqfn = ast.FunctionDef(name='gen_{}'.format(block_num),
+                                        args=args_inner,
+                                        body=body,
+                                        decorator_list=[ast.Call(
+                                            func=ast.Name(id='SequentialBlock',
+                                                          ctx=ast.Load()),
+                                            args=[ast.Name(id=sig[0].s,
+                                                           ctx=ast.Load())],
+                                            keywords=[],
+                                            starargs=None)],
+                                        returns=None)
+                block_num += 1
+                sequential_blocks.append(seqfn)
+
+            # top-level function
+            topfn = ast.FunctionDef(name=self._obj.identifier,
+                                    args=args,
+                                    body=sequential_blocks,
+                                    decorator_list=[ast.Call(
+                                        func=ast.Name(id='ParallelBlock',
+                                                      ctx=ast.Load()),
+                                        args=[],
+                                        keywords=[],
+                                        starargs=None)])
+            # TODO recover size
+            inferred_regs = comb_check.get_inferred_regs()
+            proxies = {'reg_'+name: HDLSignal('reg', 'reg_'+name)
+                       for name, is_reg in inferred_regs.items()
+                       if is_reg is True}
+            signals.update(proxies)
+            block = HDLBlock(**signals)
+            # sanitize (and insert proxies)
+            tree = LogicSanitizer(insert_reg_list=[name for name, is_reg in
+                                                   inferred_regs.items()])
+            tree.apply_on_ast(topfn)
+            block.apply_on_ast(tree.get_sanitized(rebuild=False))
+            return block.get()
