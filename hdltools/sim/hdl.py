@@ -35,7 +35,8 @@ class CombinatorialChecker(ast.NodeVisitor):
         self.tree = ast.parse(textwrap.dedent(self.logic_src), mode='exec')
         self.visit(self.tree)
 
-    def _record_assignment(self, assign_node, infer_register=False):
+    def _record_assignment(self, assign_node, infer_register=False,
+                           assign=None):
         """Record assignment."""
         if isinstance(assign_node, ast.Attribute):
             # "globals"
@@ -45,10 +46,10 @@ class CombinatorialChecker(ast.NodeVisitor):
                                        'more than once in a cycle.'
                                        .format(assign_node.lineno))
             self._assign_target_list.append([assign_node.attr, 'global',
-                                             infer_register])
+                                             infer_register, assign])
         elif isinstance(assign_node, ast.Name):
             self._assign_target_list.append([assign_node.id, 'local',
-                                             False])
+                                             False, assign])
         else:
             raise TypeError('unsupported type for assignment: {}'
                             .format(assign_node.__class__.__name__))
@@ -223,14 +224,15 @@ class CombinatorialChecker(ast.NodeVisitor):
                         infer_register = True
                     # record assignments of ports / globals
                     if manual_visit is False:
-                        self._record_assignment(target, infer_register)
+                        self._record_assignment(target, infer_register,
+                                                assign=node)
                     else:
                         assigned_globals.append(target, infer_register)
             elif isinstance(target, ast.Name):
                 # locals are taken as combinatorial assignments.
                 # signal must be created before passing through
                 # high level constructor. May be impossible to determine size!
-                self._record_assignment(target)
+                self._record_assignment(target, assign=node)
 
         self.generic_visit(node)
         self._state = prev_state
@@ -274,7 +276,7 @@ class CombinatorialChecker(ast.NodeVisitor):
         if isinstance(node.value, ast.Attribute):
             if node.value.id == 'self':
                 self._is_comb = False
-                self._record_assignment(node.value, True)
+                self._record_assignment(node.value, True, assign=node)
         # gets ignored in local variables
         self.generic_visit(node)
 
@@ -284,23 +286,37 @@ class CombinatorialChecker(ast.NodeVisitor):
 
     def get_assigned_globals(self):
         """Get globals assigned (ports)."""
-        return [(name, reg) for name, kind, reg in self._assign_target_list
+        return [(name, reg) for name, kind, reg, obj
+                in self._assign_target_list
                 if kind == 'global']
 
     def get_assigned_locals(self):
         """Get local assigned (signals)."""
-        return [name for name, kind, reg in self._assign_target_list
+        return [name for name, kind, reg, obj in self._assign_target_list
                 if kind == 'local']
 
     def get_inferred_regs(self):
         """Get inferred registers."""
         infer = {}
-        for name, scope, is_reg in self._assign_target_list:
+        for name, scope, is_reg, obj in self._assign_target_list:
             if name in infer:
                 if infer[name] is False and is_reg is True:
                     infer[name] = True
             else:
                 infer[name] = is_reg
+
+        return infer
+
+    def get_inferred_combs(self):
+        """Get inferred combinational signals."""
+        infer = {}
+        for name, scope, is_reg, obj in self._assign_target_list:
+            if name in infer:
+                if is_reg is True:
+                    del infer[name]
+            else:
+                if is_reg is False:
+                    infer[name] = obj
 
         return infer
 
@@ -494,6 +510,10 @@ class HDLSimulationObjectScheduler(HDLObject):
             block.apply_on_ast(tree)
             return block.get()
         else:
+            # re-build combinational assignments
+            comb_assignments = []
+            for name, assign in comb_check.get_inferred_combs().items():
+                comb_assignments.append(assign)
             # build inferred blocks
             block_num = 0
             sequential_blocks = []
@@ -522,26 +542,43 @@ class HDLSimulationObjectScheduler(HDLObject):
                 block_num += 1
                 sequential_blocks.append(seqfn)
 
-            # top-level function
-            topfn = ast.FunctionDef(name=self._obj.identifier,
-                                    args=args,
-                                    body=sequential_blocks,
-                                    decorator_list=[ast.Call(
-                                        func=ast.Name(id='ParallelBlock',
-                                                      ctx=ast.Load()),
-                                        args=[],
-                                        keywords=[],
-                                        starargs=None)])
+            # create proxy register assignments
             # TODO recover size
             inferred_regs = comb_check.get_inferred_regs()
             proxies = {'reg_'+name: HDLSignal('reg', 'reg_'+name)
                        for name, is_reg in inferred_regs.items()
                        if is_reg is True}
             signals.update(proxies)
+
+            # create ast items
+            proxy_assignments = [ast.Assign(targets=[
+                ast.Name(id=name,
+                         ctx=ast.Store())],
+                                            value=ast.Name(id='reg_'+name,
+                                                           ctx=ast.Load()))
+                                 for name, is_reg in inferred_regs.items()
+                                 if is_reg is True]
+
+            comb_assignments.extend(proxy_assignments)
+            # add sequential blocks
+            comb_assignments.extend(sequential_blocks)
+            # top-level function
+            topfn = ast.FunctionDef(name=self._obj.identifier,
+                                    args=args,
+                                    body=comb_assignments,
+                                    decorator_list=[ast.Call(
+                                        func=ast.Name(id='ParallelBlock',
+                                                      ctx=ast.Load()),
+                                        args=[],
+                                        keywords=[],
+                                        starargs=None)])
+
             block = HDLBlock(**signals)
             # sanitize (and insert proxies)
             tree = LogicSanitizer(insert_reg_list=[name for name, is_reg in
                                                    inferred_regs.items()])
             tree.apply_on_ast(topfn)
-            block.apply_on_ast(tree.get_sanitized(rebuild=False))
+            final_ast = tree.get_sanitized(rebuild=False)
+            # print(astunparse.unparse(final_ast))
+            block.apply_on_ast(final_ast)
             return block.get()
