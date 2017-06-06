@@ -285,6 +285,28 @@ class CombinatorialChecker(ast.NodeVisitor):
         """Get analysis result."""
         return self._is_comb
 
+    def get_assigned_globals(self):
+        """Get globals assigned (ports)."""
+        return [(name, reg) for name, kind, reg in self._assign_target_list
+                if kind == 'global']
+
+    def get_assigned_locals(self):
+        """Get local assigned (signals)."""
+        return [name for name, kind, reg in self._assign_target_list
+                if kind == 'local']
+
+    def get_inferred_regs(self):
+        """Get inferred registers."""
+        infer = {}
+        for name, scope, is_reg in self._assign_target_list:
+            if name in infer:
+                if infer[name] is False and is_reg is True:
+                    infer[name] = True
+            else:
+                infer[name] = is_reg
+
+        return infer
+
 
 class LegalityChecker(ast.NodeVisitor):
     """Check legality for transformation."""
