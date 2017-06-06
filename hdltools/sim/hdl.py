@@ -2,15 +2,12 @@
 
 from . import HDLSimulationObject
 from ..abshdl import HDLObject
-from ..abshdl.expr import HDLExpression
-from ..abshdl.seq import HDLSequentialBlock
-from ..hdllib.patterns import get_module, ParallelBlock
 from ..abshdl.signal import HDLSignal
 from ..abshdl.highlvl import HDLBlock
 import ast
 import inspect
 import textwrap
-from astdump import indented
+import astunparse
 
 
 class IllegalCodeError(Exception):
@@ -380,12 +377,22 @@ class LegalityChecker(ast.NodeVisitor):
 class LogicSanitizer(ast.NodeTransformer):
     """Sanitize logic function."""
 
-    def __init__(self, obj):
+    def __init__(self, obj=None, insert_reg_list=None):
         """Initialize."""
         self._globals = set()
         self._obj = obj
-        self.logic_src = inspect.getsource(self._obj.logic)
-        self.tree = ast.parse(textwrap.dedent(self.logic_src), mode='exec')
+        if insert_reg_list is None:
+            self._proxy_list = []
+        else:
+            self._proxy_list = insert_reg_list
+        if obj is not None:
+            self.logic_src = inspect.getsource(self._obj.logic)
+            self.tree = ast.parse(textwrap.dedent(self.logic_src), mode='exec')
+            self.visit(self.tree)
+
+    def apply_on_ast(self, tree):
+        """Run on ast."""
+        self.tree = tree
         self.visit(self.tree)
 
     def visit_Print(self, node):
@@ -404,22 +411,33 @@ class LogicSanitizer(ast.NodeTransformer):
         """Remove attributes."""
         if node.value.id == 'self':
             self._globals.add(node.attr)
-            return ast.Name(id=node.attr,
-                            ctx=node.ctx)
+            if node.attr in self._proxy_list:
+                return ast.Name(id='reg_'+node.attr,
+                                ctx=node.ctx)
+            else:
+                return ast.Name(id=node.attr,
+                                ctx=node.ctx)
 
         return node
 
-    def get_sanitized(self):
+    def get_sanitized(self, unparse=False, rebuild=True):
         """Get sanitized tree."""
         # build exterior function
-        arg_list = []
-        for arg in self._globals:
-            arg_list.append(ast.arg(arg, None))
-        root_args = ast.arguments(arg_list, None, [], None, [], [])
-        root = ast.FunctionDef(name=self._obj.identifier,
-                               args=root_args,
-                               body=self.tree.body[0].body)
-        return root
+        if rebuild is True:
+            arg_list = []
+            for arg in self._globals:
+                arg_list.append(ast.arg(arg, None))
+            root_args = ast.arguments(arg_list, None, [], None, [], [])
+            root = ast.FunctionDef(name=self._obj.identifier,
+                                   args=root_args,
+                                   body=self.tree.body[0].body)
+        else:
+            root = self.tree
+
+        if unparse is True:
+            return astunparse.unparse(root)
+        else:
+            return root
 
 
 class HDLSimulationObjectScheduler(HDLObject):
