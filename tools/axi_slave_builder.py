@@ -12,6 +12,7 @@ from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.concat import HDLConcatenation
 from hdltools.abshdl.switch import HDLCase
+from hdltools.abshdl.ifelse import HDLIfElse
 from hdltools.hdllib.aximm import get_axi_mm_slave, get_register_write_logic
 import sys
 
@@ -149,6 +150,19 @@ if __name__ == "__main__":
                                                        axi_wdata)])
         wr_switch.add_case(case)
         default_case.add_to_scope(reg_sig.assign(reg_sig))
+
+    # add autoclear if present
+    wr_if = wr_switch.get_parent().get_parent().get_parent()
+    for name, reg in mmap.registers.items():
+        for field in reg.fields:
+            if 'autoclear' in field.properties:
+                if field.properties['autoclear'] == 'true':
+                    # insert auto clearing flag behavior
+                    field_sig = slave_signals['REG_'+name]
+                    clr_if = HDLIfElse(field_sig[field.get_slice()],
+                                       if_scope=(field_sig[field.get_slice()])
+                                       .assign(0))
+                    wr_if.add(clr_if)
 
     # to generate register read, we must consider several aspects.
     # If a register field has both a flag input and an output pointing
