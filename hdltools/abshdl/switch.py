@@ -36,6 +36,7 @@ class HDLSwitch(HDLStatement):
             raise KeyError('trying to add duplicate case')
 
         self.cases[expr_repr] = case
+        case.set_parent(self)
 
     def get_case(self, expr):
         """Get case object."""
@@ -64,8 +65,9 @@ class HDLSwitch(HDLStatement):
 class HDLCase(HDLObject):
     """Switch case."""
 
-    def __init__(self, value, stmts=None):
+    def __init__(self, value, stmts=None, **kwargs):
         """Initialize."""
+        super().__init__(**kwargs)
         if isinstance(value, (HDLIntegerConstant, int, str)):
             self.case_value = HDLExpression(value)
         elif isinstance(value, HDLExpression):

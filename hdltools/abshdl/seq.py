@@ -13,7 +13,7 @@ class HDLSequentialBlock(HDLStatement):
         super(HDLSequentialBlock, self).__init__(stmt_type='par',
                                                  has_scope=True,
                                                  **kwargs)
-        self.scope = HDLScope(scope_type='seq')
+        self.scope = HDLScope(scope_type='seq', parent=self)
 
         # parse sensitivity list?
         if not isinstance(sensitivity_list, (HDLSensitivityList,

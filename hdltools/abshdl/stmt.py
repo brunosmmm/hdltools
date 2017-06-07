@@ -8,8 +8,9 @@ class HDLStatement(HDLObject):
 
     _stmt_types = ['seq', 'par', 'null']
 
-    def __init__(self, stmt_type, tag=None, has_scope=False):
+    def __init__(self, stmt_type, tag=None, has_scope=False, **kwargs):
         """Initialize."""
+        super().__init__(**kwargs)
         if stmt_type not in self._stmt_types:
             raise KeyError('invalid statement type')
 

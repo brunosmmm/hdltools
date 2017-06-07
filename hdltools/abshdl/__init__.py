@@ -4,7 +4,17 @@
 class HDLObject:
     """Abstract class from which all HDL objects derive from."""
 
-    pass
+    def __init__(self, parent=None):
+        """Initialize."""
+        self.parent = parent
+
+    def get_parent(self):
+        """Get parent object."""
+        return self.parent
+
+    def set_parent(self, parent):
+        """Set parent object."""
+        self.parent = parent
 
 
 class HDLValue(HDLObject):

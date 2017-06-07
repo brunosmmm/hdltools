@@ -11,8 +11,9 @@ class HDLScope(HDLObject):
 
     _scope_types = ['seq', 'par']
 
-    def __init__(self, scope_type):
+    def __init__(self, scope_type, **kwargs):
         """Initialize."""
+        super().__init__(**kwargs)
         self.statements = []
         if scope_type not in self._scope_types:
             raise KeyError('invalid scope type')
@@ -43,8 +44,12 @@ class HDLScope(HDLObject):
         if isinstance(elements, (tuple, list, types.GeneratorType)):
             for element in elements:
                 self.statements.append(self._check_element(element))
+                if isinstance(element, HDLObject):
+                    element.set_parent(self)
         else:
             self.statements.append(self._check_element(elements))
+            if isinstance(elements, HDLObject):
+                elements.set_parent(self)
 
     def extend(self, scope):
         """Extend from another scope."""
@@ -60,6 +65,8 @@ class HDLScope(HDLObject):
         """Insert elements."""
         for index, element in enumerate(elements):
             self.statements.insert(where+index, self._check_element(element))
+            if isinstance(element, HDLObject):
+                element.set_parent(self)
 
     def insert_before(self, tag, *elements):
         """Insert before tag."""

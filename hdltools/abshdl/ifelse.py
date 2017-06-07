@@ -14,8 +14,8 @@ class HDLIfElse(HDLStatement):
         super(HDLIfElse, self).__init__(stmt_type='seq',
                                         has_scope=True,
                                         **kwargs)
-        self.if_scope = HDLScope(scope_type='seq')
-        self.else_scope = HDLScope(scope_type='seq')
+        self.if_scope = HDLScope(scope_type='seq', parent=self)
+        self.else_scope = HDLScope(scope_type='seq', parent=self)
         if not isinstance(condition, (HDLExpression, HDLSignal,
                                       HDLSignalSlice)):
             raise TypeError('only HDLExpression, HDLSignal,'

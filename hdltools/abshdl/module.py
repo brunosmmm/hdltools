@@ -130,7 +130,7 @@ class HDLModule(HDLObject):
             self.add_parameters(params)
         if ports is not None:
             self.add_ports(ports)
-        self.scope = HDLScope(scope_type='par')
+        self.scope = HDLScope(scope_type='par', parent=self)
 
     def __call__(self, fn):
         """Use as decorator."""
