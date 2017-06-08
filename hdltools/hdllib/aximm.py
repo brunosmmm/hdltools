@@ -40,11 +40,12 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
     # caculate minimum address width: resolve immediately, do not depend
     # on parameters (could also evaluate lsb_bits with AXI_DATA_WIDTH=32)
     eval_lsb = lsb_bits.evaluate(AXI_DATA_WIDTH=data_width)
-    addr_bits = int(math.ceil(math.log2(register_count)))+int(eval_lsb)
+    addr_bits = int(math.ceil(math.log2(register_count)))
+    addr_len = addr_bits+int(eval_lsb)+1
 
     # create standard parameters
     param_list = [HDLModuleParameter('AXI_DATA_WIDTH', 'integer', data_width),
-                  HDLModuleParameter('AXI_ADDR_WIDTH', 'integer', addr_bits)]
+                  HDLModuleParameter('AXI_ADDR_WIDTH', 'integer', addr_len)]
 
     # create standard ports
     port_list = [HDLModulePort('in', 'S_AXI_ACLK'),
@@ -97,7 +98,7 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
         yield HDLSignal('const', 'ADDR_LSB', size=None,
                         default_val=HDLExpression('AXI_DATA_WIDTH/32+1'))
         yield HDLSignal('const', 'OPT_MEM_ADDR_BITS', size=None,
-                        default_val=3)
+                        default_val=addr_bits)
         yield HDLComment('Register Space', tag='REG_DECL')
         yield HDLSignal('comb', 'slv_reg_rden')
         yield HDLSignal('comb', 'slv_reg_wren')
