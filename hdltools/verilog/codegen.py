@@ -400,7 +400,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         return ret_str
 
     @staticmethod
-    def dumps_extents(left, right, simplify_extents=False, part_select=False):
+    def dumps_extents(left, right, simplify_extents=True, part_select=False):
         """Dump a vector extents."""
         if repr(left) != repr(right) or simplify_extents is False:
             if part_select is False:
