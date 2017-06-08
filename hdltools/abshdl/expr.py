@@ -225,8 +225,13 @@ class HDLExpression(HDLValue):
             # NOTICE: THIS IS LANGUAGE DEPENDENT!!!!!!
             return '[{}]'.format(self._get_expr(node.value))
         elif isinstance(node, ast.Slice):
-            return '[{}:{}]'.format(self._get_expr(node.upper),
-                                    self._get_expr(node.lower))
+            upper = self._get_expr(node.upper)
+            lower = self._get_expr(node.lower)
+            if upper != lower:
+                return '[{}:{}]'.format(upper,
+                                        lower)
+            else:
+                return '[{}]'.format(upper)
         else:
             raise TypeError('invalid type: "{}"'.format(type(node)))
 
