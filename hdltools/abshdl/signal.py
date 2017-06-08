@@ -8,6 +8,16 @@ from .const import HDLIntegerConstant
 # TODO allow multiple dimensions
 
 
+class HDLSignalPartSelect(HDLObject):
+    """Part select alternative to slice."""
+
+    def __init__(self, offset, length, **kwargs):
+        """Initialize."""
+        super().__init__(**kwargs)
+        self.offset = offset
+        self.length = length
+
+
 class HDLSignal(HDLStatement):
     """HDL Signal."""
 
@@ -252,6 +262,10 @@ class HDLSignal(HDLStatement):
         """Get signal type."""
         return self.sig_type
 
+    def part_select(self, offset, size):
+        """Part-select signal slice."""
+        return HDLSignalSlice(self, HDLSignalPartSelect(offset, size))
+
 
 class HDLSignalSlice(HDLObject):
     """Slice of a vector signal."""
@@ -283,6 +297,8 @@ class HDLSignalSlice(HDLObject):
             self.vector = hdl.vector.HDLVectorDescriptor(start, slic.stop)
         elif isinstance(slic, HDLSignal):
             self.vector = hdl.vector.HDLVectorDescriptor(slic, slic)
+        elif isinstance(slic, HDLSignalPartSelect):
+            self.vector = hdl.vector.HDLVectorDescriptor(slic)
         else:
             raise TypeError('size can only be of types: int, list, slice,'
                             ' HDLVectorDescriptor or HDLSignal')

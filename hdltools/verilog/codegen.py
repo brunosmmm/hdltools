@@ -136,6 +136,9 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             extents = element.evaluate()
         else:
             extents = element.get_bounds()
+        kwargs['part_select'] = element.part_select
+        if element.part_select is True:
+            extents = (extents[0], element.part_select_length)
         return self.dumps_extents(*extents, **kwargs)
 
     def gen_HDLAssignment(self, element, **kwargs):
@@ -397,10 +400,15 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         return ret_str
 
     @staticmethod
-    def dumps_extents(left, right, simplify_extents=False):
+    def dumps_extents(left, right, simplify_extents=False, part_select=False):
         """Dump a vector extents."""
         if repr(left) != repr(right) or simplify_extents is False:
-            return '[{}:{}]'.format(left, right)
+            if part_select is False:
+                return '[{}:{}]'.format(left, right)
+            else:
+                return '[{}{}:{}]'.format(left,
+                                          '+' if right > 0 else '-',
+                                          right)
         else:
             return '[{}]'.format(left)
 

@@ -23,7 +23,8 @@ class HDLVectorDescriptor(HDLObject):
         """
         if not isinstance(left_size, (int, HDLIntegerConstant,
                                       expr.HDLExpression,
-                                      signal.HDLSignal)):
+                                      signal.HDLSignal,
+                                      signal.HDLSignalPartSelect)):
             raise TypeError('only int or HDLExpression allowed as size,'
                             ' got: {}'.format(left_size.__class__.__name__))
 
@@ -52,8 +53,13 @@ class HDLVectorDescriptor(HDLObject):
         self._check_value(right_size)
         self._check_value(left_size)
 
+        self.part_select = False
         if isinstance(left_size, (int, HDLIntegerConstant, signal.HDLSignal)):
             self.left_size = expr.HDLExpression(left_size)
+        elif isinstance(left_size, signal.HDLSignalPartSelect):
+            self.left_size = expr.HDLExpression(left_size.offset)
+            self.part_select_length = left_size.length
+            self.part_select = True
         else:
             self.left_size = left_size
         if isinstance(right_size, (int, HDLIntegerConstant, signal.HDLSignal)):
@@ -104,7 +110,10 @@ class HDLVectorDescriptor(HDLObject):
         else:
             left_size = self.left_size
             right_size = self.right_size
-        return '[{}:{}]'.format(left_size, right_size)
+        if self.part_select is False:
+            return '[{}:{}]'.format(left_size, right_size)
+        else:
+            return '[{}:{:+}]'.format(left_size, self.part_select_length)
 
     def dumps(self, eval_scope=None):
         """Dump description to string."""

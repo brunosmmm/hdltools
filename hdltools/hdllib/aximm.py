@@ -21,8 +21,8 @@ def get_register_write_logic(loop_variable, data_width, axi_wstrb,
     after = loop_variable.assign(loop_variable + 1)
     loop = HDLForLoop(initial, expr, after)
 
-    data = axi_wdata[loop_variable*8:(loop_variable - 1)*8]
-    assign = register[loop_variable*8:(loop_variable - 1)*8].assign(data)
+    data = axi_wdata.part_select(loop_variable*8, 8)
+    assign = register.part_select(loop_variable*8, 8).assign(data)
     loop.add_to_scope(HDLIfElse(axi_wstrb[loop_variable] == 1,
                                 if_scope=assign))
 
