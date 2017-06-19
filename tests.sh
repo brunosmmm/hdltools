@@ -26,4 +26,5 @@ mv .coverage .coverage.docgen
 coverage_report_options='-i --omit=usage/*,tests/*,venv/*,tools/*'
 coverage combine
 coverage html $coverage_report_options
+coverage xml $coverage_report_options
 coverage report $coverage_report_options
