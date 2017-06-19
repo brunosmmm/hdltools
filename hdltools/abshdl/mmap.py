@@ -199,20 +199,23 @@ class MemoryMappedInterface(object):
                     raise ValueError('unknown register:'
                                      ' "{}"'.format(source_reg))
 
-                slicesize = slice_size(bitfield_pos_to_slice(statement.position))
+                slicesize = slice_size(bitfield_pos_to_slice(
+                    statement.position))
                 if statement.default is not None:
                     if statement.default.posint is not None:
                         defval = int(statement.default.posint)
-                        param_min_size = HDLIntegerConstant.minimum_value_size(defval)
+                        param_min_size = HDLIntegerConstant.minimum_value_size(
+                            defval)
                     elif statement.default.hex is not None:
                         defval = int(statement.default.hex.strip('0x'), 16)
-                        param_min_size = HDLIntegerConstant.minimum_value_size(defval)
+                        param_min_size = HDLIntegerConstant.minimum_value_size(
+                            defval)
                     elif statement.default.id is not None:
                         # search into parameters
                         val = statement.default.id.strip()
-                        if val  in self.parameters:
-                            #defval = self.parameters[val].value.value
-                            #param_min_size = self.parameters[val].value.size
+                        if val in self.parameters:
+                            # defval = self.parameters[val].value.value
+                            # param_min_size = self.parameters[val].value.size
                             param_min_size = 0
                             defval = HDLExpression(val, size=slicesize)
                         else:
@@ -221,8 +224,9 @@ class MemoryMappedInterface(object):
                     # check if it fits
                     if (slicesize < param_min_size):
                         raise ValueError('value "{}" does not fit'
-                                         ' field "{}"'.format(defval,
-                                                              statement.source.bit))
+                                         ' field "{}"'.format(
+                                             defval,
+                                             statement.source.bit))
                 else:
                     defval = 0
 
@@ -237,38 +241,36 @@ class MemoryMappedInterface(object):
                     reg_field.add_properties(**{prop.name: prop.value})
 
                 self.registers[source_reg].add_fields(reg_field)
-            # TODO parse ports
-            elif statement.__class__.__name__ == 'SlaveOutput':
+            elif statement.__class__.__name__ in ('SlaveOutput', 'SlaveInput'):
                 descriptor = statement.descriptor
                 name = descriptor.name
-                source = descriptor.source.field
-                src_reg = source.register
-                src_bit = source.bit
 
-                if src_reg not in self.registers:
-                    raise KeyError('invalid register: "{}"'.format(src_reg))
+                if statement.__class__.__name__ == 'SlaveOutput':
+                    source = descriptor.source.field
+                    src_reg = source.register
+                    src_bit = source.bit
+                    if src_reg not in self.registers:
+                        raise KeyError('invalid register: "{}"'.format(
+                            src_reg))
 
-                src_reg = self.registers[src_reg]
-                if src_reg.has_field(src_bit) is False:
-                    raise KeyError('invalid field: "{}"'.format(src_bit))
+                    src_reg = self.registers[src_reg]
+                    if src_reg.has_field(src_bit) is False:
+                        raise KeyError('invalid field: "{}"'.format(src_bit))
 
-                port = FlagPort(src_reg, src_bit, 'out', name)
-                self.add_port(port)
-            elif statement.__class__.__name__ == 'SlaveInput':
-                descriptor = statement.descriptor
-                name = descriptor.name
-                dest = descriptor.dest.field
-                dest_reg = dest.register
-                dest_bit = dest.bit
+                    port = FlagPort(src_reg, src_bit, 'out', name)
+                elif statement.__class__.__name__ == 'SlaveInput':
+                    dest = descriptor.dest.field
+                    dest_reg = dest.register
+                    dest_bit = dest.bit
+                    if dest_reg not in self.registers:
+                        raise KeyError('invalid register: "{}"'.format(
+                            dest_reg))
 
-                if dest_reg not in self.registers:
-                    raise KeyError('invalid register: "{}"'.format(dest_reg))
+                    dest_reg = self.registers[dest_reg]
+                    if dest_reg.has_field(dest_bit) is False:
+                        raise KeyError('invalid field: "{}"'.format(dest_bit))
+                    port = FlagPort(src_reg, src_bit, 'in', name)
 
-                dest_reg = self.registers[dest_reg]
-                if dest_reg.has_field(dest_bit) is False:
-                    raise KeyError('invalid field: "{}"'.format(dest_bit))
-
-                port = FlagPort(dest_reg, dest_bit, 'in', name)
                 self.add_port(port)
 
     def parse_file(self, filename):

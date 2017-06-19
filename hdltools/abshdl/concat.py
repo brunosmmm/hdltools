@@ -56,9 +56,8 @@ class HDLConcatenation(HDLObject):
                 return index
             _offset += len(item)
 
-    def insert(self, item, offset, size):
+    def insert(self, item, offset, size=None):
         """Add item with location offset."""
-
         _item = self._check_item(item)
         try:
             item_size = len(_item)
