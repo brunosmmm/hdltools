@@ -118,6 +118,15 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     self.block.add(block)
                     self.current_scope = block
+
+        # enforce legality of scope
+        for arg in node.args.args:
+            if arg.arg not in self.signal_scope:
+                raise NameError('in block declaration: "{}",'
+                                ' signal "{}" is not available'
+                                ' in current module scope'.format(node.name,
+                                                                  arg.arg))
+
         self.generic_visit(node)
         return node
 
