@@ -3,6 +3,7 @@
 import inspect
 import ast
 import textwrap
+from collections import deque
 from . import HDLObject
 from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
@@ -34,6 +35,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         self.scope = None
         self.current_scope = None
         self.block = None
+        self._current_block = deque()
 
     def __call__(self, fn):
         """Decorate."""
@@ -127,11 +129,15 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                                 ' in current module scope'.format(node.name,
                                                                   arg.arg))
 
+        # push function name to stack
+        self._current_block.append(node.name)
         self.generic_visit(node)
+        self._current_block.pop()
         return node
 
     def visit_If(self, node):
         """Visit If statement."""
+        self.visit(node.test)
         ifelse = HDLIfElse(HDLExpression(ast.Expression(body=node.test)))
         self.current_scope.add([ifelse])
         last_scope = self.current_scope
@@ -151,7 +157,10 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         if isinstance(node.value, ast.Name):
             signal = self._signal_lookup(node.value.id)
             if signal is None:
-                raise KeyError('signal not found')
+                raise NameError('in "{}": signal "{}" not available in'
+                                ' current scope'
+                                .format(self._get_current_block(),
+                                        node.value.id))
             if isinstance(node.slice, ast.Index):
                 index = self.visit(node.slice.value)
                 vec = HDLVectorDescriptor(index, index)
@@ -186,19 +195,25 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def visit_Assign(self, node):
         """Visit Assignments."""
+        self.generic_visit(node)
         assignments = []
         # check assignees (targets)
         assignees = []
         for target in node.targets:
             if self._signal_lookup(target.id) is None:
-                raise KeyError('signal "{}" was not found'.format(target.id))
+                raise NameError('in "{}": signal "{}" not available in'
+                                ' current scope'
+                                .format(self._get_current_block(),
+                                        target.id))
             assignees.append(target.id)
 
         # check value assigned
         if isinstance(node.value, ast.Name):
             if self._signal_lookup(node.value.id) is None:
-                raise KeyError('signal "{}" was not found'.format(
-                    node.value.id))
+                raise NameError('in "{}": signal "{}" not available in'
+                                ' current scope'
+                                .format(self._get_current_block(),
+                                        node.value.id))
             for assignee in assignees:
                 assignments.append(
                     HDLAssignment(self._signal_lookup(assignee),
@@ -233,6 +248,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         ifexp = HDLIfExp(HDLExpression(ast.Expression(body=node.test)),
                          if_value=self.visit(node.body),
                          else_value=self.visit(node.orelse))
+        self.generic_visit(node)
         return ifexp
 
     def visit_UnaryOp(self, node):
@@ -247,12 +263,45 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def visit_BinOp(self, node):
         """Visit Binary operations."""
+        self.generic_visit(node)
         return HDLExpression(ast.Expression(body=node))
+
+    def visit_Compare(self, node):
+        """Visit Compare."""
+        self.generic_visit(node)
+        if isinstance(node.left, ast.Name):
+            if node.left.id not in self.signal_scope:
+                raise NameError('in "{}": signal "{}" not available in'
+                                ' current scope'
+                                .format(self._get_current_block(),
+                                        node.left.id))
+        for comp in node.comparators:
+            if isinstance(comp, ast.Name):
+                if comp.id not in self.signal_scope:
+                    raise NameError('in "{}": signal "{}" not available in'
+                                    ' current scope'
+                                    .format(self._get_current_block(),
+                                            node.left.id))
+        return node
+
+    def visit_Expr(self, node):
+        """Visit Expression."""
+        self.generic_visit(node)
+        return node
 
     def get(self):
         """Get block."""
         if self.block is not None:
             return self.block
+
+    def _get_current_block(self):
+        try:
+            block = self._current_block.pop()
+        except:
+            return None
+
+        self._current_block.append(block)
+        return block
 
     def _add_to_scope(self, **kwargs):
         """Add signals to internal scope."""
