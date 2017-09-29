@@ -301,3 +301,18 @@ class HDLModule(HDLObject):
                     return element
 
         return None
+
+
+def input_port(name, size=1):
+    """Make an input port."""
+    return HDLModulePort('in', name, size)
+
+
+def output_port(name, size=1):
+    """Make an output port."""
+    return HDLModulePort('out', name, size)
+
+
+def inout_port(name, size=1):
+    """Make an input port."""
+    return HDLModulePort('inout', name, size)
