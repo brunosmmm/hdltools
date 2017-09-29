@@ -1,6 +1,6 @@
 """Usage of HDLModule as decorator."""
 
-from hdltools.abshdl.module import HDLModule, HDLModulePort
+from hdltools.abshdl.module import HDLModule, input_port, output_port
 from hdltools.hdllib.patterns import ParallelBlock, ClockedBlock
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.highlvl import HDLBlock
@@ -9,16 +9,12 @@ from hdltools.verilog.codegen import VerilogCodeGenerator
 
 if __name__ == "__main__":
 
-    @HDLModule('lfsr')
+    @HDLModule('lfsr', ports=[input_port('clk'),
+                              input_port('rst'),
+                              input_port('en'),
+                              output_port('out', 8)])
     def lfsr_module(mod):
         """LFSR Module."""
-        # ports
-        mod.add_ports([
-            HDLModulePort('in', 'clk'),
-            HDLModulePort('in', 'rst'),
-            HDLModulePort('in', 'en'),
-            HDLModulePort('out', 'out', size=8)
-        ])
         # signals
         mod.add([
             HDLSignal('comb', 'feedback'),
