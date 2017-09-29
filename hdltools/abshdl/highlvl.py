@@ -11,21 +11,23 @@ from .ifelse import HDLIfElse, HDLIfExp
 from ..hdllib.patterns import ClockedBlock, ParallelBlock, SequentialBlock
 from .concat import HDLConcatenation
 from .vector import HDLVectorDescriptor
+from .module import HDLModule
 
 
 class HDLBlock(HDLObject, ast.NodeVisitor):
     """Build HDL blocks from python syntax."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize."""
         super(HDLBlock, self).__init__()
         self._init()
 
         # build internal signal scope
         self.signal_scope = {}
-        for name, arg in kwargs.items():
-            if isinstance(arg, (HDLSignal, HDLSignalSlice)):
-                self.signal_scope[name] = arg
+        for arg in args:
+            if isinstance(arg, HDLModule):
+                self._add_to_scope(**arg.get_signal_scope())
+        self._add_to_scope(**kwargs)
 
     def _init(self):
         """Initialize or re-initialize."""
@@ -242,3 +244,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         """Get block."""
         if self.block is not None:
             return self.block
+
+    def _add_to_scope(self, **kwargs):
+        """Add signals to internal scope."""
+        for name, arg in kwargs.items():
+            if isinstance(arg, (HDLSignal, HDLSignalSlice)):
+                self.signal_scope[name] = arg

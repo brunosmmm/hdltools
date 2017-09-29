@@ -21,7 +21,7 @@ if __name__ == "__main__":
             HDLSignal('reg', 'out_reg', size=8)
         ])
 
-        @HDLBlock(**mod.get_signal_scope())
+        @HDLBlock(mod)
         @ParallelBlock()
         def lfsr_body(clk, rst, en, feedback, out_reg, out):
             """Build module body."""
