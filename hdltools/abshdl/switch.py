@@ -61,14 +61,19 @@ class HDLSwitch(HDLStatement):
 
         return True
 
+    def get_scope(self):
+        """Get case scopes."""
+        return [case.scope for name, case in self.cases.items()]
+
 
 class HDLCase(HDLStatement):
     """Switch case."""
 
     def __init__(self, value, stmts=None, **kwargs):
         """Initialize."""
-        kwargs['stmt_type'] = 'seq'
-        super().__init__(**kwargs)
+        super().__init__(has_scope=True,
+                         stmt_type='seq',
+                         **kwargs)
         if isinstance(value, (HDLIntegerConstant, int, str)):
             self.case_value = HDLExpression(value)
         elif isinstance(value, HDLExpression):
@@ -99,3 +104,7 @@ class HDLCase(HDLStatement):
     def is_legal(self):
         """Determine legality."""
         return True
+
+    def get_scope(self):
+        """Get scope."""
+        return self.scope
