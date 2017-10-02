@@ -23,9 +23,11 @@ class HDLSignal(HDLStatement):
 
     _types = ['comb', 'reg', 'const', 'var']
 
-    def __init__(self, sig_type, sig_name, size=1, default_val=None, **kwargs):
+    def __init__(self, sig_type, sig_name, size=1, default_val=None,
+                 **kwargs):
         """Initialize."""
         super(HDLSignal, self).__init__(stmt_type='par')
+        self.defer = False
         if sig_type not in self._types:
             raise ValueError('invalid signal type: "{}"'.format(sig_type))
 
@@ -59,6 +61,9 @@ class HDLSignal(HDLStatement):
                 raise ValueError('cannot determine size automatically')
             min_size = HDLIntegerConstant.minimum_value_size(eval_def_val)
             self.vector = hdl.vector.HDLVectorDescriptor(min_size)
+        elif size == 'defer':
+            self.vector = None
+            self.defer = True
         elif size is None:
             # allow this only for constants for now.
             if sig_type not in ('const', 'var'):
@@ -95,7 +100,17 @@ class HDLSignal(HDLStatement):
 
     def __len__(self):
         """Get length."""
+        if self.defer is True:
+            raise RuntimeError('signal size has not been set yet')
         return len(self.vector)
+
+    def set_size(self, size):
+        """Set signal size."""
+        if self.defer is True:
+            self.vector = hdl.vector.HDLVectorDescriptor(size-1)
+            self.defer = False
+        else:
+            raise RuntimeError('cannot set signal size, already set')
 
     def is_legal(self):
         """Check legality."""
