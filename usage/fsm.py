@@ -31,7 +31,7 @@ if __name__ == "__main__":
         """FSM Module."""
         # signals
         mod.add([
-            HDLSignal('reg', 'state'),
+            HDLSignal('reg', 'state', size='defer'),
             HDLSignal('reg', 'out_reg', size=8)
         ])
 

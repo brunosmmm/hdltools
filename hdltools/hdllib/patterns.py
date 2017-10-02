@@ -12,6 +12,7 @@ from functools import wraps
 from collections import OrderedDict
 import inspect
 import re
+import math
 
 
 def get_sequential_block(sens_list, *stmts, **kwargs):
@@ -209,14 +210,17 @@ class FSM(ClockedBlock):
         rst_if = HDLIfElse(rst == lvl, tag='rst_if')
         seq.add(rst_if)
 
-        # add switch
-        sw = HDLSwitch(state_var)
-        rst_if.add_to_else_scope(sw)
-
         # add cases
         states = cls._collect_states()
         cases = []
         state_mapping = OrderedDict()
+
+        # set state variable size
+        state_var.set_size(int(math.ceil(math.log2(float(len(states))))))
+
+        # add switch
+        sw = HDLSwitch(state_var)
+        rst_if.add_to_else_scope(sw)
 
         i = 0
         for state, method in states.items():
@@ -231,8 +235,7 @@ class FSM(ClockedBlock):
             rst_if.add_to_if_scope(HDLAssignment(state_var,
                                                  HDLMacroValue(initial)))
         else:
-            print(initial)
-            raise IOError('askdjakdjaskdjadksadkj')
+            raise RuntimeError('initial state not specified')
 
         # PROCESS STATES
         return (seq, const)
