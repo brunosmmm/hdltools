@@ -6,7 +6,7 @@ from ..abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
 from ..abshdl.scope import HDLScope
 from ..abshdl.module import HDLModule, HDLModulePort
 from ..abshdl.switch import HDLSwitch, HDLCase
-from ..abshdl.macro import HDLMacro
+from ..abshdl.macro import HDLMacro, HDLMacroValue
 from ..abshdl.assign import HDLAssignment
 from functools import wraps
 from collections import OrderedDict
@@ -169,11 +169,12 @@ class FSM(ClockedBlock):
     """Finite state machine."""
 
     def __init__(self, clk, rst, state_var,
-                 initial, clk_edge='rise', rst_lvl=1):
+                 initial, clk_edge='rise', rst_lvl=1, **kwargs):
         """Initialize."""
         super().__init__(clk, rst, clk_edge, rst_lvl)
         self.initial = initial
         self.state_var = state_var
+        self._signal_scope = kwargs
 
     @classmethod
     def _collect_states(cls):
@@ -220,7 +221,7 @@ class FSM(ClockedBlock):
         i = 0
         for state, method in states.items():
             state_mapping[state] = i
-            case = HDLCase(i)
+            case = HDLCase(HDLMacroValue(state))
             cases.append(case)
             sw.add_case(case)
             const.append(HDLMacro(state, i))
@@ -228,7 +229,7 @@ class FSM(ClockedBlock):
 
         if initial in state_mapping:
             rst_if.add_to_if_scope(HDLAssignment(state_var,
-                                                 state_mapping[initial]))
+                                                 HDLMacroValue(initial)))
         else:
             print(initial)
             raise IOError('askdjakdjaskdjadksadkj')

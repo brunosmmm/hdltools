@@ -6,6 +6,7 @@ from .const import HDLIntegerConstant
 from .scope import HDLScope
 from .stmt import HDLStatement
 from .signal import HDLSignal, HDLSignalSlice
+from .macro import HDLMacroValue
 
 
 class HDLSwitch(HDLStatement):
@@ -71,6 +72,8 @@ class HDLCase(HDLObject):
         if isinstance(value, (HDLIntegerConstant, int, str)):
             self.case_value = HDLExpression(value)
         elif isinstance(value, HDLExpression):
+            self.case_value = value
+        elif isinstance(value, HDLMacroValue):
             self.case_value = value
         else:
             raise TypeError('type "{}" '

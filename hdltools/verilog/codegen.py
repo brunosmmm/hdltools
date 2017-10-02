@@ -369,6 +369,11 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         return ret_str
 
+    def gen_HDLMacroValue(self, element, **kwargs):
+        """Generate macro usage in code."""
+        ret_str = '`{}'.format(element.name)
+        return ret_str
+
     @staticmethod
     def dumps_define(name, value):
         """Dump a define macro."""

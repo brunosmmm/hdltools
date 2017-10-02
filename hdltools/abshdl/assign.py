@@ -7,6 +7,7 @@ from .concat import HDLConcatenation
 from .stmt import HDLStatement
 from .module import HDLModulePort
 from .ifelse import HDLIfExp
+from .macro import HDLMacroValue
 
 
 class HDLAssignment(HDLStatement):
@@ -39,14 +40,14 @@ class HDLAssignment(HDLStatement):
         if isinstance(value, (HDLIntegerConstant,
                               HDLSignal, HDLExpression,
                               HDLSignalSlice, HDLConcatenation,
-                              HDLIfExp)):
+                              HDLIfExp, HDLMacroValue)):
             self.value = value
         elif isinstance(value, int):
             self.value = HDLIntegerConstant(value, **kwargs)
         else:
             raise TypeError('only integer, HDLIntegerConstant, '
                             'HDLSignal, HDLExpression, HDLConcatenation, '
-                            'HDLIfExp '
+                            'HDLIfExp, HDLMacroValue '
                             'allowed, got: {}'.format(
                                 value.__class__.__name__))
 
