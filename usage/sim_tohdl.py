@@ -56,9 +56,9 @@ if __name__ == "__main__":
 
     # verilog code
     print('*Multiplexer Verilog Code*')
-    print(gen.dump_element(sched.schedule()))
+    print(gen.dump_element(sched.schedule()[0]))
 
     lfsr = LFSR('lfsr')
     sched = HDLSimulationObjectScheduler(lfsr)
     print('*LFSR Verilog Code*')
-    print(gen.dump_element(sched.schedule()))
+    print(gen.dump_element(sched.schedule()[0]))

@@ -63,7 +63,8 @@ if __name__ == "__main__":
                            out[2], out[1], out[0], feedback]
 
     print('*High level representation*')
-    print(my_par_highlvl().dumps())
+    block, const = my_par_highlvl()
+    print(block.dumps())
 
     print('*Verilog Output*')
-    print(gen.dump_element(my_par_highlvl()))
+    print(gen.dump_element(block))

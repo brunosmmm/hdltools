@@ -64,4 +64,5 @@ if __name__ == "__main__":
 
     print('*Using python syntax*')
     # print(HDLBlockBuilder(my_counter_pythonic, **locals()).get().dumps())
-    print(my_counter_pythonic().dumps())
+    block, const = my_counter_pythonic()
+    print(block.dumps())
