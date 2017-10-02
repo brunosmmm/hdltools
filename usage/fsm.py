@@ -11,14 +11,18 @@ class TestFSM(FSM):
     """Test FSM."""
 
     def __state_zero(self, start):
-        if (start == 1):
+        if start == 1:
+            done_reg = 0
             state = 'one'
 
-    def __state_one(self):
-        pass
+    def __state_one(self, counter):
+        counter = counter + 1
+        if counter == 4:
+            state = 'two'
 
     def __state_two(self):
-        pass
+        done_reg = 1
+        state = 'zero'
 
 
 if __name__ == "__main__":
@@ -28,19 +32,20 @@ if __name__ == "__main__":
     @HDLModule('fsm', ports=[input_port('clk'),
                              input_port('rst'),
                              input_port('start'),
-                             output_port('out', 2)])
+                             output_port('done')])
     def fsm_module(mod):
         """FSM Module."""
         # signals
         mod.add([
             HDLSignal('reg', 'state', size='defer'),
-            HDLSignal('reg', 'out_reg', size=8),
+            HDLSignal('reg', 'done_reg'),
+            HDLSignal('reg', 'counter', size=8)
         ])
 
         @HDLBlock(mod)
         @ParallelBlock()
-        def fsm_body(clk, rst, out_reg, out, state):
-            out = out_reg
+        def fsm_body(clk, rst, done_reg, done, state):
+            done = done_reg
             # sequential block generation
 
             @TestFSM(clk, rst, state, initial='zero')
