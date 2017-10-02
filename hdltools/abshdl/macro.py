@@ -14,3 +14,15 @@ class HDLMacro(HDLObject):
     def dumps(self):
         """Dump representation."""
         return '    CONST {}: {}'.format(self.name, self.value)
+
+
+class HDLMacroValue(HDLObject):
+    """Usage of macros as placeholders."""
+
+    def __init__(self, name):
+        """Initialize."""
+        self.name = name
+
+    def dumps(self):
+        """Dump representation."""
+        return self.name
