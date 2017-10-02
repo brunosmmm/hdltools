@@ -10,8 +10,9 @@ from hdltools.verilog.codegen import VerilogCodeGenerator
 class TestFSM(FSM):
     """Test FSM."""
 
-    def __state_zero(self):
-        pass
+    def __state_zero(self, start):
+        if (start == 1):
+            state = 'one'
 
     def __state_one(self):
         pass
@@ -26,13 +27,14 @@ if __name__ == "__main__":
 
     @HDLModule('fsm', ports=[input_port('clk'),
                              input_port('rst'),
+                             input_port('start'),
                              output_port('out', 2)])
     def fsm_module(mod):
         """FSM Module."""
         # signals
         mod.add([
             HDLSignal('reg', 'state', size='defer'),
-            HDLSignal('reg', 'out_reg', size=8)
+            HDLSignal('reg', 'out_reg', size=8),
         ])
 
         @HDLBlock(mod)

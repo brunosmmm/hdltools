@@ -4,6 +4,7 @@ import inspect
 import ast
 import textwrap
 import sys
+import re
 from collections import deque
 from . import HDLObject
 from .expr import HDLExpression
@@ -14,6 +15,7 @@ from ..hdllib.patterns import (ClockedBlock, ClockedRstBlock,
                                ParallelBlock, SequentialBlock, FSM)
 from .concat import HDLConcatenation
 from .vector import HDLVectorDescriptor
+from .macro import HDLMacroValue
 
 
 class HDLBlock(HDLObject, ast.NodeVisitor):
@@ -152,6 +154,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                         kwargs[kw.arg] = kw.value.s
                 block, const = decorator_class.get(*args,
                                                    **kwargs)
+                # go out of tree
+                fsm = FSMBuilder(block, self.signal_scope)
+                fsm._build(decorator_class)
                 if self.block is None:
                     self.block = block
                     self.scope = self.block
@@ -355,3 +360,57 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
     def add_custom_block(cls, block_class):
         """Add custom block class."""
         cls._CUSTOM_TYPE_MAPPING[block_class.__name__] = block_class
+
+
+class FSMBuilder(HDLBlock):
+    """Helper class that builds FSMs."""
+
+    def __init__(self, fsm_block, signal_scope, **kwargs):
+        """Initialize."""
+        self._block = fsm_block
+        super().__init__(**kwargs)
+        self.signal_scope = signal_scope
+
+    def _collect_states(self, cls):
+        state_methods = {}
+        for method_name, method in inspect.getmembers(cls):
+            cls_name = cls.__name__
+            m = re.match(r'_{}__state_([a-zA-Z0-9_]+)'.format(cls_name),
+                         method_name)
+            if m is not None:
+                # found a state
+                if inspect.ismethod(method) or inspect.isfunction(method):
+                    state_methods[m.group(1)] = method
+
+        return state_methods
+
+    def _build(self, target):
+        self._class = target
+        self._states = self._collect_states(target)
+        super()._build(target)
+
+    def visit_FunctionDef(self, node):
+        """Visit function (state definition)."""
+        cls_name = self._class.__name__
+        m = re.match(r'__state_([a-zA-Z0-9_]+)'.format(cls_name),
+                     node.name)
+
+        if m is not None:
+            case_scope = self._block.find_by_tag('__autogen_case_{}'
+                                                 .format(m.group(1)))[0]
+            if case_scope is None:
+                raise RuntimeError('unknown error, cant find case scope')
+            else:
+                self.current_scope = case_scope
+
+        self.generic_visit(node)
+
+    def visit_Str(self, node):
+        """Visit strings and guess state changes."""
+        if self.current_scope is None:
+            return None
+
+        if node.s not in self._states:
+            raise RuntimeError('invalid state: {}'.format(node.s))
+
+        return HDLMacroValue(node.s)
