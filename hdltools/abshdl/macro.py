@@ -10,3 +10,7 @@ class HDLMacro(HDLObject):
         """Initialize."""
         self.name = name
         self.value = value
+
+    def dumps(self):
+        """Dump representation."""
+        return '    CONST {}: {}'.format(self.name, self.value)
