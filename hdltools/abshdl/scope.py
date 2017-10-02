@@ -94,6 +94,13 @@ class HDLScope(HDLObject):
         for statement in self.statements:
             if statement.tag is not None:
                 tags.append(statement.tag)
+
+            scopes = statement.get_scope()
+            if isinstance(scopes, HDLScope):
+                tags.extend(scopes.get_tags())
+            elif isinstance(scopes, (list, tuple)):
+                for scope in scopes:
+                    tags.extend(scope.get_tags())
         return tags
 
     def find_by_tag(self, tag):
