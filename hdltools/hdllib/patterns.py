@@ -8,6 +8,7 @@ from ..abshdl.module import HDLModule, HDLModulePort
 from ..abshdl.switch import HDLSwitch, HDLCase
 from ..abshdl.macro import HDLMacro, HDLMacroValue
 from ..abshdl.assign import HDLAssignment
+from ..abshdl.comment import HDLComment
 from functools import wraps
 from collections import OrderedDict
 import inspect
@@ -199,7 +200,7 @@ class FSM(ClockedBlock):
             seq, const = self.get(self.clk, self.rst, self.state_var,
                                   self.initial, self.edge, self.lvl)
             fn(seq, const, *args, **kwargs)
-            return seq
+            return (seq, const)
         return wrapper_FSM
 
     @classmethod
@@ -225,7 +226,11 @@ class FSM(ClockedBlock):
         i = 0
         for state, method in states.items():
             state_mapping[state] = i
-            case = HDLCase(HDLMacroValue(state))
+            case = HDLCase(HDLMacroValue(state),
+                           tag='__autogen_case_{}'.format(state))
+            case.add_to_scope(HDLComment('case {}'.format(state),
+                                         tag='__autogen_case_{}'
+                                         .format(state)))
             cases.append(case)
             sw.add_case(case)
             const.append(HDLMacro(state, i))
