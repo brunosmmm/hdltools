@@ -3,31 +3,34 @@
 import inspect
 import ast
 import textwrap
+import sys
 from collections import deque
 from . import HDLObject
 from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
 from .assign import HDLAssignment
 from .ifelse import HDLIfElse, HDLIfExp
-from ..hdllib.patterns import ClockedBlock, ParallelBlock, SequentialBlock
+from ..hdllib.patterns import (ClockedBlock, ClockedRstBlock,
+                               ParallelBlock, SequentialBlock, FSM)
 from .concat import HDLConcatenation
 from .vector import HDLVectorDescriptor
-from .module import HDLModule
 
 
 class HDLBlock(HDLObject, ast.NodeVisitor):
     """Build HDL blocks from python syntax."""
 
-    def __init__(self, *args, **kwargs):
+    _CUSTOM_TYPE_MAPPING = {}
+
+    def __init__(self, mod=None, **kwargs):
         """Initialize."""
         super(HDLBlock, self).__init__()
         self._init()
 
         # build internal signal scope
         self.signal_scope = {}
-        for arg in args:
-            if isinstance(arg, HDLModule):
-                self._add_to_scope(**arg.get_signal_scope())
+        if mod is not None:
+            self._add_to_scope(**mod.get_signal_scope())
+            self._hdlmod = mod
         self._add_to_scope(**kwargs)
 
     def _init(self):
@@ -35,6 +38,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         self.scope = None
         self.current_scope = None
         self.block = None
+        self.consts = None
         self._current_block = deque()
 
     def __call__(self, fn):
@@ -78,6 +82,15 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             raise RuntimeError('must be used in conjunction with a HDL block'
                                ' decorator, like ClockedBlock, ParallelBlock')
         for decorator in decorator_list:
+            try:
+                decorator_class = getattr(sys.modules[__name__],
+                                          decorator.func.id)
+            except:
+                if decorator.func.id not in self._CUSTOM_TYPE_MAPPING:
+                    decorator_class = None
+                else:
+                    decorator_class =\
+                        self._CUSTOM_TYPE_MAPPING[decorator.func.id]
             if decorator.func.id == 'SequentialBlock':
                 # sequential block.
                 args = []
@@ -94,7 +107,8 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     self.scope.add(block)
                     self.current_scope = block.scope
-            elif decorator.func.id == 'ClockedBlock':
+            elif decorator.func.id in ('ClockedBlock',
+                                       'ClockedRstBlock'):
                 # a clocked block.
                 # rebuild args
                 args = []
@@ -103,7 +117,10 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                     if _arg is None:
                         continue
                     args.append(_arg)
-                block = ClockedBlock.get(*args)
+                if decorator.func.id == 'ClockedBlock':
+                    block = ClockedBlock.get(*args)
+                else:
+                    block = ClockedRstBlock.get(*args)
                 if self.block is None:
                     self.block = block
                     self.scope = self.block.scope
@@ -120,6 +137,32 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     self.block.add(block)
                     self.current_scope = block
+            elif decorator_class is not None and issubclass(decorator_class,
+                                                            FSM):
+                # rebuild args
+                args = []
+                for arg in decorator.args:
+                    _arg = self._signal_lookup(arg.id)
+                    if _arg is None:
+                        continue
+                    args.append(_arg)
+                kwargs = {}
+                for kw in decorator.keywords:
+                    if isinstance(kw.value, ast.Str):
+                        kwargs[kw.arg] = kw.value.s
+                block, const = decorator_class.get(*args,
+                                                   **kwargs)
+                if self.block is None:
+                    self.block = block
+                    self.scope = self.block
+                    self.current_scope = self.scope
+                else:
+                    self.block.add(block)
+                    self.current_scope = block
+                if self.consts is None:
+                    self.consts = const
+                else:
+                    self.consts.extend(const)
 
         # enforce legality of scope
         for arg in node.args.args:
@@ -291,8 +334,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def get(self):
         """Get block."""
-        if self.block is not None:
-            return self.block
+        return (self.block, self.consts)
 
     def _get_current_block(self):
         try:
@@ -308,3 +350,8 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         for name, arg in kwargs.items():
             if isinstance(arg, (HDLSignal, HDLSignalSlice)):
                 self.signal_scope[name] = arg
+
+    @classmethod
+    def add_custom_block(cls, block_class):
+        """Add custom block class."""
+        cls._CUSTOM_TYPE_MAPPING[block_class.__name__] = block_class

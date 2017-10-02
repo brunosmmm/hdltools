@@ -43,7 +43,7 @@ if __name__ == "__main__":
                         out_reg = out_reg
 
         # add generated body to module
-        mod.extend(lfsr_body())
+        mod.extend(*lfsr_body())
 
     # generate module
     lfsr = lfsr_module()

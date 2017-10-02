@@ -144,9 +144,11 @@ class HDLModule(HDLObject):
         """Add to scope."""
         self.scope.add(items)
 
-    def extend(self, scope):
+    def extend(self, scope, const=None):
         """Extend scope."""
         self.scope.extend(scope)
+        if const is not None:
+            self.add_constants(const)
 
     def insert_before(self, tag, items):
         """Insert element before tag."""
@@ -209,7 +211,7 @@ class HDLModule(HDLObject):
                 if not isinstance(constant, HDLMacro):
                     raise TypeError('list may only contain HDLMacro instances')
 
-                self.constants.extend(constants)
+                self.constants.append(constant)
         else:
             raise TypeError('constants must be a list or HDLMacro')
 
