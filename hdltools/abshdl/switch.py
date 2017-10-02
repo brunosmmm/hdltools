@@ -1,6 +1,5 @@
 """Switch / Case statements."""
 
-from . import HDLObject
 from .expr import HDLExpression
 from .const import HDLIntegerConstant
 from .scope import HDLScope
@@ -63,11 +62,12 @@ class HDLSwitch(HDLStatement):
         return True
 
 
-class HDLCase(HDLObject):
+class HDLCase(HDLStatement):
     """Switch case."""
 
     def __init__(self, value, stmts=None, **kwargs):
         """Initialize."""
+        kwargs['stmt_type'] = 'seq'
         super().__init__(**kwargs)
         if isinstance(value, (HDLIntegerConstant, int, str)):
             self.case_value = HDLExpression(value)
@@ -95,3 +95,7 @@ class HDLCase(HDLObject):
         ret_str += 'END\n'
 
         return ret_str
+
+    def is_legal(self):
+        """Determine legality."""
+        return True
