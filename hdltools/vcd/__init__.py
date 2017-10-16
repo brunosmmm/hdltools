@@ -92,7 +92,13 @@ class VCDDump(VCDObject):
             signals = self._combine_signals(signals)
 
             if sim_time == 0:
-                self.initial = signals
+                formatted_initial = {}
+                for name, value in signals.items():
+                    if self.variables[self.variable_identifiers[name]].size > 1:
+                        formatted_initial[name] = 'b{0:b}'.format(value)
+                    else:
+                        formatted_initial[name] = '1' if bool(value) else '0'
+                self.initial = formatted_initial
                 continue
 
             # look for changes
