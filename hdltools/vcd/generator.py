@@ -31,7 +31,11 @@ class VCDGenerator(HDLCodeGenerator):
         # dump initial
         ret_str += '#0\n$dumpvars\n'
         for name, value in element.initial.items():
-            ret_str += '{}{}\n'.format(value,
+            if element.variables[element.variable_identifiers[name]].size > 1:
+                fmt_value = 'b{0:b}'.format(value)
+            else:
+                fmt_value = '1' if bool(value) else '0'
+            ret_str += '{}{}\n'.format(fmt_value,
                                        element.variable_identifiers[name])
         ret_str += '$end\n'
         for step, changes in enumerate(element.vcd):
