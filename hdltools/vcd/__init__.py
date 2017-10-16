@@ -105,7 +105,7 @@ class VCDDump(VCDObject):
             formatted_changes = {}
             for name, value in changes.items():
                 if self.variables[self.variable_identifiers[name]].size > 1:
-                    formatted_changes[name] = 'b{0:b}'.format(value)
+                    formatted_changes[name] = 'b{0:b} '.format(value)
                 else:
                     formatted_changes[name] = '1' if bool(value) else '0'
             self.vcd.append(formatted_changes)

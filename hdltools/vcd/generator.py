@@ -32,7 +32,7 @@ class VCDGenerator(HDLCodeGenerator):
         ret_str += '#0\n$dumpvars\n'
         for name, value in element.initial.items():
             if element.variables[element.variable_identifiers[name]].size > 1:
-                fmt_value = 'b{0:b}'.format(value)
+                fmt_value = 'b{0:b} '.format(value)
             else:
                 fmt_value = '1' if bool(value) else '0'
             ret_str += '{}{}\n'.format(fmt_value,
