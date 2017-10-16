@@ -55,6 +55,7 @@ class VCDDump(VCDObject):
         for arg in args:
             if not isinstance(arg, VCDVariable):
                 raise TypeError('only VCDVariable allowed')
+            self._add_variable(arg)
 
         for name, value in kwargs.items():
             if isinstance(value, HDLSimulationPort):
