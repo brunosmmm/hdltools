@@ -77,7 +77,6 @@ class VCDDump(VCDObject):
     def _detect_changes(signals, psignals):
         int_signals = {name: int(value) for name, value in signals.items()}
         int_psignals = {name: int(value) for name, value in psignals.items()}
-
         changes = {}
         for name, value in int_signals.items():
             if value != int_psignals[name]:
@@ -103,5 +102,11 @@ class VCDDump(VCDObject):
                 changes = self._detect_changes(signals,
                                                self.last_signal_values)
 
-            self.vcd.append(changes)
+            formatted_changes = {}
+            for name, value in changes.items():
+                if self.variables[self.variable_identifiers[name]].size > 1:
+                    formatted_changes[name] = 'b{0:b}'.format(value)
+                else:
+                    formatted_changes[name] = '1' if bool(value) else '0'
+            self.vcd.append(formatted_changes)
             self.last_signal_values = signals
