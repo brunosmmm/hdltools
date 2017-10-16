@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python3
 
 """Build AXI MM Slaves from specification files."""
 import argparse
