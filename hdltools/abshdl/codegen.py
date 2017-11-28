@@ -1,7 +1,5 @@
 """HDL Code generation."""
 
-from .stmt import HDLStatement
-
 
 def indent(fn):
     """Indent decorator."""
@@ -22,7 +20,7 @@ def indent(fn):
     return wrapper
 
 
-class HDLCodeGenerator(object):
+class HDLCodeGenerator:
     """Abstract class for code generators."""
 
     statements = []
@@ -47,16 +45,18 @@ class HDLCodeGenerator(object):
         """Add class alias."""
         self.class_aliases[alias_class] = use_as
 
+    def _check_validity(self, element):
+        return True
+
     def dump_element(self, element, **kwargs):
         """Get code representation for an element."""
         cls_name = element.__class__.__name__
         gen_method_name = 'gen_{}'.format(cls_name)
 
         # check statement validity
-        if isinstance(element, HDLStatement):
-            if element.is_legal() is False:
-                raise ValueError('illegal statement passed: {}'
-                                 .format(element))
+        if self._check_validity(element) is False:
+            raise ValueError('illegal statement passed: {}'
+                             .format(element))
 
         # aliases
         if cls_name in self.class_aliases:
