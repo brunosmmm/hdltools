@@ -13,3 +13,20 @@ class HDLCodeGenerator(CodeGenerator):
                 return False
 
         return True
+
+    # basic types to be implemented
+    def gen_HDLIntegerConstant(self, element, **kwargs):
+        """Generate Integer constants."""
+        raise NotImplementedError
+
+    def gen_HDLStringConstant(self, element, **kwargs):
+        """Generate String constants."""
+        raise NotImplementedError
+
+    def gen_HDLVectorDescriptor(self, element, **kwargs):
+        """Generate Vector elements."""
+        raise NotImplementedError
+
+    def gen_HDLModulePort(self, element, **kwargs):
+        """Generate ports."""
+        raise NotImplementedError
