@@ -1,8 +1,10 @@
 """Generate Verilog Statements."""
 
 import math
-from ..abshdl.codegen import HDLCodeGenerator, indent
+from ..abshdl.codegen import HDLCodeGenerator
+from scoff.codegen import indent
 from ..abshdl.const import HDLIntegerConstant
+
 
 _INDENT_STR = '    '
 
