@@ -105,7 +105,7 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
         yield HDLSignal('reg', 'reg_data_out',
                         size=HDLExpression('AXI_DATA_WIDTH'))
         yield HDLSignal('var', 'byte_index',
-                        size=None)
+                        size=None, var_type=None)
         yield 'I/O Connection assignments'
         yield HDLAssignment(mod.get_port('S_AXI_AWREADY'),
                             mod.get_signal('axi_awready'))
