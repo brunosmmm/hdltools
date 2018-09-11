@@ -45,10 +45,57 @@ class HDLModuleParameter(HDLObject):
         return self.__repr__()
 
 
-class HDLModulePort(HDLObject):
-    """HDL Module port."""
+class HDLAbsModulePort(HDLObject):
+    """Abstract class from which different port types derive."""
 
     _port_directions = ['in', 'out', 'inout']
+
+    def __init__(self, direction, name):
+        """Initialize."""
+        if direction not in self._port_directions:
+            raise ValueError('invalid port direction: "{}"'.format(direction))
+
+        self.direction = direction
+        self.name = name
+
+    def __repr__(self, eval_scope=None):
+        """Get readable representation."""
+        raise NotImplementedError()
+
+    def dumps(self, eval_scope=None):
+        """Alias for __repr__."""
+        return self.__repr__(eval_scope)
+
+        # HACKY HACKS!!!!!
+    def __pos__(self):
+        """Access internal signal as an expression."""
+        return HDLExpression(self.signal)
+
+    def __neg__(self):
+        """Access internal signal."""
+        return self.signal
+
+
+class HDLModuleTypedPort(HDLAbsModulePort):
+    """Typed ports."""
+
+    def __init__(self, direction, name, ptype):
+        """Initialize."""
+        super().__init__(direction, name)
+
+        # create internal signal
+        self.signal = HDLSignal(sig_type='var', sig_name=name,
+                                var_type=ptype, size=None)
+
+    def __repr__(self, eval_scope=None):
+        """Get readable representation."""
+        return '{} {} {}'.format(self.direction.upper(),
+                                 self.signal.var_type,
+                                 self.name)
+
+
+class HDLModulePort(HDLAbsModulePort):
+    """HDL Module port."""
 
     def __init__(self, direction, name, size=1):
         """Initialize.
@@ -62,11 +109,7 @@ class HDLModulePort(HDLObject):
         name: str
            Port name
         """
-        if direction not in self._port_directions:
-            raise ValueError('invalid port direction: "{}"'.format(direction))
-
-        self.direction = direction
-        self.name = name
+        super().__init__(direction, name)
         if isinstance(size, int):
             # default is [size-1:0] / (size-1 downto 0)
             if (size < 0):
@@ -94,19 +137,6 @@ class HDLModulePort(HDLObject):
         return '{} {}{}'.format(self.direction.upper(),
                                 self.name,
                                 self.vector.dumps(eval_scope))
-
-    def dumps(self, eval_scope=None):
-        """Alias for __repr__."""
-        return self.__repr__(eval_scope)
-
-    # HACKY HACKS!!!!!
-    def __pos__(self):
-        """Access internal signal as an expression."""
-        return HDLExpression(self.signal)
-
-    def __neg__(self):
-        """Access internal signal."""
-        return self.signal
 
 
 class HDLModule(HDLObject):
@@ -171,16 +201,24 @@ class HDLModule(HDLObject):
             List of ports to be added
         """
         # TODO: duplicate port verification
-        if isinstance(ports, HDLModulePort):
-            self.ports.append(ports)
-        elif isinstance(ports, (tuple, list)):
-            for port in ports:
-                if not isinstance(port, HDLModulePort):
-                    raise TypeError('list may only contain HDLModulePort'
-                                    ' instances')
-            self.ports.extend(ports)
-        else:
-            raise TypeError('ports must be a list or HDLModulePort')
+        typed_ports_added = False
+        untyped_ports_added = False
+        if not isinstance(ports, (tuple, list)):
+            ports = [ports]
+        for port in ports:
+            if isinstance(port, HDLModuleTypedPort):
+                if untyped_ports_added:
+                    raise TypeError('cannot mix typed and untyped ports')
+                self.ports.append(port)
+                typed_ports_added = True
+            elif isinstance(port, HDLModulePort):
+                if typed_ports_added:
+                    raise TypeError('cannot mix typed and untyped ports')
+                self.ports.append(port)
+                untyped_ports_added = True
+            else:
+                raise TypeError('list may only contain HDLModulePort'
+                                ' instances')
 
     def add_parameters(self, params):
         """Add parameters to module.

@@ -59,8 +59,7 @@ if __name__ == "__main__":
                 out = 0
             else:
                 if en == 1:
-                    out = [out[6], out[5], out[4], out[3],
-                           out[2], out[1], out[0], feedback]
+                    out = [out[0:6], feedback]
 
     print('*High level representation*')
     block, const = my_par_highlvl()

@@ -190,6 +190,7 @@ if __name__ == '__main__':
     vcd_dump.add_variables(**sim.report_signals())
     vcd_dump.load_dump(dump)
     vcd = VCDGenerator()
+    print(vcd.dump_element(vcd_dump))
 
     rx_bytes = []
     while len(sspi.rx_queue) > 0:

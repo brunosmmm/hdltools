@@ -33,6 +33,7 @@ class HDLSignal(HDLStatement):
 
         self.sig_type = sig_type
         self.name = sig_name
+        self.var_type = None
         if isinstance(default_val, hdl.expr.HDLExpression):
             self.default_val = default_val
         elif default_val is None:
@@ -69,6 +70,11 @@ class HDLSignal(HDLStatement):
             if sig_type not in ('const', 'var'):
                 raise ValueError('signal must have size')
             self.vector = None
+            if sig_type == 'var':
+                # must have type
+                if 'var_type' not in kwargs:
+                    raise ValueError('variable signals must have type')
+                self.var_type = kwargs['var_type']
         else:
             raise TypeError('size can only be of types: int, list or'
                             ' HDLVectorDescriptor')

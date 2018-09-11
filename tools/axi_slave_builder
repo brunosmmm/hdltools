@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # register write
     slave_signals = slave.get_signal_scope()
     slave_parameters = slave.get_parameter_scope()
-    data_width = slave_parameters['AXI_DATA_WIDTH']
+    data_width = slave_parameters['C_S_AXI_DATA_WIDTH']
     loop_var = slave_signals['byte_index']
     axi_wstrb = slave_signals['S_AXI_WSTRB']
     axi_wdata = slave_signals['S_AXI_WDATA']
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     index, wr_switch = where
     lsb_bits_sig = slave_signals['ADDR_LSB']
     addr_width = slave_signals['OPT_MEM_ADDR_BITS'].default_val.evaluate()
-    lsb_bits = lsb_bits_sig.default_val.evaluate(AXI_DATA_WIDTH=data_width)
+    lsb_bits = lsb_bits_sig.default_val.evaluate(C_S_AXI_DATA_WIDTH=data_width)
     default_case = wr_switch.get_case('default')
     for name, reg in mmap.registers.items():
         reg_sig = slave_signals['REG_'+name]

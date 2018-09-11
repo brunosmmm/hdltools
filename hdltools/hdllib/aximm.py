@@ -35,42 +35,44 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
     mod = HDLModule(module_name=mod_name)
 
     # addr lsb bits
-    lsb_bits = (HDLExpression('AXI_DATA_WIDTH') / 32) + 1
+    lsb_bits = (HDLExpression('C_S_AXI_DATA_WIDTH') / 32) + 1
 
     # caculate minimum address width: resolve immediately, do not depend
-    # on parameters (could also evaluate lsb_bits with AXI_DATA_WIDTH=32)
-    eval_lsb = lsb_bits.evaluate(AXI_DATA_WIDTH=data_width)
-    addr_bits = int(math.ceil(math.log2(register_count)))
-    addr_len = addr_bits+int(eval_lsb)+1
+    # on parameters (could also evaluate lsb_bits with C_S_AXI_DATA_WIDTH=32)
+    eval_lsb = lsb_bits.evaluate(C_S_AXI_DATA_WIDTH=data_width)
+    addr_bits = int(math.ceil(math.log2(register_count))) + 1
+    addr_len = addr_bits+int(eval_lsb)
 
     # create standard parameters
-    param_list = [HDLModuleParameter('AXI_DATA_WIDTH', 'integer', data_width),
-                  HDLModuleParameter('AXI_ADDR_WIDTH', 'integer', addr_len)]
+    param_list = [HDLModuleParameter('C_S_AXI_DATA_WIDTH',
+                                     'integer', data_width),
+                  HDLModuleParameter('C_S_AXI_ADDR_WIDTH', 'integer',
+                                     addr_len)]
 
     # create standard ports
     port_list = [HDLModulePort('in', 'S_AXI_ACLK'),
                  HDLModulePort('in', 'S_AXI_ARESETN'),
                  HDLModulePort('in', 'S_AXI_AWADDR',
-                               size=HDLExpression('AXI_ADDR_WIDTH')),
+                               size=HDLExpression('C_S_AXI_ADDR_WIDTH')),
                  HDLModulePort('in', 'S_AXI_AWPROT', size=3),
                  HDLModulePort('in', 'S_AXI_AWVALID'),
                  HDLModulePort('out', 'S_AXI_AWREADY'),
                  HDLModulePort('in', 'S_AXI_WDATA',
-                               size=HDLExpression('AXI_DATA_WIDTH')),
+                               size=HDLExpression('C_S_AXI_DATA_WIDTH')),
                  HDLModulePort('in', 'S_AXI_WSTRB',
-                               size=HDLExpression('AXI_DATA_WIDTH/8')),
+                               size=HDLExpression('C_S_AXI_DATA_WIDTH/8')),
                  HDLModulePort('in', 'S_AXI_WVALID'),
                  HDLModulePort('out', 'S_AXI_WREADY'),
                  HDLModulePort('out', 'S_AXI_BRESP', size=2),
                  HDLModulePort('out', 'S_AXI_BVALID'),
                  HDLModulePort('in', 'S_AXI_BREADY'),
                  HDLModulePort('in', 'S_AXI_ARADDR',
-                               size=HDLExpression('AXI_ADDR_WIDTH')),
+                               size=HDLExpression('C_S_AXI_ADDR_WIDTH')),
                  HDLModulePort('in', 'S_AXI_ARPROT', size=3),
                  HDLModulePort('in', 'S_AXI_ARVALID'),
                  HDLModulePort('out', 'S_AXI_ARREADY'),
                  HDLModulePort('out', 'S_AXI_RDATA',
-                               size=HDLExpression('AXI_DATA_WIDTH')),
+                               size=HDLExpression('C_S_AXI_DATA_WIDTH')),
                  HDLModulePort('out', 'S_AXI_RRESP', size=2),
                  HDLModulePort('out', 'S_AXI_RVALID'),
                  HDLModulePort('in', 'S_AXI_RREADY')]
@@ -82,28 +84,28 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
     # create some signals
     def body_1():
         yield HDLSignal('reg', 'axi_awaddr',
-                        size=HDLExpression('AXI_ADDR_WIDTH'))
+                        size=HDLExpression('C_S_AXI_ADDR_WIDTH'))
         yield HDLSignal('reg', 'axi_awready')
         yield HDLSignal('reg', 'axi_wready')
         yield HDLSignal('reg', 'axi_bresp', size=2)
         yield HDLSignal('reg', 'axi_bvalid')
         yield HDLSignal('reg', 'axi_araddr',
-                        size=HDLExpression('AXI_ADDR_WIDTH'))
+                        size=HDLExpression('C_S_AXI_ADDR_WIDTH'))
         yield HDLSignal('reg', 'axi_arready')
         yield HDLSignal('reg', 'axi_rdata',
-                        size=HDLExpression('AXI_DATA_WIDTH'))
+                        size=HDLExpression('C_S_AXI_DATA_WIDTH'))
         yield HDLSignal('reg', 'axi_rresp',
                         size=2)
         yield HDLSignal('reg', 'axi_rvalid')
         yield HDLSignal('const', 'ADDR_LSB', size=None,
-                        default_val=HDLExpression('AXI_DATA_WIDTH/32+1'))
+                        default_val=HDLExpression('C_S_AXI_DATA_WIDTH/32+1'))
         yield HDLSignal('const', 'OPT_MEM_ADDR_BITS', size=None,
                         default_val=addr_bits)
         yield HDLComment('Register Space', tag='REG_DECL')
         yield HDLSignal('comb', 'slv_reg_rden')
         yield HDLSignal('comb', 'slv_reg_wren')
         yield HDLSignal('reg', 'reg_data_out',
-                        size=HDLExpression('AXI_DATA_WIDTH'))
+                        size=HDLExpression('C_S_AXI_DATA_WIDTH'))
         yield HDLSignal('var', 'byte_index',
                         size=None, var_type=None)
         yield 'I/O Connection assignments'
@@ -193,12 +195,12 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
 
     # slave write enable
     mod.add(['generate slave write enable',
-             slv_reg_wren.assign((~axi_wready)
+             slv_reg_wren.assign((axi_wready)
                                  .bool_and(+WVALID)
                                  .bool_and(+axi_awready)
                                  .bool_and(+AWVALID))])
 
-    switch = HDLSwitch(axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB],
+    switch = HDLSwitch(axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS-1:ADDR_LSB],
                        tag='reg_write_case')
     def_case = HDLCase('default')
     switch.add_case(def_case)
@@ -216,7 +218,7 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
     mod.add([seq])
 
     # write response logic
-    innerifelse = HDLIfElse((~axi_awready)
+    innerifelse = HDLIfElse((axi_awready)
                             .bool_and(+AWVALID)
                             .bool_and(~axi_bvalid)
                             .bool_and(axi_wready)
@@ -288,7 +290,7 @@ def get_axi_mm_slave(mod_name, data_width, register_count):
                                         ~sig['axi_rvalid'])])
 
     innercase = HDLSwitch(sig['axi_araddr']
-                          [ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB],
+                          [ADDR_LSB+OPT_MEM_ADDR_BITS-1:ADDR_LSB],
                           tag='reg_read_switch')
     def_case = HDLCase('default',
                        stmts=[sig['reg_data_out'].assign(0)])
