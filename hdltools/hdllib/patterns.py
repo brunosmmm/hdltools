@@ -16,6 +16,12 @@ import re
 import math
 
 
+class InvalidStateError(Exception):
+    """Invalid FSM state error."""
+
+    pas
+
+
 def get_sequential_block(sens_list, *stmts, **kwargs):
     """Get an unpopulated sequential block."""
     sens = HDLSensitivityList(sens_list)
@@ -182,6 +188,9 @@ class FSM(ClockedBlock):
         self.initial = initial
         self.state_var = state_var
         self._signal_scope = kwargs
+        self._state_transitions = {}
+        self._current_state = None
+        self._state_names = self._collect_states()
 
     @property
     def state(self):
@@ -190,7 +199,27 @@ class FSM(ClockedBlock):
 
     @state.setter
     def state(self, next_state):
-        raise NotImplementedError
+        """Set current state."""
+        if self._current_state is None:
+            self.current_state = self.initial
+        if self._current_state not in self._state_transitions:
+            self._state_transitions[self._current_state] = set()
+
+        cur_trans = self._state_transitions[self._current_state]
+
+        if next_state not in self._state_names:
+            raise InvalidStateError("invalid state name: {}".format(next_state))
+
+        cur_trans |= set([next_state])
+
+    def _infer_fsm(self):
+        """Infer FSM."""
+        for state_name, method in self._state_names.items():
+            # TODO call method, cant because arguments are unknown
+            # method()
+            pass
+
+        return self._state_transitions
 
     @classmethod
     def _collect_states(cls):
