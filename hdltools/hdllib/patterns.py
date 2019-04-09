@@ -19,7 +19,7 @@ import math
 class InvalidStateError(Exception):
     """Invalid FSM state error."""
 
-    pas
+    pass
 
 
 def get_sequential_block(sens_list, *stmts, **kwargs):
