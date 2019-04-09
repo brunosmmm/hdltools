@@ -1,46 +1,52 @@
+"""Test tools."""
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 from hdltools.abshdl.mmap import MemoryMappedInterface
 import os
 
+
 def test_vec():
-
-    print(VerilogCodeGenerator.dumps_vector(1, 32, 'h'))
-    print(VerilogCodeGenerator.dumps_vector(1, 32, 'd'))
-    print(VerilogCodeGenerator.dumps_vector(1, 32, 'b'))
+    """Test verilog code generator."""
+    print(VerilogCodeGenerator.dumps_vector(1, 32, "h"))
+    print(VerilogCodeGenerator.dumps_vector(1, 32, "d"))
+    print(VerilogCodeGenerator.dumps_vector(1, 32, "b"))
 
     try:
-        vec = VerilogCodeGenerator.dumps_vector(256, 8, 'b')
+        _ = VerilogCodeGenerator.dumps_vector(256, 8, "b")
         raise
     except ValueError:
         pass
 
     try:
-        vec = VerilogCodeGenerator.dumps_vector(256, 8, 'x')
+        _ = VerilogCodeGenerator.dumps_vector(256, 8, "x")
         raise
     except ValueError:
         pass
+
 
 def test_define():
+    """Test define."""
+    print(VerilogCodeGenerator.dumps_define("NAME", "VALUE"))
 
-    print(VerilogCodeGenerator.dumps_define('NAME', 'VALUE'))
 
 def test_template():
-
-    template_file = os.path.join('assets', 'verilog', 'axi_slave.v')
+    """Test template."""
+    template_file = os.path.join("assets", "verilog", "axi_slave.v")
     parser = HDLTemplateParser()
     parser.parse_file(template_file)
-    parser.insert_contents(list(parser.locations.keys())[0],
-                           'line1\nline2\nline3')
+    parser.insert_contents(
+        list(parser.locations.keys())[0], "line1\nline2\nline3"
+    )
 
     try:
-        parser.dump_templated('test.v')
+        parser.dump_templated("test.v")
         raise
     except ValueError:
         pass
 
-def test_mmap():
 
+def test_mmap():
+    """Test memory-mapped AXI slave generator."""
     TEST_STR = """
     #register_size 32;
     //registers
