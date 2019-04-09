@@ -11,11 +11,22 @@ from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
 from .assign import HDLAssignment
 from .ifelse import HDLIfElse, HDLIfExp
-from ..hdllib.patterns import (ClockedBlock, ClockedRstBlock,
-                               ParallelBlock, SequentialBlock, FSM)
+from ..hdllib.patterns import (
+    ClockedBlock,
+    ClockedRstBlock,
+    ParallelBlock,
+    SequentialBlock,
+    FSM,
+)
 from .concat import HDLConcatenation
 from .vector import HDLVectorDescriptor
 from .macro import HDLMacroValue
+
+
+class PatternNotAllowedError(Exception):
+    """Code pattern not allowed."""
+
+    pass
 
 
 class HDLBlock(HDLObject, ast.NodeVisitor):
@@ -45,10 +56,12 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def __call__(self, fn):
         """Decorate."""
+
         def wrapper_BlockBuilder(*args):
             self._init()
             self._build(fn)
             return self.get()
+
         return wrapper_BlockBuilder
 
     def apply_on_ast(self, tree):
@@ -72,28 +85,35 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def _build(self, target):
         src = inspect.getsource(target)
-        self.tree = ast.parse(textwrap.dedent(src), mode='exec')
+        self.tree = ast.parse(textwrap.dedent(src), mode="exec")
         self.visit(self.tree)
 
     def visit_FunctionDef(self, node):
         """Visit function declaration."""
         # starting point is function declaration. Remove our own decorator.
-        decorator_list = [x for x in node.decorator_list if x.func.id !=
-                          self.__class__.__name__]
+        decorator_list = [
+            x
+            for x in node.decorator_list
+            if x.func.id != self.__class__.__name__
+        ]
         if len(decorator_list) == 0:
-            raise RuntimeError('must be used in conjunction with a HDL block'
-                               ' decorator, like ClockedBlock, ParallelBlock')
+            raise RuntimeError(
+                "must be used in conjunction with a HDL block"
+                " decorator, like ClockedBlock, ParallelBlock"
+            )
         for decorator in decorator_list:
             try:
-                decorator_class = getattr(sys.modules[__name__],
-                                          decorator.func.id)
+                decorator_class = getattr(
+                    sys.modules[__name__], decorator.func.id
+                )
             except:
                 if decorator.func.id not in self._CUSTOM_TYPE_MAPPING:
                     decorator_class = None
                 else:
-                    decorator_class =\
-                        self._CUSTOM_TYPE_MAPPING[decorator.func.id]
-            if decorator.func.id == 'SequentialBlock':
+                    decorator_class = self._CUSTOM_TYPE_MAPPING[
+                        decorator.func.id
+                    ]
+            if decorator.func.id == "SequentialBlock":
                 # sequential block.
                 args = []
                 for arg in decorator.args:
@@ -109,8 +129,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     self.scope.add(block)
                     self.current_scope = block.scope
-            elif decorator.func.id in ('ClockedBlock',
-                                       'ClockedRstBlock'):
+            elif decorator.func.id in ("ClockedBlock", "ClockedRstBlock"):
                 # a clocked block.
                 # rebuild args
                 args = []
@@ -119,7 +138,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                     if _arg is None:
                         continue
                     args.append(_arg)
-                if decorator.func.id == 'ClockedBlock':
+                if decorator.func.id == "ClockedBlock":
                     block = ClockedBlock.get(*args)
                 else:
                     block = ClockedRstBlock.get(*args)
@@ -130,7 +149,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     self.scope.add(block)
                     self.current_scope = block.scope
-            elif decorator.func.id == 'ParallelBlock':
+            elif decorator.func.id == "ParallelBlock":
                 block = ParallelBlock.get()
                 if self.block is None:
                     self.block = block
@@ -139,8 +158,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     self.block.add(block)
                     self.current_scope = block
-            elif decorator_class is not None and issubclass(decorator_class,
-                                                            FSM):
+            elif decorator_class is not None and issubclass(
+                decorator_class, FSM
+            ):
                 # rebuild args
                 args = []
                 for arg in decorator.args:
@@ -152,8 +172,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 for kw in decorator.keywords:
                     if isinstance(kw.value, ast.Str):
                         kwargs[kw.arg] = kw.value.s
-                block, const = decorator_class.get(*args,
-                                                   **kwargs)
+                block, const = decorator_class.get(*args, **kwargs)
                 # go out of tree
                 fsm = FSMBuilder(block, self.signal_scope)
                 fsm._build(decorator_class)
@@ -172,10 +191,11 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         # enforce legality of scope
         for arg in node.args.args:
             if arg.arg not in self.signal_scope:
-                raise NameError('in block declaration: "{}",'
-                                ' signal "{}" is not available'
-                                ' in current module scope'.format(node.name,
-                                                                  arg.arg))
+                raise NameError(
+                    'in block declaration: "{}",'
+                    ' signal "{}" is not available'
+                    " in current module scope".format(node.name, arg.arg)
+                )
 
         # push function name to stack
         self._current_block.append(node.name)
@@ -205,15 +225,16 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         if isinstance(node.value, ast.Name):
             signal = self._signal_lookup(node.value.id)
             if signal is None:
-                raise NameError('in "{}": signal "{}" not available in'
-                                ' current scope'
-                                .format(self._get_current_block(),
-                                        node.value.id))
+                raise NameError(
+                    'in "{}": signal "{}" not available in'
+                    " current scope".format(
+                        self._get_current_block(), node.value.id
+                    )
+                )
             if isinstance(node.slice, ast.Index):
                 index = self.visit(node.slice.value)
                 vec = HDLVectorDescriptor(index, index)
-                return HDLSignalSlice(signal,
-                                      vec)
+                return HDLSignalSlice(signal, vec)
             elif isinstance(node.slice, ast.Slice):
                 if isinstance(node.slice.upper, ast.Num):
                     upper = node.slice.upper.n
@@ -223,15 +244,17 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                     lower = node.slice.lower.n
                 else:
                     lower = node.slice.lower
-                return HDLSignalSlice(signal,
-                                      [upper,
-                                       lower])
+                return HDLSignalSlice(signal, [upper, lower])
             else:
-                raise TypeError('type {} not supported'.format(
-                    node.slice.__class__.__name__))
+                raise TypeError(
+                    "type {} not supported".format(
+                        node.slice.__class__.__name__
+                    )
+                )
         else:
-            raise TypeError('type {} not supported'.format(
-                node.value.__class__.__name__))
+            raise TypeError(
+                "type {} not supported".format(node.value.__class__.__name__)
+            )
 
     def visit_Num(self, node):
         """Visit Num."""
@@ -248,54 +271,82 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         # check assignees (targets)
         assignees = []
         for target in node.targets:
+            if isinstance(target, ast.Attribute):
+                # attributes are not allowed, except for self access
+                if target.value.id == "self":
+                    # bypass attribute access directly,
+                    # later on we can execute the block itself in python
+                    # if necessary
+                    target.id = target.attr
+                else:
+                    raise PatternNotAllowedError(
+                        "Attribute access is not allowed in HDL blocks."
+                    )
             if self._signal_lookup(target.id) is None:
-                raise NameError('in "{}": signal "{}" not available in'
-                                ' current scope'
-                                .format(self._get_current_block(),
-                                        target.id))
+                raise NameError(
+                    'in "{}": signal "{}" not available in'
+                    " current scope".format(
+                        self._get_current_block(), target.id
+                    )
+                )
             assignees.append(target.id)
 
         # check value assigned
         if isinstance(node.value, ast.Name):
             if self._signal_lookup(node.value.id) is None:
-                raise NameError('in "{}": signal "{}" not available in'
-                                ' current scope'
-                                .format(self._get_current_block(),
-                                        node.value.id))
+                raise NameError(
+                    'in "{}": signal "{}" not available in'
+                    " current scope".format(
+                        self._get_current_block(), node.value.id
+                    )
+                )
             for assignee in assignees:
                 assignments.append(
-                    HDLAssignment(self._signal_lookup(assignee),
-                                  self._signal_lookup(node.value.id)))
+                    HDLAssignment(
+                        self._signal_lookup(assignee),
+                        self._signal_lookup(node.value.id),
+                    )
+                )
         elif isinstance(node.value, ast.Num):
             for assignee in assignees:
                 assignments.append(
-                    HDLAssignment(self._signal_lookup(assignee),
-                                  HDLExpression(node.value.n)))
+                    HDLAssignment(
+                        self._signal_lookup(assignee),
+                        HDLExpression(node.value.n),
+                    )
+                )
         elif isinstance(node.value, (ast.List, ast.Tuple)):
             items = [self.visit(item) for item in node.value.elts]
             for assignee in assignees:
                 assignments.append(
-                    HDLAssignment(self._signal_lookup(assignee),
-                                  HDLConcatenation(*items[::-1])))
+                    HDLAssignment(
+                        self._signal_lookup(assignee),
+                        HDLConcatenation(*items[::-1]),
+                    )
+                )
         else:
             try:
                 expr = self.visit(node.value)
                 for assignee in assignees:
+                    print(assignee)
                     assignments.append(
-                        HDLAssignment(self._signal_lookup(assignee),
-                                      expr))
+                        HDLAssignment(self._signal_lookup(assignee), expr)
+                    )
             except TypeError:
                 # raise TypeError('type {} not supported'.format(
                 #    node.value.__class__.__name__))
                 raise
         # find out where to insert statement
-        self.current_scope.add(*assignments)
+        if len(assignments) > 0:
+            self.current_scope.add(*assignments)
 
     def visit_IfExp(self, node):
         """Visit If expression."""
-        ifexp = HDLIfExp(HDLExpression(ast.Expression(body=node.test)),
-                         if_value=self.visit(node.body),
-                         else_value=self.visit(node.orelse))
+        ifexp = HDLIfExp(
+            HDLExpression(ast.Expression(body=node.test)),
+            if_value=self.visit(node.body),
+            else_value=self.visit(node.orelse),
+        )
         self.generic_visit(node)
         return ifexp
 
@@ -306,8 +357,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         elif isinstance(node.op, ast.Invert):
             return ~HDLExpression(self.visit(node.operand))
         else:
-            raise TypeError('operator {} not supported'.
-                            format(node.op.__class__.__name__))
+            raise TypeError(
+                "operator {} not supported".format(node.op.__class__.__name__)
+            )
 
     def visit_BinOp(self, node):
         """Visit Binary operations."""
@@ -319,17 +371,21 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         self.generic_visit(node)
         if isinstance(node.left, ast.Name):
             if node.left.id not in self.signal_scope:
-                raise NameError('in "{}": signal "{}" not available in'
-                                ' current scope'
-                                .format(self._get_current_block(),
-                                        node.left.id))
+                raise NameError(
+                    'in "{}": signal "{}" not available in'
+                    " current scope".format(
+                        self._get_current_block(), node.left.id
+                    )
+                )
         for comp in node.comparators:
             if isinstance(comp, ast.Name):
                 if comp.id not in self.signal_scope:
-                    raise NameError('in "{}": signal "{}" not available in'
-                                    ' current scope'
-                                    .format(self._get_current_block(),
-                                            node.left.id))
+                    raise NameError(
+                        'in "{}": signal "{}" not available in'
+                        " current scope".format(
+                            self._get_current_block(), node.left.id
+                        )
+                    )
         return node
 
     def visit_Expr(self, node):
@@ -375,8 +431,9 @@ class FSMBuilder(HDLBlock):
         state_methods = {}
         for method_name, method in inspect.getmembers(cls):
             cls_name = cls.__name__
-            m = re.match(r'_{}__state_([a-zA-Z0-9_]+)'.format(cls_name),
-                         method_name)
+            m = re.match(
+                r"_{}__state_([a-zA-Z0-9_]+)".format(cls_name), method_name
+            )
             if m is not None:
                 # found a state
                 if inspect.ismethod(method) or inspect.isfunction(method):
@@ -392,14 +449,14 @@ class FSMBuilder(HDLBlock):
     def visit_FunctionDef(self, node):
         """Visit function (state definition)."""
         cls_name = self._class.__name__
-        m = re.match(r'__state_([a-zA-Z0-9_]+)'.format(cls_name),
-                     node.name)
+        m = re.match(r"__state_([a-zA-Z0-9_]+)".format(cls_name), node.name)
 
         if m is not None:
-            case_scope = self._block.find_by_tag('__autogen_case_{}'
-                                                 .format(m.group(1)))[0]
+            case_scope = self._block.find_by_tag(
+                "__autogen_case_{}".format(m.group(1))
+            )[0]
             if case_scope is None:
-                raise RuntimeError('unknown error, cant find case scope')
+                raise RuntimeError("unknown error, cant find case scope")
             else:
                 self.current_scope = case_scope
 
@@ -411,6 +468,6 @@ class FSMBuilder(HDLBlock):
             return None
 
         if node.s not in self._states:
-            raise RuntimeError('invalid state: {}'.format(node.s))
+            raise RuntimeError("invalid state: {}".format(node.s))
 
         return HDLMacroValue(node.s)
