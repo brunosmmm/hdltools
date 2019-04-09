@@ -1,5 +1,5 @@
 appdirs==1.4.3
-Arpeggio==1.6.1
+Arpeggio==1.9.0
 coverage==4.4.1
 flake8==3.3.0
 flake8-docstrings==1.1.0
@@ -13,5 +13,5 @@ pyflakes==1.5.0
 pyparsing==2.2.0
 six==1.10.0
 snowballstemmer==1.2.1
-textX==1.5
+textX==1.8.0
 git+https://github.com/brunosmmm/scoff.git@master#egg=scoff
