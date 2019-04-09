@@ -1,21 +1,18 @@
-from hdltools.verilog.parser import (VerilogModuleParser,
-                                     verilog_bitstring_to_int)
+"""HDL Primitives."""
 from hdltools.abshdl.vector import HDLVectorDescriptor
-from hdltools.abshdl.module import (HDLModulePort,
-                                    HDLModule,
-                                    HDLModuleParameter)
+from hdltools.abshdl.module import HDLModulePort, HDLModule, HDLModuleParameter
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
-from hdltools.abshdl.const import (HDLIntegerConstant, HDLStringConstant)
+from hdltools.abshdl.const import HDLIntegerConstant, HDLStringConstant
 from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
 from hdltools.abshdl.seq import HDLSequentialBlock
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.concat import HDLConcatenation
-import os
 import ast
 
-def test_constants():
 
+def test_constants():
+    """Test constants."""
     try:
         fit_1 = HDLIntegerConstant(256, size=8)
         raise Exception
@@ -30,23 +27,23 @@ def test_constants():
     ret = fit_2 - fit_1
     ret = fit_1 + fit_2
     ret = 2 + fit_1
-    ret = 2*fit_1
-    ret = fit_1*2
+    ret = 2 * fit_1
+    ret = fit_1 * 2
 
     try:
-        _ = HDLIntegerConstant(2) - '123'
+        _ = HDLIntegerConstant(2) - "123"
         raise Exception
     except TypeError:
         pass
 
     try:
-        _ = HDLIntegerConstant(2) + '123'
+        _ = HDLIntegerConstant(2) + "123"
         raise Exception
     except TypeError:
         pass
 
     try:
-        _ = HDLIntegerConstant(2)*1.0
+        _ = HDLIntegerConstant(2) * 1.0
         raise Exception
     except TypeError:
         pass
@@ -56,19 +53,20 @@ def test_constants():
         raise Exception
 
     try:
-        _ = HDLIntegerConstant(2) == 'x'
+        _ = HDLIntegerConstant(2) == "x"
         raise Exception
     except TypeError:
         pass
 
-    x = abs(HDLIntegerConstant(-1))
+    _ = abs(HDLIntegerConstant(-1))
 
-    s = HDLStringConstant(value='some_value')
+    s = HDLStringConstant(value="some_value")
     print(s.dumps())
+
 
 # test HDL primitives
 def test_vector_descriptor():
-
+    """Test vectors."""
     # basic testing
     vec = HDLVectorDescriptor(0, 0)
     print(vec.dumps())
@@ -85,19 +83,19 @@ def test_vector_descriptor():
         pass
 
     try:
-        vec = HDLVectorDescriptor('1', 0)
+        vec = HDLVectorDescriptor("1", 0)
         raise Exception
     except TypeError:
         pass
 
     try:
-        vec = HDLVectorDescriptor(left_size=1, right_size='1')
+        vec = HDLVectorDescriptor(left_size=1, right_size="1")
         raise Exception
     except TypeError:
         pass
 
     try:
-        vec = HDLVectorDescriptor(7, stored_value='a')
+        vec = HDLVectorDescriptor(7, stored_value="a")
         raise Exception
     except TypeError:
         pass
@@ -111,100 +109,101 @@ def test_vector_descriptor():
     except ValueError:
         pass
 
-def test_module_port():
 
-    port = HDLModulePort('in', 'myport', 3)
-    port = HDLModulePort('out', 'myport', (2, 0))
-    port = HDLModulePort('inout', 'myport', HDLVectorDescriptor(2, 0))
+def test_module_port():
+    """Test ports."""
+    port = HDLModulePort("in", "myport", 3)
+    port = HDLModulePort("out", "myport", (2, 0))
+    port = HDLModulePort("inout", "myport", HDLVectorDescriptor(2, 0))
     print(port.dumps())
 
     # fail cases
     try:
-        port = HDLModulePort('unknown', 'myport', 0)
+        port = HDLModulePort("unknown", "myport", 0)
         raise Exception
     except ValueError:
         pass
 
     try:
-        port = HDLModulePort('in', 'myport', -1)
+        port = HDLModulePort("in", "myport", -1)
         raise Exception
     except ValueError:
         pass
 
     try:
-        port = HDLModulePort('in', 'myport', (2, 3, 0))
+        port = HDLModulePort("in", "myport", (2, 3, 0))
         raise Exception
     except ValueError:
         pass
 
     try:
-        port = HDLModulePort('in', 'myport', 'INVALID')
+        port = HDLModulePort("in", "myport", "INVALID")
         raise Exception
     except TypeError:
         pass
 
-def test_hdl_parameter():
 
-    param = HDLModuleParameter('myparam', 'integer', param_default=0)
+def test_hdl_parameter():
+    """Test parameters."""
+    param = HDLModuleParameter("myparam", "integer", param_default=0)
     print(param.dumps())
 
+
 def test_hdl_module():
+    """Test modules."""
+    mod = HDLModule("my_module")
+    mod = HDLModule("my_module", [HDLModulePort("in", "myport", 8)])
+    mod = HDLModule(
+        "my_module", params=[HDLModuleParameter("myparam", "integer", 0)]
+    )
 
-    mod = HDLModule('my_module')
-    mod = HDLModule('my_module', [HDLModulePort('in', 'myport', 8)])
-    mod = HDLModule('my_module', params=[HDLModuleParameter('myparam',
-                                                            'integer',
-                                                            0)])
-
-    expr = ast.parse('myparam-1', mode='eval')
-    vec = HDLVectorDescriptor(left_size=HDLExpression(expr),
-                              right_size=0)
-    mod = HDLModule('my_module',
-                    ports=[HDLModulePort('in',
-                                         'myport',
-                                         vec)],
-                    params=HDLModuleParameter('myparam',
-                                              'integer',
-                                              0))
+    expr = ast.parse("myparam-1", mode="eval")
+    vec = HDLVectorDescriptor(left_size=HDLExpression(expr), right_size=0)
+    mod = HDLModule(
+        "my_module",
+        ports=[HDLModulePort("in", "myport", vec)],
+        params=HDLModuleParameter("myparam", "integer", 0),
+    )
     print(mod.dumps(evaluate=True))
 
-    param_scope = mod.get_parameter_scope()
-    full_scope = mod.get_full_scope()
-    params = mod.get_param_names()
-    ports = mod.get_port_names()
+    _ = mod.get_parameter_scope()
+    _ = mod.get_full_scope()
+    _ = mod.get_param_names()
+    _ = mod.get_port_names()
 
     # failures
     try:
-        mod = HDLModule('my_module', 0)
+        mod = HDLModule("my_module", 0)
         raise Exception
     except TypeError:
         pass
 
     try:
-        mod = HDLModule('my_module', [0])
+        mod = HDLModule("my_module", [0])
         raise Exception
     except TypeError:
         pass
 
     try:
-        mod = HDLModule('my_module', params=[0])
+        mod = HDLModule("my_module", params=[0])
         raise Exception
     except TypeError:
         pass
 
     try:
-        mod = HDLModule('my_module', params=0)
+        mod = HDLModule("my_module", params=0)
         raise Exception
     except TypeError:
         pass
+
 
 def test_hdl_expression():
-    print('*TEST_EXPR*')
-    expr_1 = 'PARAM-2'
-    expr_2 = 'PARAM_X+1'
-    expr_3 = 'a and ~b'
-    hdl_expr_1 = HDLExpression(ast.parse(expr_1, mode='eval'))
-    hdl_expr_2 = HDLExpression(ast.parse(expr_2, mode='eval'))
+    """Test expressions."""
+    expr_1 = "PARAM-2"
+    expr_2 = "PARAM_X+1"
+    expr_3 = "a and ~b"
+    hdl_expr_1 = HDLExpression(ast.parse(expr_1, mode="eval"))
+    hdl_expr_2 = HDLExpression(ast.parse(expr_2, mode="eval"))
     hdl_expr_3 = HDLExpression(expr_3)
     print(hdl_expr_3.dumps())
     sum = hdl_expr_1 + hdl_expr_2
@@ -224,7 +223,7 @@ def test_hdl_expression():
     _ = 0x1 ^ hdl_expr_1
     _ = hdl_expr_1 ^ 0x1
 
-    my_signal = HDLSignal('reg', 'signal_a', size=2)
+    my_signal = HDLSignal("reg", "signal_a", size=2)
     _ = HDLExpression(HDLIntegerConstant(1))
     _ = HDLExpression(1)
     _ = HDLExpression(my_signal)
@@ -232,21 +231,21 @@ def test_hdl_expression():
     _ = HDLExpression(my_signal[1:0])
 
     # test reduction
-    expr_a = HDLExpression('value_a')
-    expr_b = HDLExpression('value_b')
-    full_expr = expr_a<<0 | expr_b<<16 | HDLExpression(0)
+    expr_a = HDLExpression("value_a")
+    expr_b = HDLExpression("value_b")
+    full_expr = expr_a << 0 | expr_b << 16 | HDLExpression(0)
 
-    case_1 = ast.BinOp(left=ast.Num(n=0),
-                       op=ast.BitOr(),
-                       right=ast.Name(id='VAR'))
+    case_1 = ast.BinOp(
+        left=ast.Num(n=0), op=ast.BitOr(), right=ast.Name(id="VAR")
+    )
 
-    case_2 = ast.BinOp(left=ast.Num(n=1),
-                       op=ast.Mult(),
-                       right=ast.Name(id='VAR'))
+    case_2 = ast.BinOp(
+        left=ast.Num(n=1), op=ast.Mult(), right=ast.Name(id="VAR")
+    )
 
-    case_3 = ast.BinOp(left=ast.Num(n=0),
-                       op=ast.Mult(),
-                       right=ast.Name(id='VAR'))
+    case_3 = ast.BinOp(
+        left=ast.Num(n=0), op=ast.Mult(), right=ast.Name(id="VAR")
+    )
 
     hdl_expr = HDLExpression(ast.Expression(body=case_1))
     hdl_expr_2 = HDLExpression(ast.Expression(body=case_2))
@@ -270,38 +269,39 @@ def test_hdl_expression():
     full_expr.reduce_expr()
     print(full_expr.dumps())
 
-def test_hdl_signal():
 
-    my_sig = HDLSignal('reg', 'signal_x', size=(7, 0))
+def test_hdl_signal():
+    """Test signals."""
+    my_sig = HDLSignal("reg", "signal_x", size=(7, 0))
     print(my_sig.dumps())
-    my_sliced_sig = my_sig[3:1]
-    other_slice = my_sig[7]
+    _ = my_sig[3:1]
+    _ = my_sig[7]
     yet_another = my_sig[2:]
-    another = my_sig[:2]
+    _ = my_sig[:2]
     print(yet_another.dumps())
-    _ = HDLSignal('reg', 'sig', HDLVectorDescriptor(1, 0))
+    _ = HDLSignal("reg", "sig", HDLVectorDescriptor(1, 0))
 
     # exceptions
     try:
-        _ = HDLSignal('unknown', 'sig', 1)
+        _ = HDLSignal("unknown", "sig", 1)
         raise Exception
     except ValueError:
         pass
 
     try:
-        _ = HDLSignal('reg', 'sig', -1)
+        _ = HDLSignal("reg", "sig", -1)
         raise Exception
     except ValueError:
         pass
 
     try:
-        _ = HDLSignal('reg', 'sig', (1, 2, 3))
+        _ = HDLSignal("reg", "sig", (1, 2, 3))
         raise Exception
     except ValueError:
         pass
 
     try:
-        _ = HDLSignal('reg', 'sig', 'invalid')
+        _ = HDLSignal("reg", "sig", "invalid")
         raise Exception
     except TypeError:
         pass
@@ -309,30 +309,32 @@ def test_hdl_signal():
     _ = HDLSignalSlice(my_sig, HDLVectorDescriptor(1, 0))
 
     try:
-        _ = HDLSignalSlice(my_sig, 'invalid')
+        _ = HDLSignalSlice(my_sig, "invalid")
         raise Exception
     except TypeError:
         pass
 
-def test_sens():
 
-    some_signal = HDLSignal('reg', 'signal', size=1)
-    sens_1 = HDLSensitivityDescriptor(sens_type='rise', sig=some_signal)
+def test_sens():
+    """Test sensitivity list."""
+    some_signal = HDLSignal("reg", "signal", size=1)
+    sens_1 = HDLSensitivityDescriptor(sens_type="rise", sig=some_signal)
 
     sens_list = HDLSensitivityList()
     sens_list.add(sens_1)
 
     print(sens_list.dumps())
 
-def test_seq():
 
-    some_signal = HDLSignal('reg', 'signal', size=1)
-    sens_1 = HDLSensitivityDescriptor(sens_type='rise', sig=some_signal)
+def test_seq():
+    """Test sequential block."""
+    some_signal = HDLSignal("reg", "signal", size=1)
+    sens_1 = HDLSensitivityDescriptor(sens_type="rise", sig=some_signal)
 
     sens_list = HDLSensitivityList()
     sens_list.add(sens_1)
 
-    ass_sig = HDLSignal('reg', 'counter', size=2)
+    ass_sig = HDLSignal("reg", "counter", size=2)
     ass_expr = HDLExpression(ass_sig) + 1
     assign = HDLAssignment(ass_sig, ass_expr)
 
@@ -341,26 +343,28 @@ def test_seq():
 
     print(seq.dumps())
 
-def test_assign():
 
+def test_assign():
+    """Test assignment."""
     # this module is extensively tested already, being used as a support
     # class for many others. here we test whatever is missing
 
-    sig = HDLSignal('comb', 'my_signal')
+    sig = HDLSignal("comb", "my_signal")
     assign = HDLAssignment(signal=sig, value=0)
     print(assign.dumps())
 
     # test fail cases
     try:
-        _ = HDLAssignment('not_allowed', 0)
+        _ = HDLAssignment("not_allowed", 0)
         raise Exception
     except TypeError:
         pass
 
+
 def test_concat():
-    print('*TEST CONCAT*')
-    sig = HDLSignal('comb', 'my_signal', size=4)
-    concat = HDLConcatenation(sig, HDLExpression(0x0c, size=8))
+    """Test concatenation."""
+    sig = HDLSignal("comb", "my_signal", size=4)
+    concat = HDLConcatenation(sig, HDLExpression(0x0C, size=8))
     if len(concat) != 12:
         raise ValueError
 
@@ -368,7 +372,7 @@ def test_concat():
 
     # failures
     try:
-        _ = HDLConcatenation(sig, 'not_allowed')
+        _ = HDLConcatenation(sig, "not_allowed")
         raise Exception
     except TypeError:
         pass
