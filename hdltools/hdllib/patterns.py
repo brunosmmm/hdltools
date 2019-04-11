@@ -186,10 +186,11 @@ class FSMInvalidStateError(Exception):
 class FSMProxy:
     """Proxy object for FSM inference."""
 
-    def __init__(self, initial, signal_scope, state_methods):
+    def __init__(self, fsm_type, initial, signal_scope, state_methods):
         """Initialize."""
         self.initial = initial
         self.signal_scope = signal_scope
+        self._type = fsm_type
         self._state_transitions = {}
         self._current_state = initial
         self._state_methods = state_methods
@@ -199,6 +200,11 @@ class FSMProxy:
     def state(self):
         """Current state."""
         raise NotImplementedError
+
+    @property
+    def fsm_type(self):
+        """Get fsm type."""
+        return self._type
 
     @state.setter
     def state(self, next_state):
@@ -249,7 +255,7 @@ class FSM:
                             state_name, _input
                         )
                     )
-        fsm_object = FSMProxy(initial_state, signal_scope, states)
+        fsm_object = FSMProxy(cls.__name__, initial_state, signal_scope, states)
         return fsm_object
 
     @classmethod
