@@ -183,20 +183,17 @@ class FSMInvalidStateError(Exception):
     pass
 
 
-class FSM(ClockedBlock):
-    """Finite state machine."""
+class FSMProxy:
+    """Proxy object for FSM inference."""
 
-    def __init__(
-        self, clk, rst, state_var, initial, clk_edge="rise", rst_lvl=1, **kwargs
-    ):
+    def __init__(self, initial, signal_scope, state_methods):
         """Initialize."""
-        super().__init__(clk, rst, clk_edge, rst_lvl)
         self.initial = initial
-        self.state_var = state_var
-        self._signal_scope = kwargs
+        self.signal_scope = signal_scope
         self._state_transitions = {}
-        self._current_state = None
-        self._state_names = self._collect_states()
+        self._current_state = initial
+        self._state_methods = state_methods
+        self.__infer_fsm()
 
     @property
     def state(self):
@@ -213,15 +210,33 @@ class FSM(ClockedBlock):
 
         cur_trans = self._state_transitions[self._current_state]
 
-        if next_state not in self._state_names:
+        if next_state not in self._state_methods:
             raise FSMInvalidStateError(
                 "invalid state name: {}".format(next_state)
             )
 
         cur_trans |= set([next_state])
 
+    def __infer_fsm(self):
+        """Infer FSM."""
+        for state_name, (method, inputs) in self._state_methods.items():
+            self._current_state = state_name
+            for _input in inputs:
+                signal = self.signal_scope[_input]
+                for i in range(0, 2 ** len(signal)):
+                    method(self, i)
+            if len(inputs) == 0:
+                method(self)
+
+        print(self._state_transitions)
+        return self._state_transitions
+
+
+class FSM:
+    """Finite state machine."""
+
     @classmethod
-    def _infer_fsm(cls, signal_scope, states):
+    def _infer_fsm(cls, signal_scope, states, initial_state):
         # verify that signals are in scope.
         for state_name, (method, inputs) in states.items():
             for _input in inputs:
@@ -231,15 +246,7 @@ class FSM(ClockedBlock):
                             state_name, _input
                         )
                     )
-
-    def __infer_fsm(self):
-        """Infer FSM."""
-        for state_name, method in self._state_names.items():
-            # TODO call method, cant because arguments are unknown
-            # method()
-            pass
-
-        return self._state_transitions
+        fsm_object = FSMProxy(initial_state, signal_scope, states)
 
     @classmethod
     def _collect_states(cls):
@@ -300,7 +307,7 @@ class FSM(ClockedBlock):
         cases = []
         state_mapping = OrderedDict()
 
-        fsm = cls._infer_fsm(_signal_scope, states)
+        fsm = cls._infer_fsm(_signal_scope, states, initial)
 
         # set state variable size
         state_var.set_size(int(math.ceil(math.log2(float(len(states))))))
