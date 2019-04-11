@@ -184,7 +184,6 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 block, const, fsm = decorator_class.get(*args, **kwargs)
                 # perform checks
                 state_var = fsm.state_var_name
-                print(type(state_var))
                 for fsm_name, _fsm in self.fsms.items():
                     if _fsm.state_var_name.name == state_var.name:
                         raise PatternNotAllowedError(
