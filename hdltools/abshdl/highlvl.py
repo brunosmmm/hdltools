@@ -172,7 +172,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 for kw in decorator.keywords:
                     if isinstance(kw.value, ast.Str):
                         kwargs[kw.arg] = kw.value.s
-                block, const = decorator_class.get(*args, **kwargs)
+                # add signal scope in the mix
+                kwargs["_signal_scope"] = self.signal_scope
+                block, const, fsm = decorator_class.get(*args, **kwargs)
                 # go out of tree
                 fsm = FSMBuilder(block, self.signal_scope)
                 fsm._build(decorator_class)
@@ -436,7 +438,9 @@ class FSMBuilder(HDLBlock):
             if m is not None:
                 # found a state
                 if inspect.ismethod(method) or inspect.isfunction(method):
-                    state_methods[m.group(1)] = method
+                    args = set(inspect.getfullargspec(method).args)
+                    input_list = args - set(["self"])
+                    state_methods[m.group(1)] = (method, input_list)
 
         return state_methods
 
@@ -470,3 +474,11 @@ class FSMBuilder(HDLBlock):
             raise RuntimeError("invalid state: {}".format(node.s))
 
         return HDLMacroValue(node.s)
+
+    def visit_Name(self, node):
+        """Visit a name."""
+        # why???
+        if node.id in ("self", "FSM"):
+            return
+        if node.id not in self.signal_scope:
+            raise NameError("unknown signal in FSM: '{}'".format(node.id))
