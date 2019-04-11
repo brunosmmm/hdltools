@@ -194,9 +194,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                     self.block.add(block)
                     self.current_scope = block
                 if self.consts is None:
-                    self.consts = const
+                    self.consts = {c.name: c for c in const}
                 else:
-                    self.consts.extend(const)
+                    self.consts.update({c.name: c for c in const})
 
         # enforce legality of scope
         for arg in node.args.args:

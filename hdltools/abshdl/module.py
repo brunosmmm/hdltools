@@ -159,7 +159,11 @@ class HDLModule(HDLObject):
             for constant in constants:
                 if not isinstance(constant, HDLMacro):
                     raise TypeError("list may only contain HDLMacro instances")
-
+                self.constants.append(constant)
+        elif isinstance(constants, dict):
+            for const_name, constant in constants.items():
+                if not isinstance(constant, HDLMacro):
+                    raise TypeError("list may only contain HDLMacro instances")
                 self.constants.append(constant)
         else:
             raise TypeError("constants must be a list or HDLMacro")
