@@ -45,6 +45,7 @@ if __name__ == "__main__":
         mod.add(
             [
                 HDLSignal("reg", "state", size="defer"),
+                HDLSignal("reg", "state2", size="defer"),
                 HDLSignal("reg", "done_reg"),
                 HDLSignal("reg", "counter", size=counter_size),
             ]
@@ -52,12 +53,18 @@ if __name__ == "__main__":
 
         @HDLBlock(mod)
         @ParallelBlock()
-        def fsm_body(clk, rst, done_reg, done, state, start, counter):
+        def fsm_body(clk, rst, done_reg, done, state, state2, start, counter):
             done = done_reg
             # sequential block generation
 
             @TestFSM(clk, rst, state, initial="zero")
             def myfsm():
+                pass
+
+            # TODO state variable cannot be the same, detect and prevent
+            # in generation code
+            @TestFSM(clk, rst, state2, initial="zero")
+            def mysecondfsm():
                 pass
 
         # add generated body to module
