@@ -2,40 +2,41 @@
 
 from . import HDLObject
 from .signal import HDLSignal, HDLSignalSlice
-from .module import HDLModulePort
+from .port import HDLModulePort
 
 
 class HDLSensitivityDescriptor(HDLObject):
     """Signal sensitivity descriptor."""
 
-    _sens_types = ['rise', 'fall', 'both', 'any']
+    _sens_types = ["rise", "fall", "both", "any"]
 
     def __init__(self, sens_type, sig=None):
         """Initialize."""
         if sens_type not in self._sens_types:
-            raise ValueError('illegal sensitivity'
-                             ' type: "{}"'.format(sens_type))
+            raise ValueError(
+                "illegal sensitivity" ' type: "{}"'.format(sens_type)
+            )
 
         if isinstance(sig, HDLModulePort):
             sig = sig.signal
-        elif sig is None and sens_type != 'any':
-            raise ValueError('signal cannot be None')
+        elif sig is None and sens_type != "any":
+            raise ValueError("signal cannot be None")
 
         if not isinstance(sig, (HDLSignal, HDLSignalSlice, type(None))):
-            raise TypeError('sig must be HDLSignal or HDLSignalSlice')
+            raise TypeError("sig must be HDLSignal or HDLSignalSlice")
 
         self.sens_type = sens_type
         self.signal = sig
 
     def dumps(self):
         """Get representation."""
-        if self.sens_type == 'rise':
-            ret_str = 'rise({})'.format(self.signal.dumps(decl=False))
-        elif self.sens_type == 'fall':
-            ret_str = 'fall({})'.format(self.signal.dumps(decl=False))
-        elif self.sens_type == 'both':
-            ret_str = 'both({})'.format(self.signal.dumps(decl=False))
-        elif self.sens_type == 'any':
+        if self.sens_type == "rise":
+            ret_str = "rise({})".format(self.signal.dumps(decl=False))
+        elif self.sens_type == "fall":
+            ret_str = "fall({})".format(self.signal.dumps(decl=False))
+        elif self.sens_type == "both":
+            ret_str = "both({})".format(self.signal.dumps(decl=False))
+        elif self.sens_type == "any":
             ret_str = self.signal.dumps(decl=False)
 
         return ret_str
@@ -53,7 +54,7 @@ class HDLSensitivityList(HDLObject):
         """Add descriptors."""
         for descr in descrs:
             if not isinstance(descr, HDLSensitivityDescriptor):
-                raise TypeError('only HDLSensitivityDescriptor allowed')
+                raise TypeError("only HDLSensitivityDescriptor allowed")
 
             # no duplicate checking!!!
             self.items.append(descr)
@@ -68,4 +69,4 @@ class HDLSensitivityList(HDLObject):
 
     def dumps(self):
         """Get representation."""
-        return '[{}]'.format(','.join([x.dumps() for x in self.items]))
+        return "[{}]".format(",".join([x.dumps() for x in self.items]))

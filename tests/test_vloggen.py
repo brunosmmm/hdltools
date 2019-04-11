@@ -6,7 +6,8 @@ from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
 from hdltools.abshdl.seq import HDLSequentialBlock
-from hdltools.abshdl.module import HDLModule, HDLModulePort, HDLModuleParameter
+from hdltools.abshdl.module import HDLModule, HDLModuleParameter
+from hdltools.abshdl.port import HDLModulePort
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.verilog.codegen import VerilogCodeGenerator
 

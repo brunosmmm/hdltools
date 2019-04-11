@@ -5,7 +5,7 @@ from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
 from .concat import HDLConcatenation
 from .stmt import HDLStatement
-from .module import HDLModulePort
+from .port import HDLModulePort
 from .ifelse import HDLIfExp
 from .macro import HDLMacroValue
 

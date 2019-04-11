@@ -2,7 +2,8 @@
 
 from textx.metamodel import metamodel_from_str
 from .registers import HDLRegister, HDLRegisterField
-from .module import HDLModulePort, HDLModuleParameter
+from .port import HDLModulePort
+from .module import HDLModuleParameter
 from .const import HDLIntegerConstant, HDLStringConstant
 from .expr import HDLExpression
 

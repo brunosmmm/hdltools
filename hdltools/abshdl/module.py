@@ -1,12 +1,12 @@
 """HDL Module."""
 
 from . import HDLObject
-from .vector import HDLVectorDescriptor
 from .builtin import HDLBuiltins
 from .scope import HDLScope
-from .expr import HDLExpression
 from .signal import HDLSignal
 from .macro import HDLMacro
+from .seq import HDLSequentialBlock
+from .port import HDLModulePort, HDLModuleTypedPort
 
 
 class HDLModuleParameter(HDLObject):
@@ -31,112 +31,17 @@ class HDLModuleParameter(HDLObject):
     def __repr__(self):
         """Get readable representation."""
         if self.ptype is not None:
-            ret_str = '#{} {}'.format(self.ptype.upper(),
-                                      self.name.upper())
+            ret_str = "#{} {}".format(self.ptype.upper(), self.name.upper())
         else:
-            ret_str = '#{}'.format(self.name.upper())
+            ret_str = "#{}".format(self.name.upper())
         if self.value is not None:
-            ret_str += ' ({})'.format(self.value)
+            ret_str += " ({})".format(self.value)
 
         return ret_str
 
     def dumps(self):
         """Alias for __repr__."""
         return self.__repr__()
-
-
-class HDLAbsModulePort(HDLObject):
-    """Abstract class from which different port types derive."""
-
-    _port_directions = ['in', 'out', 'inout']
-
-    def __init__(self, direction, name):
-        """Initialize."""
-        if direction not in self._port_directions:
-            raise ValueError('invalid port direction: "{}"'.format(direction))
-
-        self.direction = direction
-        self.name = name
-
-    def __repr__(self, eval_scope=None):
-        """Get readable representation."""
-        raise NotImplementedError()
-
-    def dumps(self, eval_scope=None):
-        """Alias for __repr__."""
-        return self.__repr__(eval_scope)
-
-        # HACKY HACKS!!!!!
-    def __pos__(self):
-        """Access internal signal as an expression."""
-        return HDLExpression(self.signal)
-
-    def __neg__(self):
-        """Access internal signal."""
-        return self.signal
-
-
-class HDLModuleTypedPort(HDLAbsModulePort):
-    """Typed ports."""
-
-    def __init__(self, direction, name, ptype):
-        """Initialize."""
-        super().__init__(direction, name)
-
-        # create internal signal
-        self.signal = HDLSignal(sig_type='var', sig_name=name,
-                                var_type=ptype, size=None)
-
-    def __repr__(self, eval_scope=None):
-        """Get readable representation."""
-        return '{} {} {}'.format(self.direction.upper(),
-                                 self.signal.var_type,
-                                 self.name)
-
-
-class HDLModulePort(HDLAbsModulePort):
-    """HDL Module port."""
-
-    def __init__(self, direction, name, size=1):
-        """Initialize.
-
-        Args
-        ----
-        direction: str
-           Port direction
-        size: int, tuple or vector.HDLVectorDescriptor
-           Port description
-        name: str
-           Port name
-        """
-        super().__init__(direction, name)
-        if isinstance(size, int):
-            # default is [size-1:0] / (size-1 downto 0)
-            if (size < 0):
-                raise ValueError('only positive size allowed')
-            self.vector = HDLVectorDescriptor(size-1, 0)
-        elif isinstance(size, (tuple, list)):
-            if len(size) != 2:
-                raise ValueError('invalid vector '
-                                 'dimensions: "{}"'.format(size))
-            self.vector = HDLVectorDescriptor(*size)
-        elif isinstance(size, HDLVectorDescriptor):
-            self.vector = size
-        elif isinstance(size, HDLExpression):
-            self.vector = HDLVectorDescriptor(left_size=size-1)
-        else:
-            raise TypeError('size can only be of types: int, list or'
-                            ' vector.HDLVectorDescriptor')
-
-        # create internal signal
-        self.signal = HDLSignal(sig_type='comb', sig_name=name,
-                                size=size)
-
-    def __repr__(self, eval_scope=None):
-        """Get readable representation."""
-        return '{} {}{}'.format(self.direction.upper(),
-                                self.name,
-                                self.vector.dumps(eval_scope))
 
 
 class HDLModule(HDLObject):
@@ -160,14 +65,16 @@ class HDLModule(HDLObject):
             self.add_parameters(params)
         if ports is not None:
             self.add_ports(ports)
-        self.scope = HDLScope(scope_type='par', parent=self)
+        self.scope = HDLScope(scope_type="par", parent=self)
 
     def __call__(self, fn):
         """Use as decorator."""
+
         def wrapper_HDLModule(*args):
             mod = self
             fn(mod, *args)
             return mod
+
         return wrapper_HDLModule
 
     def add(self, items):
@@ -208,17 +115,18 @@ class HDLModule(HDLObject):
         for port in ports:
             if isinstance(port, HDLModuleTypedPort):
                 if untyped_ports_added:
-                    raise TypeError('cannot mix typed and untyped ports')
+                    raise TypeError("cannot mix typed and untyped ports")
                 self.ports.append(port)
                 typed_ports_added = True
             elif isinstance(port, HDLModulePort):
                 if typed_ports_added:
-                    raise TypeError('cannot mix typed and untyped ports')
+                    raise TypeError("cannot mix typed and untyped ports")
                 self.ports.append(port)
                 untyped_ports_added = True
             else:
-                raise TypeError('list may only contain HDLModulePort'
-                                ' instances')
+                raise TypeError(
+                    "list may only contain HDLModulePort" " instances"
+                )
 
     def add_parameters(self, params):
         """Add parameters to module.
@@ -234,11 +142,12 @@ class HDLModule(HDLObject):
         elif isinstance(params, (tuple, list)):
             for param in params:
                 if not isinstance(param, HDLModuleParameter):
-                    raise TypeError('list may only contain HDLModuleParameter'
-                                    ' instances')
+                    raise TypeError(
+                        "list may only contain HDLModuleParameter" " instances"
+                    )
             self.params.extend(params)
         else:
-            raise TypeError('params must be a list or HDLModuleParameter')
+            raise TypeError("params must be a list or HDLModuleParameter")
 
     def add_constants(self, constants):
         """Add constant declarations (macros)."""
@@ -247,11 +156,11 @@ class HDLModule(HDLObject):
         elif isinstance(constants, (list, tuple)):
             for constant in constants:
                 if not isinstance(constant, HDLMacro):
-                    raise TypeError('list may only contain HDLMacro instances')
+                    raise TypeError("list may only contain HDLMacro instances")
 
                 self.constants.append(constant)
         else:
-            raise TypeError('constants must be a list or HDLMacro')
+            raise TypeError("constants must be a list or HDLMacro")
 
     def get_parameter_scope(self):
         """Get parameters as dictionary."""
@@ -296,18 +205,18 @@ class HDLModule(HDLObject):
             eval_scope = self.get_full_scope()
         else:
             eval_scope = None
-        ret_str = '{} {{\n'.format(self.name.upper())
+        ret_str = "{} {{\n".format(self.name.upper())
 
         for constant in self.constants:
-            ret_str += '{}\n'.format(constant.dumps())
+            ret_str += "{}\n".format(constant.dumps())
 
         for param in self.params:
-            ret_str += '{}\n'.format(param.dumps())
+            ret_str += "{}\n".format(param.dumps())
 
         for port in self.ports:
-            ret_str += '    {}\n'.format(port.dumps(eval_scope=eval_scope))
+            ret_str += "    {}\n".format(port.dumps(eval_scope=eval_scope))
 
-        ret_str += '}'
+        ret_str += "}"
 
         # TODO dump scope
 
@@ -345,14 +254,14 @@ class HDLModule(HDLObject):
 
 def input_port(name, size=1):
     """Make an input port."""
-    return HDLModulePort('in', name, size)
+    return HDLModulePort("in", name, size)
 
 
 def output_port(name, size=1):
     """Make an output port."""
-    return HDLModulePort('out', name, size)
+    return HDLModulePort("out", name, size)
 
 
 def inout_port(name, size=1):
     """Make an input port."""
-    return HDLModulePort('inout', name, size)
+    return HDLModulePort("inout", name, size)

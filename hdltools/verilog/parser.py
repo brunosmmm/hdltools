@@ -1,8 +1,9 @@
 """Verilog module declaration parser."""
 
 from textx.metamodel import metamodel_from_str
-from ..abshdl.module import (HDLModulePort, HDLModule,
-                             HDLModuleParameter)
+from ..abshdl.module import HDLModule, HDLModuleParameter
+from ..abshdl.port import HDLModulePort
+
 from ..abshdl.expr import HDLExpression
 import re
 import ast
@@ -59,42 +60,44 @@ Comment:
 
 def verilog_bitstring_to_int(bitstring):
     """Parse bitstring and return value."""
-    HEX_BITSTRING_REGEX = re.compile(r'([0-9]+)?\'h([0-9a-fA-F]+)')
-    DEC_BITSTRING_REGEX = re.compile(r'([0-9]+)?\'d([0-9]+)')
-    BIN_BITSTRING_REGEX = re.compile(r'([0-9]+)?\'b([01]+)')
+    HEX_BITSTRING_REGEX = re.compile(r"([0-9]+)?\'h([0-9a-fA-F]+)")
+    DEC_BITSTRING_REGEX = re.compile(r"([0-9]+)?\'d([0-9]+)")
+    BIN_BITSTRING_REGEX = re.compile(r"([0-9]+)?\'b([01]+)")
 
     m_hex = HEX_BITSTRING_REGEX.match(bitstring)
     m_dec = DEC_BITSTRING_REGEX.match(bitstring)
     m_bin = BIN_BITSTRING_REGEX.match(bitstring)
 
     if m_hex is not None:
-        if m_hex.group == '':
+        if m_hex.group == "":
             width = None
         else:
             width = int(m_hex.group(1))
         return (width, int(m_hex.group(2), 16))
     elif m_dec is not None:
-        if m_dec.group == '':
+        if m_dec.group == "":
             width = None
         else:
             width = int(m_dec.group(1))
         return (width, int(m_dec.group(2), 10))
     elif m_bin is not None:
-        if m_bin.group == '':
+        if m_bin.group == "":
             width = None
         else:
             width = int(m_bin.group(1))
         return (width, int(m_bin.group(2), 2))
     else:
-        raise ValueError('could not convert bitstring')
+        raise ValueError("could not convert bitstring")
 
 
 class VerilogModuleParser(object):
     """Parse module declarations in verilog files."""
 
-    _class_to_port_dir = {'ModuleInput': 'in',
-                          'ModuleOutput': 'out',
-                          'ModuleInout': 'inout'}
+    _class_to_port_dir = {
+        "ModuleInput": "in",
+        "ModuleOutput": "out",
+        "ModuleInout": "inout",
+    }
 
     def __init__(self, module_file):
         """Initialize.
@@ -125,15 +128,16 @@ class VerilogModuleParser(object):
 
                 # use ast to parse
                 if param.def_val.expr is not None:
-                    param_str = param.def_val.expr.replace('$', '_')
-                    param_tree = ast.parse(param_str, mode='eval')
+                    param_str = param.def_val.expr.replace("$", "_")
+                    param_tree = ast.parse(param_str, mode="eval")
 
                     # dependency check
                     param_deps = self._find_dependencies(param_tree)
                     for dep in param_deps:
                         if dep not in self.hdl_model.get_param_names():
-                            raise KeyError('unknown identifier:'
-                                           ' {}'.format(dep))
+                            raise KeyError(
+                                "unknown identifier:" " {}".format(dep)
+                            )
 
                     # evaluate parameters immediately (not necessary)
                     scope = hdl_mod.get_full_scope()
@@ -141,9 +145,11 @@ class VerilogModuleParser(object):
                 else:
                     param_val = param.def_val.bitstr
 
-                hdl_param = HDLModuleParameter(param_name=param.par_name,
-                                               param_type=param.par_type,
-                                               param_default=param_val)
+                hdl_param = HDLModuleParameter(
+                    param_name=param.par_name,
+                    param_type=param.par_type,
+                    param_default=param_val,
+                )
 
                 hdl_mod.add_parameters(hdl_param)
 
@@ -158,35 +164,31 @@ class VerilogModuleParser(object):
             direction = self._class_to_port_dir[port.__class__.__name__]
             name = port.decl.port_name
             if port.decl.srange is not None:
-                size = (port.decl.srange.left_size,
-                        port.decl.srange.right_size)
+                size = (port.decl.srange.left_size, port.decl.srange.right_size)
 
                 # use ast to parse, avoiding complicated grammar
-                left_str = port.decl.srange.left_size.replace('$', '_')
-                right_str = port.decl.srange.right_size.replace('$',
-                                                                '_')
-                left_tree = ast.parse(left_str,
-                                      mode='eval')
-                right_tree = ast.parse(right_str,
-                                       mode='eval')
+                left_str = port.decl.srange.left_size.replace("$", "_")
+                right_str = port.decl.srange.right_size.replace("$", "_")
+                left_tree = ast.parse(left_str, mode="eval")
+                right_tree = ast.parse(right_str, mode="eval")
                 left_deps = self._find_dependencies(left_tree)
                 right_deps = self._find_dependencies(right_tree)
 
                 # search dependencies in parameters
                 for dep in left_deps:
                     if dep not in self.hdl_model.get_param_names():
-                        raise KeyError('unknown identifier: {}'.format(dep))
+                        raise KeyError("unknown identifier: {}".format(dep))
                 for dep in right_deps:
                     if dep not in self.hdl_model.get_param_names():
-                        raise KeyError('unknown identifier: {}'.format(dep))
+                        raise KeyError("unknown identifier: {}".format(dep))
 
                 size = (HDLExpression(left_tree), HDLExpression(right_tree))
             else:
                 size = (0, 0)
             try:
-                hdl_port = HDLModulePort(direction=direction,
-                                         name=name,
-                                         size=size)
+                hdl_port = HDLModulePort(
+                    direction=direction, name=name, size=size
+                )
             except TypeError:
                 pass
 

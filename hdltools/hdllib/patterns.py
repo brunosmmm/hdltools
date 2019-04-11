@@ -4,7 +4,8 @@ from ..abshdl.seq import HDLSequentialBlock
 from ..abshdl.ifelse import HDLIfElse
 from ..abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
 from ..abshdl.scope import HDLScope
-from ..abshdl.module import HDLModule, HDLModulePort
+from ..abshdl.module import HDLModule
+from ..abshdl.port import HDLModulePort
 from ..abshdl.switch import HDLSwitch, HDLCase
 from ..abshdl.macro import HDLMacro, HDLMacroValue
 from ..abshdl.assign import HDLAssignment

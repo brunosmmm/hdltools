@@ -1,6 +1,7 @@
 """HDL Primitives."""
 from hdltools.abshdl.vector import HDLVectorDescriptor
-from hdltools.abshdl.module import HDLModulePort, HDLModule, HDLModuleParameter
+from hdltools.abshdl.module import HDLModule, HDLModuleParameter
+from hdltools.abshdl.port import HDLModulePort
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from hdltools.abshdl.const import HDLIntegerConstant, HDLStringConstant
