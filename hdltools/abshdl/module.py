@@ -218,6 +218,9 @@ class HDLModule(HDLObject):
         for port in self.ports:
             ret_str += "    {}\n".format(port.dumps(eval_scope=eval_scope))
 
+        for fsm_name, fsm_obj in self.fsms.items():
+            ret_str += "    FSM {}: {}\n".format(fsm_name, fsm_obj.fsm_type)
+
         ret_str += "}"
 
         # TODO dump scope
