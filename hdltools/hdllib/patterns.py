@@ -16,12 +16,6 @@ import re
 import math
 
 
-class InvalidStateError(Exception):
-    """Invalid FSM state error."""
-
-    pass
-
-
 def get_sequential_block(sens_list, *stmts, **kwargs):
     """Get an unpopulated sequential block."""
     sens = HDLSensitivityList(sens_list)
@@ -177,6 +171,18 @@ class ClockedRstBlock(ClockedBlock):
         return seq
 
 
+class FSMInputError(Exception):
+    """FSM Input signal error."""
+
+    pass
+
+
+class FSMInvalidStateError(Exception):
+    """Invalid FSM state error."""
+
+    pass
+
+
 class FSM(ClockedBlock):
     """Finite state machine."""
 
@@ -208,11 +214,25 @@ class FSM(ClockedBlock):
         cur_trans = self._state_transitions[self._current_state]
 
         if next_state not in self._state_names:
-            raise InvalidStateError("invalid state name: {}".format(next_state))
+            raise FSMInvalidStateError(
+                "invalid state name: {}".format(next_state)
+            )
 
         cur_trans |= set([next_state])
 
-    def _infer_fsm(self):
+    @classmethod
+    def _infer_fsm(cls, signal_scope, states):
+        # verify that signals are in scope.
+        for state_name, (method, inputs) in states.items():
+            for _input in inputs:
+                if _input not in signal_scope:
+                    raise FSMInputError(
+                        "in state '{}': input signal '{}' is not available in scope".format(
+                            state_name, _input
+                        )
+                    )
+
+    def __infer_fsm(self):
         """Infer FSM."""
         for state_name, method in self._state_names.items():
             # TODO call method, cant because arguments are unknown
@@ -232,7 +252,9 @@ class FSM(ClockedBlock):
             if m is not None:
                 # found a state
                 if inspect.ismethod(method) or inspect.isfunction(method):
-                    state_methods[m.group(1)] = method
+                    args = set(inspect.getfullargspec(method).args)
+                    input_list = args - set(["self"])
+                    state_methods[m.group(1)] = (method, input_list)
 
         return state_methods
 
@@ -249,6 +271,7 @@ class FSM(ClockedBlock):
                 self.initial,
                 self.edge,
                 self.lvl,
+                self._signal_scope,
             )
             fn(seq, const, *args, **kwargs)
             return (seq, const)
@@ -256,7 +279,16 @@ class FSM(ClockedBlock):
         return wrapper_FSM
 
     @classmethod
-    def get(cls, clk, rst, state_var, initial, edge="rise", lvl=1):
+    def get(
+        cls,
+        clk,
+        rst,
+        state_var,
+        initial,
+        edge="rise",
+        lvl=1,
+        _signal_scope=None,
+    ):
         """Get sequential block."""
         seq = ClockedBlock.get(clk, edge)
         const = []
@@ -268,6 +300,8 @@ class FSM(ClockedBlock):
         cases = []
         state_mapping = OrderedDict()
 
+        fsm = cls._infer_fsm(_signal_scope, states)
+
         # set state variable size
         state_var.set_size(int(math.ceil(math.log2(float(len(states))))))
 
@@ -276,7 +310,7 @@ class FSM(ClockedBlock):
         rst_if.add_to_else_scope(sw)
 
         i = 0
-        for state, method in states.items():
+        for state, (method, inputs) in states.items():
             state_mapping[state] = i
             case = HDLCase(
                 HDLMacroValue(state), tag="__autogen_case_{}".format(state)
@@ -300,7 +334,7 @@ class FSM(ClockedBlock):
             raise RuntimeError("initial state not specified")
 
         # PROCESS STATES
-        return (seq, const)
+        return (seq, const, fsm)
 
 
 class ParallelBlock:
