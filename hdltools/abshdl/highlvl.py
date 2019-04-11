@@ -16,8 +16,8 @@ from ..hdllib.patterns import (
     ClockedRstBlock,
     ParallelBlock,
     SequentialBlock,
-    FSM,
 )
+from ..hdllib.fsm import FSM
 from .concat import HDLConcatenation
 from .vector import HDLVectorDescriptor
 from .macro import HDLMacroValue

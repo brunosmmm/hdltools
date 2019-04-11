@@ -1,7 +1,8 @@
 """Usage of HDLModule as decorator."""
 
 from hdltools.abshdl.module import HDLModule, input_port, output_port
-from hdltools.hdllib.patterns import ParallelBlock, FSM
+from hdltools.hdllib.patterns import ParallelBlock
+from hdltools.hdllib.fsm import FSM
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.highlvl import HDLBlock
 from hdltools.verilog.codegen import VerilogCodeGenerator
@@ -62,11 +63,14 @@ if __name__ == "__main__":
         # add generated body to module
         mod.extend(*fsm_body())
 
+    print("* Module *")
     # generate module
     # FIXME doesnt work with keyword arguments
     fsm = fsm_module(16)
 
     print(fsm.dumps())
+
+    print("* Verilog *")
 
     # generate verilog code
     gen = VerilogCodeGenerator(indent=True)
