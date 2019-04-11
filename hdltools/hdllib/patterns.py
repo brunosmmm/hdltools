@@ -85,9 +85,10 @@ def get_module(name, inputs=None, outputs=None):
 class SequentialBlock:
     """Sequential block decorator."""
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         """Initialize."""
         self.signals = args
+        self._kwargs = kwargs
 
     def __call__(self, fn):
         """Decorate."""
@@ -117,8 +118,9 @@ class SequentialBlock:
 class ClockedBlock(SequentialBlock):
     """Clocked sequential block."""
 
-    def __init__(self, clk, edge="rise"):
+    def __init__(self, clk, edge="rise", *args, **kwargs):
         """Initialize."""
+        super().__init__(clk, edge, *args, **kwargs)
         self.clk = clk
         self.edge = edge
 
@@ -144,11 +146,11 @@ class ClockedBlock(SequentialBlock):
 class ClockedRstBlock(ClockedBlock):
     """Clocked sequential block with reset."""
 
-    def __init__(self, clk, rst, clk_edge="rise", rst_lvl=1):
+    def __init__(self, clk, rst, clk_edge="rise", rst_lvl=1, **kwargs):
         """Initialize."""
+        super().__init__(clk, clk_edge, rst, **kwargs)
         self.rst = rst
         self.lvl = rst_lvl
-        self.clk = clk
         self.edge = clk_edge
 
     def __call__(self, fn):
