@@ -11,16 +11,17 @@ class HDLIfElse(HDLStatement):
 
     def __init__(self, condition, if_scope=None, else_scope=None, **kwargs):
         """Initialize."""
-        super(HDLIfElse, self).__init__(stmt_type='seq',
-                                        has_scope=True,
-                                        **kwargs)
-        self.if_scope = HDLScope(scope_type='seq', parent=self)
-        self.else_scope = HDLScope(scope_type='seq', parent=self)
-        if not isinstance(condition, (HDLExpression, HDLSignal,
-                                      HDLSignalSlice)):
-            raise TypeError('only HDLExpression, HDLSignal,'
-                            ' HDLSignalSlice allowed, got:'
-                            ' {}'.format(condition.__class__.__name__))
+        super().__init__(stmt_type="seq", has_scope=True, **kwargs)
+        self.if_scope = HDLScope(scope_type="seq", parent=self)
+        self.else_scope = HDLScope(scope_type="seq", parent=self)
+        if not isinstance(
+            condition, (HDLExpression, HDLSignal, HDLSignalSlice)
+        ):
+            raise TypeError(
+                "only HDLExpression, HDLSignal,"
+                " HDLSignalSlice allowed, got:"
+                " {}".format(condition.__class__.__name__)
+            )
 
         # Always use HDLExpression
         self.condition = HDLExpression(condition)
@@ -46,14 +47,14 @@ class HDLIfElse(HDLStatement):
 
     def dumps(self):
         """Get Intermediate representation."""
-        ret_str = 'IF {} BEGIN\n'.format(self.condition.dumps())
+        ret_str = "IF {} BEGIN\n".format(self.condition.dumps())
         ret_str += self.if_scope.dumps()
-        ret_str += '\nEND'
+        ret_str += "\nEND"
 
         if len(self.else_scope) > 0:
-            ret_str += '\nELSE BEGIN\n'
+            ret_str += "\nELSE BEGIN\n"
             ret_str += self.else_scope.dumps()
-            ret_str += '\nEND'
+            ret_str += "\nEND"
 
         return ret_str
 
@@ -74,16 +75,19 @@ class HDLIfExp(HDLStatement):
 
     def __init__(self, condition, if_value, else_value, **kwargs):
         """Initialize."""
-        super().__init__(stmt_type='par', **kwargs)
+        super().__init__(stmt_type="par", **kwargs)
         self.condition = condition
         self.if_value = if_value
         self.else_value = else_value
 
-        if not isinstance(condition, (HDLExpression, HDLSignal,
-                                      HDLSignalSlice)):
-            raise TypeError('only HDLExpression, HDLSignal,'
-                            ' HDLSignalSlice allowed, got:'
-                            ' {}'.format(condition.__class__.__name__))
+        if not isinstance(
+            condition, (HDLExpression, HDLSignal, HDLSignalSlice)
+        ):
+            raise TypeError(
+                "only HDLExpression, HDLSignal,"
+                " HDLSignalSlice allowed, got:"
+                " {}".format(condition.__class__.__name__)
+            )
 
         self.condition = HDLExpression(condition)
 
@@ -96,7 +100,7 @@ class HDLIfExp(HDLStatement):
 
     def dumps(self):
         """Get representation."""
-        ret_str = '{} ? {} else {}'.format(self.condition.dumps(),
-                                           self.if_value,
-                                           self.else_value)
+        ret_str = "{} ? {} else {}".format(
+            self.condition.dumps(), self.if_value, self.else_value
+        )
         return ret_str

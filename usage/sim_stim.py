@@ -11,15 +11,16 @@ import sys
 class HDLSPIMaster(HDLSimulationObject):
     """SPI Master."""
 
-    def __init__(self, identifier=None, clk_period=1,
-                 tx_size=8, lsb_first=True):
+    def __init__(
+        self, identifier=None, clk_period=1, tx_size=8, lsb_first=True
+    ):
         """Initialize."""
-        super(HDLSPIMaster, self).__init__(identifier)
+        super()._init__(identifier)
         # outputs
-        self.ce = self.output('ce', initial=0)
-        self.clk = self.output('clk', initial=0)
-        self.do = self.output('do', initial=0)
-        self.di = self.input('di')
+        self.ce = self.output("ce", initial=0)
+        self.clk = self.output("clk", initial=0)
+        self.do = self.output("do", initial=0)
+        self.di = self.input("di")
 
         # data buffer
         self.tx_queue = deque()
@@ -31,7 +32,7 @@ class HDLSPIMaster(HDLSimulationObject):
         self.lsb_first = lsb_first
 
         # internal states
-        self._state = 'idle'
+        self._state = "idle"
         self._txdata = None
         self._rxdata = None
         self._size = None
@@ -51,7 +52,7 @@ class HDLSPIMaster(HDLSimulationObject):
         # put into queue for transmitting
         if size is None:
             size = self.tx_size
-        sys.stderr.write('{} : stop = {}\n'.format(hex(data), stop))
+        sys.stderr.write("{} : stop = {}\n".format(hex(data), stop))
         self.tx_queue.appendleft([data, size, stop])
 
     def transmit_blocks(self, *data, block_size=None, stop=True):
@@ -67,9 +68,9 @@ class HDLSPIMaster(HDLSimulationObject):
 
     def logic(self, **kwargs):
         """Perform internal logic."""
-        if self._state == 'idle':
+        if self._state == "idle":
             if len(self.tx_queue) > 0:
-                self._state = 'transmit'
+                self._state = "transmit"
                 # LSB first
                 self._pos = 0
                 self._txdata, self._size, stop = self.tx_queue.pop()
@@ -85,7 +86,7 @@ class HDLSPIMaster(HDLSimulationObject):
                 self.do = False
                 self.clk = False
                 self._txdata = None
-        elif self._state == 'transmit':
+        elif self._state == "transmit":
             # chip enable
             self.ce = True
             if self._last_clk >= self.clk_period - 1:
@@ -99,14 +100,16 @@ class HDLSPIMaster(HDLSimulationObject):
                         self.do = bool(self._txdata & (1 << self._pos))
                         self._rxdata |= int(self.di) << self._pos
                     else:
-                        self.do = bool(self._txdata &
-                                       (1 << (self._size - self._pos - 1)))
-                        self._rxdata |= (int(self.di) <<
-                                         self._size - self._pos - 1)
+                        self.do = bool(
+                            self._txdata & (1 << (self._size - self._pos - 1))
+                        )
+                        self._rxdata |= (
+                            int(self.di) << self._size - self._pos - 1
+                        )
 
                     self._pos += 1
                     if self._pos > self._size - 1:
-                        self._state = 'idle'
+                        self._state = "idle"
                         self.rx_queue.appendleft(self._rxdata)
             else:
                 # wait
@@ -116,15 +119,16 @@ class HDLSPIMaster(HDLSimulationObject):
 class HDLSpiSlave(HDLSimulationObject):
     """SPI Slave."""
 
-    def __init__(self, identifier=None, clk_period=1,
-                 tx_size=8, lsb_first=True):
+    def __init__(
+        self, identifier=None, clk_period=1, tx_size=8, lsb_first=True
+    ):
         """Initialize."""
         super().__init__(identifier)
         # ports
-        self.di = self.input('di')
-        self.clk = self.input('clk')
-        self.ce = self.input('ce')
-        self.do = self.output('do')
+        self.di = self.input("di")
+        self.clk = self.input("clk")
+        self.ce = self.input("ce")
+        self.do = self.output("do")
 
         # default logic behavior
         self.tx_size = tx_size
@@ -132,7 +136,7 @@ class HDLSpiSlave(HDLSimulationObject):
         self.lsb_first = lsb_first
 
         # internal state
-        self._state = 'idle'
+        self._state = "idle"
         self._txdata = None
         self._rxdata = None
         self._pos = 0
@@ -147,9 +151,9 @@ class HDLSpiSlave(HDLSimulationObject):
 
     def logic(self, **kwargs):
         """Do internal logic."""
-        if self._state == 'idle':
+        if self._state == "idle":
             if self.ce is True:
-                self._state = 'receive'
+                self._state = "receive"
 
                 # first bit might already be there
                 if self.clk is True:
@@ -158,35 +162,35 @@ class HDLSpiSlave(HDLSimulationObject):
                 else:
                     self._pos = 0
                     self._rxdata = 0
-        elif self._state == 'receive':
+        elif self._state == "receive":
             if self.clk is True:
                 self._rxdata |= int(self.di) << self._pos
 
                 self._pos += 1
                 if self._pos > self.tx_size - 1:
-                    self._state = 'idle'
+                    self._state = "idle"
                     self.rx_queue.appendleft(self._rxdata)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     sim = HDLSimulation()
-    mspi = HDLSPIMaster('mspi')
-    sspi = HDLSpiSlave('sspi')
+    mspi = HDLSPIMaster("mspi")
+    sspi = HDLSpiSlave("sspi")
 
     sim.add_stimulus(mspi, sspi)
-    sim.connect('mspi.clk', 'sspi.clk')
-    sim.connect('mspi.do', 'sspi.di')
-    sim.connect('mspi.ce', 'sspi.ce')
-    sim.connect('sspi.do', 'mspi.di')
+    sim.connect("mspi.clk", "sspi.clk")
+    sim.connect("mspi.do", "sspi.di")
+    sim.connect("mspi.ce", "sspi.ce")
+    sim.connect("sspi.do", "mspi.di")
 
-    print('Will send 3 bytes')
+    print("Will send 3 bytes")
     mspi.transmit_blocks(0x10, 0xAA)
     mspi.transmit_blocks(0x80)
-    print('Simulating 100 steps')
+    print("Simulating 100 steps")
     dump = sim.simulate(100)
 
-    vcd_dump = VCDDump('spi')
+    vcd_dump = VCDDump("spi")
     vcd_dump.add_variables(**sim.report_signals())
     vcd_dump.load_dump(dump)
     vcd = VCDGenerator()
@@ -195,5 +199,4 @@ if __name__ == '__main__':
     rx_bytes = []
     while len(sspi.rx_queue) > 0:
         rx_bytes.append(hex(sspi.rx_queue.pop()))
-    print('Slave got {} bytes: {}'.format(len(rx_bytes),
-                                          rx_bytes))
+    print("Slave got {} bytes: {}".format(len(rx_bytes), rx_bytes))

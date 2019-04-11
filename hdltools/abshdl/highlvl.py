@@ -36,7 +36,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def __init__(self, mod=None, **kwargs):
         """Initialize."""
-        super(HDLBlock, self).__init__()
+        super().__init__()
         self._init()
 
         # build internal signal scope

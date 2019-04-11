@@ -9,26 +9,25 @@ from .scope import HDLScope
 class HDLForLoop(HDLStatement):
     """For loop."""
 
-    def __init__(self, init, stop_condition, afterthought,  **kwargs):
+    def __init__(self, init, stop_condition, afterthought, **kwargs):
         """Initialize."""
-        super(HDLForLoop, self).__init__(has_scope=True,
-                                         stmt_type='seq',
-                                         **kwargs)
-        self.scope = HDLScope(scope_type='seq')
+        super().__init__(has_scope=True, stmt_type="seq", **kwargs)
+        self.scope = HDLScope(scope_type="seq")
 
         if not isinstance(init, HDLAssignment):
-            raise TypeError('initialization argument must be a '
-                            ' HDLAssignment object')
+            raise TypeError(
+                "initialization argument must be a " " HDLAssignment object"
+            )
 
         self.init = init
 
         if not isinstance(stop_condition, HDLExpression):
-            raise TypeError('stop condition must be a HDLExpression object')
+            raise TypeError("stop condition must be a HDLExpression object")
 
         self.stop = stop_condition
 
         if not isinstance(afterthought, HDLAssignment):
-            raise TypeError('afterthought must be a HDLAssignment object')
+            raise TypeError("afterthought must be a HDLAssignment object")
 
         self.after = afterthought
 
@@ -42,6 +41,7 @@ class HDLForLoop(HDLStatement):
             return True
 
         return False
+
 
 class HDLForRange(HDLForLoop):
     """For loop using range."""

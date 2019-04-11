@@ -22,7 +22,7 @@ class HDLSimulationReset(HDLSimulationObject):
 
     def __init__(self, rst_delay, rst_lvl=1):
         """Initialize."""
-        super(HDLSimulationReset, self).__init__()
+        super().__init__()
         self.delay = self._get_constant(rst_delay)
         self.lvl = HDLExpression(rst_lvl)
 
@@ -41,7 +41,7 @@ class HDLSimulationClock(HDLSimulationObject):
 
     def __init__(self, period, start_pol=1):
         """Initialize."""
-        super(HDLSimulationClock, self).__init__()
+        super().__init__()
         self.start_pol = self._get_constant(start_pol)
         self.period = self._get_constant(period)
         self._level = bool(self.start_pol)

@@ -14,9 +14,9 @@ class VCDObject:
 class VCDVariable(VCDObject):
     """Variable declaration."""
 
-    def __init__(self, *identifiers, var_type='wire', size=1):
+    def __init__(self, *identifiers, var_type="wire", size=1):
         """Initialize."""
-        super(VCDVariable, self).__init__()
+        super().__init__()
         self.var_type = var_type
         self.size = size
         self.identifiers = identifiers
@@ -32,7 +32,7 @@ class VCDVariable(VCDObject):
 class VCDDump(VCDObject):
     """Complete VCD dump."""
 
-    def __init__(self, name, timescale='1 ns', **kwargs):
+    def __init__(self, name, timescale="1 ns", **kwargs):
         """Initialize."""
         super().__init__(**kwargs)
         self.variables = {}
@@ -41,27 +41,28 @@ class VCDDump(VCDObject):
         self.name = name
         self.initial = None
         self.vcd = []
-        self.var_counter = ord('!')
+        self.var_counter = ord("!")
         self.last_signal_values = None
 
     def _add_variable(self, var):
         self.variables[chr(self.var_counter)] = var
-        self.variable_identifiers[var.get_first_identifier()] =\
-            chr(self.var_counter)
+        self.variable_identifiers[var.get_first_identifier()] = chr(
+            self.var_counter
+        )
         self.var_counter += 1
 
     def add_variables(self, *args, **kwargs):
         """Add variables."""
         for arg in args:
             if not isinstance(arg, VCDVariable):
-                raise TypeError('only VCDVariable allowed')
+                raise TypeError("only VCDVariable allowed")
             self._add_variable(arg)
 
         for name, value in kwargs.items():
             if isinstance(value, HDLSimulationPort):
                 var = VCDVariable(name, size=value.size)
             else:
-                raise TypeError('not allowed')
+                raise TypeError("not allowed")
 
             self._add_variable(var)
 
@@ -99,14 +100,13 @@ class VCDDump(VCDObject):
             if len(self.vcd) == 0:
                 changes = self._detect_changes(signals, self.initial)
             else:
-                changes = self._detect_changes(signals,
-                                               self.last_signal_values)
+                changes = self._detect_changes(signals, self.last_signal_values)
 
             formatted_changes = {}
             for name, value in changes.items():
                 if self.variables[self.variable_identifiers[name]].size > 1:
-                    formatted_changes[name] = 'b{0:b} '.format(value)
+                    formatted_changes[name] = "b{0:b} ".format(value)
                 else:
-                    formatted_changes[name] = '1' if bool(value) else '0'
+                    formatted_changes[name] = "1" if bool(value) else "0"
             self.vcd.append(formatted_changes)
             self.last_signal_values = signals

@@ -10,15 +10,12 @@ class HDLSequentialBlock(HDLStatement):
 
     def __init__(self, sensitivity_list=None, **kwargs):
         """Initialize."""
-        super(HDLSequentialBlock, self).__init__(stmt_type='par',
-                                                 has_scope=True,
-                                                 **kwargs)
-        self.scope = HDLScope(scope_type='seq', parent=self)
+        super().__init__(stmt_type="par", has_scope=True, **kwargs)
+        self.scope = HDLScope(scope_type="seq", parent=self)
 
         # parse sensitivity list?
-        if not isinstance(sensitivity_list, (HDLSensitivityList,
-                                             type(None))):
-            raise TypeError('only HDLSensitivityList allowed')
+        if not isinstance(sensitivity_list, (HDLSensitivityList, type(None))):
+            raise TypeError("only HDLSensitivityList allowed")
 
         self.sens_list = sensitivity_list
 
@@ -28,9 +25,9 @@ class HDLSequentialBlock(HDLStatement):
 
     def dumps(self):
         """Get representation."""
-        ret_str = 'SEQ({}) BEGIN\n'.format(self.sens_list.dumps())
+        ret_str = "SEQ({}) BEGIN\n".format(self.sens_list.dumps())
         ret_str += self.scope.dumps()
-        ret_str += '\nEND\n'
+        ret_str += "\nEND\n"
 
         return ret_str
 

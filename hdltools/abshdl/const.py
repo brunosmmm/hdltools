@@ -18,7 +18,7 @@ class HDLStringConstant(HDLConstant):
 
     def __init__(self, value, **kwargs):
         """Initialize."""
-        super(HDLStringConstant, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.value = str(value)
 
     def dumps(self):
@@ -37,14 +37,14 @@ class HDLIntegerConstant(HDLConstant):
         value: int
             A constant value
         """
-        super(HDLIntegerConstant, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if size is not None:
             # check size
             if self.value_fits_width(size, value) is True:
                 self.size = size
             else:
-                raise ValueError('given value does not fit in given size')
+                raise ValueError("given value does not fit in given size")
         else:
             # attribute size
             self.size = self.minimum_value_size(value)
@@ -74,8 +74,9 @@ class HDLIntegerConstant(HDLConstant):
         if isinstance(other, (int, HDLIntegerConstant)):
             return HDLIntegerConstant(self.value - int(other))
         else:
-            raise TypeError('can only subtract int and '
-                            'HDLIntegerConstant types')
+            raise TypeError(
+                "can only subtract int and " "HDLIntegerConstant types"
+            )
 
     def __abs__(self):
         """Return absolute value."""
@@ -99,7 +100,7 @@ class HDLIntegerConstant(HDLConstant):
         if isinstance(other, (int, HDLIntegerConstant)):
             return HDLIntegerConstant(self.value + int(other))
         else:
-            raise TypeError('can only add int and HDLIntegerConstant types')
+            raise TypeError("can only add int and HDLIntegerConstant types")
 
     def __radd__(self, other):
         """Reverse add. Uses __add__."""
@@ -114,8 +115,9 @@ class HDLIntegerConstant(HDLConstant):
         if isinstance(other, (int, HDLIntegerConstant)):
             return HDLIntegerConstant(self.value * int(other))
         else:
-            raise TypeError('can only multiply int and'
-                            ' HDLIntegerConstant types')
+            raise TypeError(
+                "can only multiply int and" " HDLIntegerConstant types"
+            )
 
     def __rmul__(self, other):
         """Reverse mult."""
@@ -173,7 +175,7 @@ class HDLIntegerConstant(HDLConstant):
         if value == 0:
             return 1
         else:
-            return int(math.ceil(math.log2(float(abs(value)))))+1
+            return int(math.ceil(math.log2(float(abs(value))))) + 1
 
     def __len__(self):
         """Get size."""

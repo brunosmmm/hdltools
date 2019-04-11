@@ -21,12 +21,11 @@ class HDLSignalPartSelect(HDLObject):
 class HDLSignal(HDLStatement):
     """HDL Signal."""
 
-    _types = ['comb', 'reg', 'const', 'var']
+    _types = ["comb", "reg", "const", "var"]
 
-    def __init__(self, sig_type, sig_name, size=1, default_val=None,
-                 **kwargs):
+    def __init__(self, sig_type, sig_name, size=1, default_val=None, **kwargs):
         """Initialize."""
-        super(HDLSignal, self).__init__(stmt_type='par')
+        super().__init__(stmt_type="par")
         self.defer = False
         if sig_type not in self._types:
             raise ValueError('invalid signal type: "{}"'.format(sig_type))
@@ -43,41 +42,43 @@ class HDLSignal(HDLStatement):
 
         if isinstance(size, int):
             # default is [size-1:0] / (size-1 downto 0)
-            if (size < 0):
-                raise ValueError('only positive size allowed')
-            self.vector = hdl.vector.HDLVectorDescriptor(size-1, 0)
+            if size < 0:
+                raise ValueError("only positive size allowed")
+            self.vector = hdl.vector.HDLVectorDescriptor(size - 1, 0)
         elif isinstance(size, (tuple, list)):
             if len(size) != 2:
-                raise ValueError('invalid vector '
-                                 'dimensions: "{}"'.format(size))
+                raise ValueError(
+                    "invalid vector " 'dimensions: "{}"'.format(size)
+                )
             self.vector = hdl.vector.HDLVectorDescriptor(*size)
         elif isinstance(size, hdl.vector.HDLVectorDescriptor):
             self.vector = size
         elif isinstance(size, hdl.expr.HDLExpression):
-            self.vector = hdl.vector.HDLVectorDescriptor(size-1)
-        elif size == 'auto':
+            self.vector = hdl.vector.HDLVectorDescriptor(size - 1)
+        elif size == "auto":
             if default_val is not None:
                 eval_def_val = default_val.evaluate(**kwargs)
             else:
-                raise ValueError('cannot determine size automatically')
+                raise ValueError("cannot determine size automatically")
             min_size = HDLIntegerConstant.minimum_value_size(eval_def_val)
             self.vector = hdl.vector.HDLVectorDescriptor(min_size)
-        elif size == 'defer':
+        elif size == "defer":
             self.vector = None
             self.defer = True
         elif size is None:
             # allow this only for constants for now.
-            if sig_type not in ('const', 'var'):
-                raise ValueError('signal must have size')
+            if sig_type not in ("const", "var"):
+                raise ValueError("signal must have size")
             self.vector = None
-            if sig_type == 'var':
+            if sig_type == "var":
                 # must have type
-                if 'var_type' not in kwargs:
-                    raise ValueError('variable signals must have type')
-                self.var_type = kwargs['var_type']
+                if "var_type" not in kwargs:
+                    raise ValueError("variable signals must have type")
+                self.var_type = kwargs["var_type"]
         else:
-            raise TypeError('size can only be of types: int, list or'
-                            ' HDLVectorDescriptor')
+            raise TypeError(
+                "size can only be of types: int, list or" " HDLVectorDescriptor"
+            )
 
     def __getitem__(self, key):
         """Slice of signal."""
@@ -87,13 +88,11 @@ class HDLSignal(HDLStatement):
         """Get readable representation."""
         if decl is True:
             if self.vector is None:
-                vec = ''
+                vec = ""
             else:
                 vec = self.vector.dumps(eval_scope)
 
-            ret_str = '{} {}{} '.format(self.sig_type.upper(),
-                                        self.name,
-                                        vec)
+            ret_str = "{} {}{} ".format(self.sig_type.upper(), self.name, vec)
         else:
             ret_str = self.name
 
@@ -101,22 +100,21 @@ class HDLSignal(HDLStatement):
 
     def dumps(self, eval_scope=None, decl=True):
         """Alias for __repr__."""
-        return self.__repr__(eval_scope=eval_scope,
-                             decl=decl)
+        return self.__repr__(eval_scope=eval_scope, decl=decl)
 
     def __len__(self):
         """Get length."""
         if self.defer is True:
-            raise RuntimeError('signal size has not been set yet')
+            raise RuntimeError("signal size has not been set yet")
         return len(self.vector)
 
     def set_size(self, size):
         """Set signal size."""
         if self.defer is True:
-            self.vector = hdl.vector.HDLVectorDescriptor(size-1)
+            self.vector = hdl.vector.HDLVectorDescriptor(size - 1)
             self.defer = False
         else:
-            raise RuntimeError('cannot set signal size, already set')
+            raise RuntimeError("cannot set signal size, already set")
 
     def is_legal(self):
         """Check legality."""
@@ -272,12 +270,13 @@ class HDLSignal(HDLStatement):
 
     def assign(self, value, **kwargs):
         """Return an assignment."""
-        if self.sig_type == 'var':
-            assign_type = 'nonblock'
+        if self.sig_type == "var":
+            assign_type = "nonblock"
         else:
-            assign_type = 'block'
-        return hdl.assign.HDLAssignment(self, value, assign_type=assign_type,
-                                        **kwargs)
+            assign_type = "block"
+        return hdl.assign.HDLAssignment(
+            self, value, assign_type=assign_type, **kwargs
+        )
 
     def get_sig_type(self):
         """Get signal type."""
@@ -294,19 +293,20 @@ class HDLSignalSlice(HDLObject):
     def __init__(self, signal, slic):
         """Initialize."""
         if not isinstance(signal, HDLSignal):
-            raise TypeError('only HDLSignal allowed')
+            raise TypeError("only HDLSignal allowed")
 
         self.signal = signal
 
         if isinstance(slic, int):
             # default is [size-1:0] / (size-1 downto 0)
-            if (slic < 0):
-                raise ValueError('only positive integers allowed')
+            if slic < 0:
+                raise ValueError("only positive integers allowed")
             self.vector = hdl.vector.HDLVectorDescriptor(slic, slic)
         elif isinstance(slic, (tuple, list)):
             if len(slic) != 2:
-                raise ValueError('invalid vector '
-                                 'dimensions: "{}"'.format(slic))
+                raise ValueError(
+                    "invalid vector " 'dimensions: "{}"'.format(slic)
+                )
             self.vector = hdl.vector.HDLVectorDescriptor(*slic)
         elif isinstance(slic, hdl.vector.HDLVectorDescriptor):
             self.vector = slic
@@ -321,13 +321,14 @@ class HDLSignalSlice(HDLObject):
         elif isinstance(slic, HDLSignalPartSelect):
             self.vector = hdl.vector.HDLVectorDescriptor(slic)
         else:
-            raise TypeError('size can only be of types: int, list, slice,'
-                            ' HDLVectorDescriptor or HDLSignal')
+            raise TypeError(
+                "size can only be of types: int, list, slice,"
+                " HDLVectorDescriptor or HDLSignal"
+            )
 
     def __repr__(self, eval_scope=None):
         """Get representation."""
-        return '{}{}'.format(self.signal.name,
-                             self.vector.dumps(eval_scope))
+        return "{}{}".format(self.signal.name, self.vector.dumps(eval_scope))
 
     def dumps(self, eval_scope=None):
         """Alias for __repr__."""
