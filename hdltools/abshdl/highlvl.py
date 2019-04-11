@@ -328,7 +328,6 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             try:
                 expr = self.visit(node.value)
                 for assignee in assignees:
-                    print(assignee)
                     assignments.append(
                         HDLAssignment(self._signal_lookup(assignee), expr)
                     )
