@@ -45,7 +45,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             self._add_to_scope(**mod.get_signal_scope())
             self._hdlmod = mod
         self._add_to_scope(**kwargs)
-        self._fsms = {}
+        self.fsms = {}
 
     def _init(self):
         """Initialize or re-initialize."""
@@ -163,7 +163,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 decorator_class, FSM
             ):
 
-                if node.name in self._fsms:
+                if node.name in self.fsms:
                     raise PatternNotAllowedError(
                         "FSM '{}' already declared.".format(node.name)
                     )
@@ -182,7 +182,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 kwargs["_signal_scope"] = self.signal_scope
                 kwargs["instance_name"] = node.name
                 block, const, fsm = decorator_class.get(*args, **kwargs)
-                self._fsms[node.name] = fsm
+                self.fsms[node.name] = fsm
                 # go out of tree
                 fsm = FSMBuilder(block, self.signal_scope)
                 fsm._build(decorator_class)
