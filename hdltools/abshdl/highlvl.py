@@ -404,7 +404,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def get(self):
         """Get block."""
-        return (self.block, self.consts)
+        return (self.block, self.consts, self.fsms)
 
     def _get_current_block(self):
         try:

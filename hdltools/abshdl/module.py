@@ -5,7 +5,6 @@ from .builtin import HDLBuiltins
 from .scope import HDLScope
 from .signal import HDLSignal
 from .macro import HDLMacro
-from .seq import HDLSequentialBlock
 from .port import HDLModulePort, HDLModuleTypedPort
 
 
@@ -61,6 +60,7 @@ class HDLModule(HDLObject):
         self.ports = []
         self.params = []
         self.constants = []
+        self.fsms = {}
         if params is not None:
             self.add_parameters(params)
         if ports is not None:
@@ -81,11 +81,13 @@ class HDLModule(HDLObject):
         """Add to scope."""
         self.scope.add(items)
 
-    def extend(self, scope, const=None):
+    def extend(self, scope, const=None, fsms=None):
         """Extend scope."""
         self.scope.extend(scope)
         if const is not None:
             self.add_constants(const)
+        if fsms is not None:
+            self.fsms.update(fsms)
 
     def insert_before(self, tag, items):
         """Insert element before tag."""
