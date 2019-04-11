@@ -92,10 +92,6 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
     def visit_FunctionDef(self, node):
         """Visit function declaration."""
         # starting point is function declaration. Remove our own decorator.
-        if node.name in self._fsms:
-            raise PatternNotAllowedError(
-                "FSM '{}' already declared.".format(node.name)
-            )
         decorator_list = [
             x
             for x in node.decorator_list
@@ -166,6 +162,11 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             elif decorator_class is not None and issubclass(
                 decorator_class, FSM
             ):
+
+                if node.name in self._fsms:
+                    raise PatternNotAllowedError(
+                        "FSM '{}' already declared.".format(node.name)
+                    )
                 # rebuild args
                 args = []
                 for arg in decorator.args:
