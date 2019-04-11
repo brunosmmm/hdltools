@@ -29,13 +29,20 @@ class FSMProxy:
     """Proxy object for FSM inference."""
 
     def __init__(
-        self, fsm_type, instance_name, initial, signal_scope, state_methods
+        self,
+        fsm_type,
+        instance_name,
+        initial,
+        signal_scope,
+        state_methods,
+        state_var_name,
     ):
         """Initialize."""
         self.initial = initial
         self.signal_scope = signal_scope
         self._type = fsm_type
         self.name = instance_name
+        self.state_var_name = state_var_name
         self._state_transitions = {}
         self._current_state = initial
         self._state_methods = state_methods
@@ -90,7 +97,9 @@ class FSM:
     """Finite state machine."""
 
     @classmethod
-    def _infer_fsm(cls, signal_scope, states, initial_state, instance_name):
+    def _infer_fsm(
+        cls, signal_scope, states, initial_state, instance_name, state_var_name
+    ):
         # verify that signals are in scope.
         for state_name, (method, inputs) in states.items():
             for _input in inputs:
@@ -101,7 +110,12 @@ class FSM:
                         )
                     )
         fsm_object = FSMProxy(
-            cls.__name__, instance_name, initial_state, signal_scope, states
+            cls.__name__,
+            instance_name,
+            initial_state,
+            signal_scope,
+            states,
+            state_var_name,
         )
         return fsm_object
 
@@ -165,7 +179,9 @@ class FSM:
         cases = []
         state_mapping = OrderedDict()
 
-        fsm = cls._infer_fsm(_signal_scope, states, initial, instance_name)
+        fsm = cls._infer_fsm(
+            _signal_scope, states, initial, instance_name, state_var
+        )
 
         # set state variable size
         state_var.set_size(int(math.ceil(math.log2(float(len(states))))))

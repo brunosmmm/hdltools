@@ -182,6 +182,16 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 kwargs["_signal_scope"] = self.signal_scope
                 kwargs["instance_name"] = node.name
                 block, const, fsm = decorator_class.get(*args, **kwargs)
+                # perform checks
+                state_var = fsm.state_var_name
+                print(type(state_var))
+                for fsm_name, _fsm in self.fsms.items():
+                    if _fsm.state_var_name.name == state_var.name:
+                        raise PatternNotAllowedError(
+                            "state variable '{}' re-utilized in FSM '{}'".format(
+                                node.name
+                            )
+                        )
                 self.fsms[node.name] = fsm
                 # go out of tree
                 fsm = FSMBuilder(block, self.signal_scope)
