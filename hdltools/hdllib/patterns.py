@@ -228,7 +228,6 @@ class FSMProxy:
             if len(inputs) == 0:
                 method(self)
 
-        print(self._state_transitions)
         return self._state_transitions
 
 
