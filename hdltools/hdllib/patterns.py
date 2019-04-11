@@ -230,6 +230,10 @@ class FSMProxy:
 
         return self._state_transitions
 
+    def get_transition_map(self):
+        """Get map of state transitions."""
+        return self._state_transitions
+
 
 class FSM:
     """Finite state machine."""
@@ -246,6 +250,7 @@ class FSM:
                         )
                     )
         fsm_object = FSMProxy(initial_state, signal_scope, states)
+        return fsm_object
 
     @classmethod
     def _collect_states(cls):
