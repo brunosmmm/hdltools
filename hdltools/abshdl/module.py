@@ -6,6 +6,7 @@ from .scope import HDLScope
 from .signal import HDLSignal
 from .macro import HDLMacro
 from .port import HDLModulePort, HDLModuleTypedPort
+from .instance import HDLInstance
 
 
 class HDLModuleParameter(HDLObject):
@@ -61,6 +62,7 @@ class HDLModule(HDLObject):
         self.params = []
         self.constants = []
         self.fsms = {}
+        self.instances = {}
         if params is not None:
             self.add_parameters(params)
         if ports is not None:
@@ -167,6 +169,23 @@ class HDLModule(HDLObject):
                 self.constants.append(constant)
         else:
             raise TypeError("constants must be a list or HDLMacro")
+
+    def add_instances(self, instances):
+        """Add instances."""
+        if isinstance(instances, HDLInstance):
+            self.instances[instances.name] = instances
+        elif isinstance(instances, (tuple, list)):
+            for instance in instances:
+                if not isinstance(instance, HDLInstance):
+                    raise TypeError("must be HDLInstance object")
+                self.instances[instance.name] = instance
+        elif isinstance(instances, dict):
+            for inst_name, inst in instances.items():
+                if not isinstance(inst, HDLInstance):
+                    raise TypeError("must be HDLInstance object")
+            self.instances.update(instances)
+        else:
+            raise TypeError("must be list, dictionary or HDLInstance")
 
     def get_parameter_scope(self):
         """Get parameters as dictionary."""

@@ -1,7 +1,7 @@
 """Instances of other modules."""
 
 from . import HDLObject
-from hdltools.abshdl.module import HDLModule
+import hdltools.abshdl.module
 
 
 class HDLInstance(HDLObject):
@@ -9,7 +9,7 @@ class HDLInstance(HDLObject):
 
     def __init__(self, instance_name, instance_type):
         """Initialize."""
-        if not isinstance(instance_type, HDLModule):
+        if not isinstance(instance_type, hdltools.abshdl.module.HDLModule):
             raise TypeError(
                 "argument instanc_type must be HDLModule or subclass type"
             )
