@@ -11,10 +11,10 @@ class Multiplexer(HDLSimulationObject):
     def __init__(self, identifier):
         """Initialize."""
         super().__init__(identifier)
-        self.a = self.input('a')
-        self.b = self.input('b')
-        self.y = self.output('y')
-        self.sel = self.input('sel')
+        self.add_input("a")
+        self.add_input("b")
+        self.add_output("y")
+        self.add_input("sel")
 
     def logic(self, **kwargs):
         """Do logic."""
@@ -29,16 +29,16 @@ class LFSR(HDLSimulationObject):
     def __init__(self, identifier):
         """Initialize."""
         super().__init__(identifier)
-        self.clk = self.input('clk')
-        self.rst = self.input('rst')
-        self.en = self.input('en')
-        self.out = self.output('out', size=8)
+        self.add_input("clk")
+        self.add_input("rst")
+        self.add_input("en")
+        self.add_output("out", size=8)
 
     def logic(self, **kwargs):
         """Do internal logic."""
         feedback = not (self.out[7] ^ self.out[3])
 
-        if self.rising_edge('clk'):
+        if self.rising_edge("clk"):
             if self.rst is True:
                 self.out = 0
             else:
@@ -50,15 +50,15 @@ class LFSR(HDLSimulationObject):
 
 if __name__ == "__main__":
 
-    logic = Multiplexer('mux')
+    logic = Multiplexer("mux")
     sched = HDLSimulationObjectScheduler(logic)
     gen = VerilogCodeGenerator(indent=True)
 
     # verilog code
-    print('*Multiplexer Verilog Code*')
+    print("*Multiplexer Verilog Code*")
     print(gen.dump_element(sched.schedule()[0]))
 
-    lfsr = LFSR('lfsr')
+    lfsr = LFSR("lfsr")
     sched = HDLSimulationObjectScheduler(lfsr)
-    print('*LFSR Verilog Code*')
+    print("*LFSR Verilog Code*")
     print(gen.dump_element(sched.schedule()[0]))

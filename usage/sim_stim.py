@@ -17,10 +17,10 @@ class HDLSPIMaster(HDLSimulationObject):
         """Initialize."""
         super().__init__(identifier)
         # outputs
-        self.ce = self.output("ce", initial=0)
-        self.clk = self.output("clk", initial=0)
-        self.do = self.output("do", initial=0)
-        self.di = self.input("di")
+        self.add_output("ce", initial=0)
+        self.add_output("clk", initial=0)
+        self.add_output("do", initial=0)
+        self.add_input("di")
 
         # data buffer
         self.tx_queue = deque()
@@ -125,10 +125,10 @@ class HDLSpiSlave(HDLSimulationObject):
         """Initialize."""
         super().__init__(identifier)
         # ports
-        self.di = self.input("di")
-        self.clk = self.input("clk")
-        self.ce = self.input("ce")
-        self.do = self.output("do")
+        self.add_input("di")
+        self.add_input("clk")
+        self.add_input("ce")
+        self.add_output("do")
 
         # default logic behavior
         self.tx_size = tx_size
@@ -145,8 +145,7 @@ class HDLSpiSlave(HDLSimulationObject):
 
     def input_changed(self, which_input, value):
         """Input change callback."""
-        # print('changed: {} -> {}'.format(which_input,
-        #                                  value))
+        print("changed: {} -> {}".format(which_input, value))
         pass
 
     def logic(self, **kwargs):

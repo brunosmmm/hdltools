@@ -3,6 +3,7 @@
 from ..abshdl import HDLObject
 from ..abshdl.const import HDLIntegerConstant
 from ..abshdl.expr import HDLExpression
+import re
 
 
 class HDLSimulationPort(HDLObject):
@@ -24,9 +25,9 @@ class HDLSimulationPort(HDLObject):
         if self.size == 1:
             if bool(self._value ^ value) is True:
                 if bool(self._value) is True:
-                    self._edge = 'fall'
+                    self._edge = "fall"
                 else:
-                    self._edge = 'rise'
+                    self._edge = "rise"
             else:
                 self._edge = None
         else:
@@ -41,32 +42,39 @@ class HDLSimulationPort(HDLObject):
     def rising_edge(self):
         """Is rising edge."""
         if self.size != 1:
-            raise IOError('only applicable to ports of size 1')
-        return bool(self._edge == 'rise')
+            raise IOError("only applicable to ports of size 1")
+        return bool(self._edge == "rise")
 
     def falling_edge(self):
         """Is falling edge."""
         if self.size != 1:
-            raise IOError('only applicable to ports of size 1')
-        return bool(self._edge == 'fall')
+            raise IOError("only applicable to ports of size 1")
+        return bool(self._edge == "fall")
 
     def value_changed(self):
         """Get value changed or not."""
         return bool(self._edge is not None or self._changed is True)
 
+    @property
+    def value(self):
+        """Get current value."""
+        return self._value
+
 
 class HDLSimulationObject(HDLObject):
     """Abstract class for simulation objects."""
 
-    _sequential_methods = ['rising_edge', 'falling_edge']
+    _sequential_methods = ["rising_edge", "falling_edge"]
 
     def __init__(self, identifier=None):
         """Initialize."""
-        self.identifier = identifier
-        self._sim_time = HDLIntegerConstant(0)
+        self._initialized = False
         self._outputs = {}
         self._inputs = {}
         self._attrs = {}
+        self.identifier = identifier
+        self._sim_time = HDLIntegerConstant(0)
+        self._initialized = True
 
     @staticmethod
     def _get_constant(value, size=None):
@@ -75,14 +83,15 @@ class HDLSimulationObject(HDLObject):
             try:
                 return value.evaluate()
             except:
-                raise ValueError('can only accept constant expressions.')
+                raise ValueError("can only accept constant expressions.")
         elif isinstance(value, HDLIntegerConstant):
             return value
         elif isinstance(value, int):
             return HDLIntegerConstant(value, size)
         else:
-            raise TypeError('type "{}" not supported'
-                            .format(value.__class__.__name__))
+            raise TypeError(
+                'type "{}" not supported'.format(value.__class__.__name__)
+            )
 
     def input_changed(self, which_input, value):
         """Call on input changed."""
@@ -100,46 +109,47 @@ class HDLSimulationObject(HDLObject):
         """Do internal logic."""
         pass
 
-    def output(self, name, size=1, initial=0, attrs=None):
+    def add_output(self, name, size=1, initial=0, attrs=None):
         """Register output."""
         if name in self._outputs:
-            raise ValueError('output already registered: {}'.format(name))
+            raise ValueError("output already registered: {}".format(name))
         self._outputs[name] = HDLSimulationPort(name, size, initial=initial)
         if attrs is not None:
             self.set_attrs(name, attrs)
-        return self._outputs[name]
 
-    def input(self, name, size=1, attrs=None):
+    def add_input(self, name, size=1, attrs=None):
         """Register input."""
         if name in self._inputs:
-            raise ValueError('input already registered: {}'.format(name))
-        self._inputs[name] = HDLSimulationPort(name, size, initial=0,
-                                               change_cb=self.input_changed)
+            raise ValueError("input already registered: {}".format(name))
+        self._inputs[name] = HDLSimulationPort(
+            name, size, initial=0, change_cb=self.input_changed
+        )
         if attrs is not None:
             self.set_attrs(name, attrs)
-        return self._inputs[name]
 
     def get_outputs(self, **kwargs):
         """Get output states."""
         outputs = {name: int(getattr(self, name)) for name in self._outputs}
 
-        if 'prefix' in kwargs:
-            prefix = kwargs.pop('prefix')
-            return {'{}.{}'.format(prefix, name): value
-                    for name, value in outputs.items()}
+        if "prefix" in kwargs:
+            prefix = kwargs.pop("prefix")
+            return {
+                "{}.{}".format(prefix, name): value
+                for name, value in outputs.items()
+            }
 
         return outputs
 
     def set_inputs(self, input_values, **kwargs):
         """Set input states."""
-        if 'prefix' in kwargs:
-            prefix = kwargs.pop('prefix')
+        if "prefix" in kwargs:
+            prefix = kwargs.pop("prefix")
         else:
             prefix = None
 
         for name, value in input_values.items():
             if prefix is not None:
-                _prefix, _name = name.split('.')
+                _prefix, _name = name.split(".")
                 if _prefix != prefix:
                     # ignore
                     continue
@@ -159,25 +169,32 @@ class HDLSimulationObject(HDLObject):
 
     def __setattr__(self, name, value):
         """Set an attribute."""
-        if not hasattr(self, name):
+        if name.startswith("_") or self._initialized is False:
             super().__setattr__(name, value)
+            return
+        # check if it is a port
+        if name in self._inputs:
+            port = self._inputs[name]
+        elif name in self._outputs:
+            port = self._outputs[name]
         else:
-            # do not use getattr directly
-            port = super().__getattribute__(name)
-            if isinstance(port, HDLSimulationPort):
-                # do magic stuff
-                if value is None:
-                    raise ValueError('cannot set port to None')
-                port._value_change(value)
-            else:
-                # do normal stuff
-                super().__setattr__(name, value)
+            super().__setattr__(name, value)
+            return
+        print(f"value change: {name} -> {value}")
+        if isinstance(port, HDLSimulationPort):
+            # do magic stuff
+            if value is None:
+                raise ValueError("cannot set port to None")
+            port._value_change(value)
 
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         """Get an attribute."""
-        attr = super().__getattribute__(name)
+        if name in self._inputs:
+            attr = self._inputs[name]
+        elif name in self._outputs:
+            attr = self._outputs[name]
         if isinstance(attr, HDLSimulationPort):
-            return attr._value
+            return attr.value
         else:
             return attr
 
@@ -188,13 +205,13 @@ class HDLSimulationObject(HDLObject):
     def rising_edge(self, input_name):
         """Get if rising edge."""
         if input_name not in self._inputs:
-            raise KeyError('invalid input: {}'.format(input_name))
+            raise KeyError("invalid input: {}".format(input_name))
 
         return self._inputs[input_name].rising_edge()
 
     def falling_edge(self, input_name):
         """Get if falling edge."""
         if input_name not in self._inputs:
-            raise KeyError('invalid input: {}'.format(input_name))
+            raise KeyError("invalid input: {}".format(input_name))
 
         return self._inputs[input_name].falling_edge()
