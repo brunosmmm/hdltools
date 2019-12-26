@@ -120,6 +120,10 @@ class HDLExpression(HDLValue):
                 # could not determine size
                 self.size = None
             self.from_type = "signal"
+        elif isinstance(value, ast.Compare):
+            self.tree = value
+            self.size = size
+            self.from_type = "expr"
         else:
             raise TypeError(
                 "invalid type provided: " "{}".format(value.__class__.__name__)

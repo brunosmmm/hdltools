@@ -396,16 +396,18 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                         self._get_current_block(), node.left.id
                     )
                 )
-        for comp in node.comparators:
-            if isinstance(comp, ast.Name):
-                if comp.id not in self.signal_scope:
-                    raise NameError(
-                        'in "{}": signal "{}" not available in'
-                        " current scope".format(
-                            self._get_current_block(), node.left.id
-                        )
+        if len(node.comparators) > 1:
+            raise RuntimeError("only single comparison is allowed")
+        (comp,) = node.comparators
+        if isinstance(comp, ast.Name):
+            if comp.id not in self.signal_scope:
+                raise NameError(
+                    'in "{}": signal "{}" not available in'
+                    " current scope".format(
+                        self._get_current_block(), node.left.id
                     )
-        return node
+                )
+        return HDLExpression(node)
 
     def visit_Expr(self, node):
         """Visit Expression."""

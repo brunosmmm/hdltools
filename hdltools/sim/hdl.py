@@ -522,12 +522,12 @@ class HDLSimulationObjectScheduler(HDLObject):
             name: HDLSignal("comb", name)
             for name in comb_check.get_assigned_locals()
         }
-
         state = {
             name: HDLSignal("reg", var.name, var.size)
             for name, var in self._obj.state_elements.items()
         }
 
+        signals.update(state)
         signals.update(inputs)
         signals.update(outputs)
 
