@@ -15,8 +15,24 @@ class HDLSPIMaster(HDLSimulationObject):
         self, identifier=None, clk_period=1, tx_size=8, lsb_first=True
     ):
         """Initialize."""
-        super().__init__(identifier)
-        # outputs
+        super().__init__(
+            identifier,
+            clk_period=clk_period,
+            tx_size=tx_size,
+            lsb_first=lsb_first,
+        )
+
+    def initialstate(self):
+        """Initial state."""
+        self._state = "idle"
+        self._txdata = None
+        self._rxdata = None
+        self._size = None
+        self._stop = False
+        self._last_clk = 0
+
+    def structure(self):
+        """Hierarchical structure."""
         self.add_output("ce", initial=0)
         self.add_output("clk", initial=0)
         self.add_output("do", initial=0)
@@ -25,19 +41,6 @@ class HDLSPIMaster(HDLSimulationObject):
         # data buffer
         self.tx_queue = deque()
         self.rx_queue = deque()
-
-        # default logic behavior
-        self.tx_size = tx_size
-        self.clk_period = clk_period
-        self.lsb_first = lsb_first
-
-        # internal states
-        self._state = "idle"
-        self._txdata = None
-        self._rxdata = None
-        self._size = None
-        self._stop = False
-        self._last_clk = 0
 
     def get_received_count(self):
         """Get received count."""
@@ -123,23 +126,29 @@ class HDLSpiSlave(HDLSimulationObject):
         self, identifier=None, clk_period=1, tx_size=8, lsb_first=True
     ):
         """Initialize."""
-        super().__init__(identifier)
+        super().__init__(
+            identifier,
+            clk_period=clk_period,
+            tx_size=tx_size,
+            lsb_first=lsb_first,
+        )
+
+    def initialstate(self):
+        """Initial state."""
+        self._state = "idle"
+        self._txdata = None
+        self._rxdata = None
+        self._pos = 0
+
+    def structure(self):
+        """Hierarchical structure."""
         # ports
         self.add_input("di")
         self.add_input("clk")
         self.add_input("ce")
         self.add_output("do")
 
-        # default logic behavior
-        self.tx_size = tx_size
-        self.clk_period = clk_period
-        self.lsb_first = lsb_first
-
-        # internal state
-        self._state = "idle"
-        self._txdata = None
-        self._rxdata = None
-        self._pos = 0
+        # other
         self.rx_queue = deque()
         self.tx_queue = deque()
 

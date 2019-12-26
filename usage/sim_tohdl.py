@@ -8,9 +8,8 @@ from hdltools.verilog.codegen import VerilogCodeGenerator
 class Multiplexer(HDLSimulationObject):
     """A simple, combinatorial logic only object."""
 
-    def __init__(self, identifier):
-        """Initialize."""
-        super().__init__(identifier)
+    def structure(self):
+        """Structural hierarchy."""
         self.add_input("a")
         self.add_input("b")
         self.add_output("y")
@@ -26,9 +25,8 @@ class Multiplexer(HDLSimulationObject):
 class LFSR(HDLSimulationObject):
     """Linear feedback shift register."""
 
-    def __init__(self, identifier):
-        """Initialize."""
-        super().__init__(identifier)
+    def structure(self):
+        """Structural Hierarchy."""
         self.add_input("clk")
         self.add_input("rst")
         self.add_input("en")

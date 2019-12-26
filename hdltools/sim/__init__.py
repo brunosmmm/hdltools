@@ -66,7 +66,7 @@ class HDLSimulationObject(HDLObject):
 
     _sequential_methods = ["rising_edge", "falling_edge"]
 
-    def __init__(self, identifier=None):
+    def __init__(self, identifier=None, **kwargs):
         """Initialize."""
         self._initialized = False
         self._outputs = {}
@@ -74,7 +74,31 @@ class HDLSimulationObject(HDLObject):
         self._attrs = {}
         self.identifier = identifier
         self._sim_time = HDLIntegerConstant(0)
+
+        # call parameter assignment
+        self._parameters = self.parameters(**kwargs)
+
+        # call structural generation method
+        self.structure()
+
         self._initialized = True
+
+        # call state initialization
+        self.initialstate()
+
+    def structure(self):
+        """Structural generation."""
+
+    def initialstate(self):
+        """Initialize state."""
+
+    def parameters(self, **kwargs):
+        """Parameter initialization."""
+        return kwargs
+
+    def get_param(self, param_name):
+        """Get parameter value."""
+        return self._parameters[param_name]
 
     @staticmethod
     def _get_constant(value, size=None):
@@ -111,6 +135,8 @@ class HDLSimulationObject(HDLObject):
 
     def add_output(self, name, size=1, initial=0, attrs=None):
         """Register output."""
+        if self._initialized is True:
+            raise RuntimeError("cannot add ports after initialization.")
         if name in self._outputs:
             raise ValueError("output already registered: {}".format(name))
         self._outputs[name] = HDLSimulationPort(name, size, initial=initial)
@@ -119,6 +145,8 @@ class HDLSimulationObject(HDLObject):
 
     def add_input(self, name, size=1, attrs=None):
         """Register input."""
+        if self._initialized is True:
+            raise RuntimeError("cannot add ports after initialization.")
         if name in self._inputs:
             raise ValueError("input already registered: {}".format(name))
         self._inputs[name] = HDLSimulationPort(
@@ -193,6 +221,10 @@ class HDLSimulationObject(HDLObject):
             attr = self._inputs[name]
         elif name in self._outputs:
             attr = self._outputs[name]
+        elif name in self._parameters:
+            return self._parameters[name]
+        else:
+            raise AttributeError("invalid member: '{}'".format(name))
         if isinstance(attr, HDLSimulationPort):
             return attr.value
         else:
