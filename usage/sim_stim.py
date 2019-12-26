@@ -15,7 +15,7 @@ class HDLSPIMaster(HDLSimulationObject):
         self, identifier=None, clk_period=1, tx_size=8, lsb_first=True
     ):
         """Initialize."""
-        super()._init__(identifier)
+        super().__init__(identifier)
         # outputs
         self.ce = self.output("ce", initial=0)
         self.clk = self.output("clk", initial=0)
