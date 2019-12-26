@@ -512,7 +512,7 @@ class HDLSimulationObjectScheduler(HDLObject):
 
         inputs = {
             inp.name: HDLSignal("comb", inp.name, inp.size)
-            for name, inp in self._obj.outputs.items()
+            for name, inp in self._obj.inputs.items()
         }
         outputs = {
             out.name: HDLSignal("comb", out.name, out.size)
