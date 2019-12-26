@@ -4,6 +4,7 @@ from ..abshdl import HDLObject
 from ..abshdl.const import HDLIntegerConstant
 from ..abshdl.expr import HDLExpression
 from .ports import HDLSimulationPort
+from .state import HDLSimulationState
 import re
 
 
@@ -15,9 +16,11 @@ class HDLSimulationObject(HDLObject):
     def __init__(self, identifier=None, **kwargs):
         """Initialize."""
         self._initialized = False
+        self._structure_init = False
         self._outputs = {}
         self._inputs = {}
         self._attrs = {}
+        self._variables = {}
         self.identifier = identifier
         self._sim_time = HDLIntegerConstant(0)
 
@@ -26,11 +29,12 @@ class HDLSimulationObject(HDLObject):
 
         # call structural generation method
         self.structure()
-
-        self._initialized = True
+        self._structure_init = True
 
         # call state initialization
         self.initialstate()
+
+        self._initialized = True
 
     def structure(self):
         """Structural generation."""
@@ -79,9 +83,21 @@ class HDLSimulationObject(HDLObject):
         """Do internal logic."""
         pass
 
+    def add_state(self, name, initial=None, attrs=None):
+        """Add stateful logic element."""
+        if self._initialized is True:
+            raise RuntimeError("cannot add stateful logic after intialization")
+        if name in self._variables:
+            raise ValueError(
+                "stateful element already registered: {}".format(name)
+            )
+        self._variables[name] = HDLSimulationState(name, initial=initial)
+        if attrs is not None:
+            self.set_attrs(name, attrs)
+
     def add_output(self, name, size=1, initial=0, attrs=None):
         """Register output."""
-        if self._initialized is True:
+        if self._structure_init is True:
             raise RuntimeError("cannot add ports after initialization.")
         if name in self._outputs:
             raise ValueError("output already registered: {}".format(name))
@@ -91,7 +107,7 @@ class HDLSimulationObject(HDLObject):
 
     def add_input(self, name, size=1, attrs=None):
         """Register input."""
-        if self._initialized is True:
+        if self._structure_init is True:
             raise RuntimeError("cannot add ports after initialization.")
         if name in self._inputs:
             raise ValueError("input already registered: {}".format(name))
@@ -133,13 +149,20 @@ class HDLSimulationObject(HDLObject):
             # set value
             setattr(self, _name, value)
 
-    def report_outputs(self, **kwargs):
+    @property
+    def outputs(self):
         """Report registered outputs."""
         return self._outputs
 
-    def report_inputs(self, **kwargs):
+    @property
+    def inputs(self):
         """Report registered inputs."""
         return self._inputs
+
+    @property
+    def state_elements(self):
+        """Report registered stateful logic."""
+        return self._variables
 
     def __setattr__(self, name, value):
         """Set an attribute."""
