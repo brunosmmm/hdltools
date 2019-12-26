@@ -208,13 +208,14 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                     self.consts.update({c.name: c for c in const})
 
         # enforce legality of scope
-        for arg in node.args.args:
-            if arg.arg not in self.signal_scope:
-                raise NameError(
-                    'in block declaration: "{}",'
-                    ' signal "{}" is not available'
-                    " in current module scope".format(node.name, arg.arg)
-                )
+        if node.args.args is not None:
+            for arg in node.args.args:
+                if arg.arg not in self.signal_scope:
+                    raise NameError(
+                        'in block declaration: "{}",'
+                        ' signal "{}" is not available'
+                        " in current module scope".format(node.name, arg.arg)
+                    )
 
         # push function name to stack
         self._current_block.append(node.name)
