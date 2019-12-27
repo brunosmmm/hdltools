@@ -83,7 +83,7 @@ class HDLSimulationObject(HDLObject):
         """Do internal logic."""
         pass
 
-    def add_state(self, name, initial=None, attrs=None):
+    def add_state(self, name, initial=None, attrs=None, **kwargs):
         """Add stateful logic element."""
         if self._initialized is True:
             raise RuntimeError("cannot add stateful logic after intialization")
@@ -91,7 +91,9 @@ class HDLSimulationObject(HDLObject):
             raise ValueError(
                 "stateful element already registered: {}".format(name)
             )
-        self._variables[name] = HDLSimulationState(name, initial=initial)
+        self._variables[name] = HDLSimulationState(
+            name, initial=initial, **kwargs
+        )
         if attrs is not None:
             self.set_attrs(name, attrs)
 
