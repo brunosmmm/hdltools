@@ -314,12 +314,15 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                         "Attribute access is not allowed in HDL blocks."
                     )
             if self._signal_lookup(target.id) is None:
-                raise NameError(
-                    'in "{}": signal "{}" not available in'
-                    " current scope".format(
-                        self._get_current_block(), target.id
+                if self._signal_lookup("reg_" + target.id) is None:
+                    raise NameError(
+                        'in "{}": signal "{}" not available in'
+                        " current scope".format(
+                            self._get_current_block(), target.id
+                        )
                     )
-                )
+                else:
+                    target.id = "reg_" + target.id
             assignees.append(target.id)
 
         # check value assigned
@@ -456,23 +459,31 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         self.generic_visit(node)
         if isinstance(node.left, ast.Name):
             if node.left.id not in self.signal_scope:
-                raise NameError(
-                    'in "{}": signal "{}" not available in'
-                    " current scope".format(
-                        self._get_current_block(), node.left.id
+                if "reg_" + node.left.id in self.signal_scope:
+                    # rename
+                    node.left.id = "reg_" + node.left.id
+                else:
+                    raise NameError(
+                        'in "{}": signal "{}" not available in'
+                        " current scope".format(
+                            self._get_current_block(), node.left.id
+                        )
                     )
-                )
         if len(node.comparators) > 1:
             raise RuntimeError("only single comparison is allowed")
         (comp,) = node.comparators
         if isinstance(comp, ast.Name):
             if comp.id not in self.signal_scope:
-                raise NameError(
-                    'in "{}": signal "{}" not available in'
-                    " current scope".format(
-                        self._get_current_block(), node.left.id
+                if "reg_" + comp.id in self.signal_scope:
+                    # is state register, rename
+                    comp.id = "reg_" + comp.id
+                else:
+                    raise NameError(
+                        'in "{}": signal "{}" not available in'
+                        " current scope".format(
+                            self._get_current_block(), comp.id
+                        )
                     )
-                )
         return HDLExpression(node)
 
     def visit_Expr(self, node):
