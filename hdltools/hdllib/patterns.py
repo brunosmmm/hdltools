@@ -106,7 +106,7 @@ class SequentialBlock:
                 sens_descrs.append(HDLSensitivityDescriptor(*arg))
             else:
                 sens_descrs.append(HDLSensitivityDescriptor("rise", arg))
-            sens_list = HDLSensitivityList(*sens_descrs)
+        sens_list = HDLSensitivityList(*sens_descrs)
         seq = HDLSequentialBlock(sens_list)
         return seq
 
