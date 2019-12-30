@@ -34,7 +34,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     _CUSTOM_TYPE_MAPPING = {}
 
-    def __init__(self, mod=None, **kwargs):
+    def __init__(self, mod=None, symbols=None, **kwargs):
         """Initialize."""
         super().__init__()
         self._init()
@@ -45,6 +45,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             self._add_to_scope(**mod.get_signal_scope())
             self._hdlmod = mod
         self._add_to_scope(**kwargs)
+        self._symbols = symbols
         self.fsms = {}
 
     def _init(self):
@@ -54,6 +55,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         self.block = None
         self.consts = None
         self._current_block = deque()
+        self._verify_signal_name = False
 
     def __call__(self, fn):
         """Decorate."""
@@ -282,6 +284,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def visit_Name(self, node):
         """Visit Name."""
+        if self._verify_signal_name:
+            if self._signal_lookup(node.id) is None:
+                raise NameError("unknown name: {}".format(node.id))
         return HDLExpression(node.id)
 
     def visit_Assign(self, node):
@@ -370,6 +375,22 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         # find out where to insert statement
         if len(assignments) > 0:
             self.current_scope.add(*assignments)
+
+    def visit_Call(self, node):
+        """Visit call."""
+        self._verify_signal_name = True
+        if (
+            isinstance(node.func, ast.Name)
+            and node.func.id not in self._symbols
+        ):
+            raise NameError(
+                "unknown python function: '{}'".format(node.func.id)
+            )
+        for arg in node.args:
+            self.generic_visit(arg)
+        for kwarg in node.keywords:
+            self.generic_visit(kwarg)
+        self._verify_signal_name = False
 
     def visit_IfExp(self, node):
         """Visit If expression."""

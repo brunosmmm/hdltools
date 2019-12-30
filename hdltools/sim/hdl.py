@@ -214,7 +214,6 @@ class CombinatorialChecker(ast.NodeVisitor):
                 if func.attr in HDLSimulationObject._sequential_methods:
                     self._is_comb = False
         if isinstance(func, ast.Name) and func.id in self._symbols:
-            # dont visit, we'll call as python function later
             return
         elif func.id not in self._symbols:
             raise RuntimeError("unknown python function: '{}'".format(func.id))
@@ -561,7 +560,7 @@ class HDLSimulationObjectScheduler(HDLObject):
             ]
 
             # now use HDLBlock
-            block = HDLBlock(**signals)
+            block = HDLBlock(symbols=self._symbols, **signals)
             block.apply_on_ast(tree)
             return block.get()
         else:
@@ -637,7 +636,7 @@ class HDLSimulationObjectScheduler(HDLObject):
                 ],
             )
 
-            block = HDLBlock(**signals)
+            block = HDLBlock(symbols=self._symbols, **signals)
             # sanitize (and insert proxies)
             tree = LogicSanitizer(
                 insert_reg_list=[name for name, is_reg in inferred_regs.items()]
