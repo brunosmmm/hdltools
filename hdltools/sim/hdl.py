@@ -4,6 +4,7 @@ from . import HDLSimulationObject
 from ..abshdl import HDLObject
 from ..abshdl.signal import HDLSignal
 from ..abshdl.highlvl import HDLBlock
+from .util import concat
 import ast
 import inspect
 import textwrap
@@ -19,7 +20,7 @@ class IllegalCodeError(Exception):
 class CombinatorialChecker(ast.NodeVisitor):
     """Checks if the logic is purely combinatorial."""
 
-    def __init__(self, obj, if_seq=True):
+    def __init__(self, obj, if_seq=True, **symbols):
         """Initialize."""
         # internal state
         self._state = "normal"
@@ -28,6 +29,7 @@ class CombinatorialChecker(ast.NodeVisitor):
         self._assign_target_list = []
         self._if_seq = if_seq
         self._inferred_sequential_blocks = []
+        self._symbols = symbols
 
         # get source, parse
         self.sim_obj = obj
@@ -211,6 +213,11 @@ class CombinatorialChecker(ast.NodeVisitor):
             if func.value.id == "self":
                 if func.attr in HDLSimulationObject._sequential_methods:
                     self._is_comb = False
+        if isinstance(func, ast.Name) and func.id in self._symbols:
+            # dont visit, we'll call as python function later
+            return
+        elif func.id not in self._symbols:
+            raise RuntimeError("unknown python function: '{}'".format(func.id))
         self.generic_visit(node)
 
     def visit_Assign(self, node, manual_visit=False):
@@ -497,9 +504,11 @@ class HDLSimulationObjectScheduler(HDLObject):
             raise TypeError("only HDLSimulationObject allowed")
 
         self._obj = obj
+        self._symbols = {"concat": concat}
 
-    def schedule(self):
+    def schedule(self, **symbols):
         """Do the scheduling."""
+        self._symbols.update(symbols)
         # check various things
         src = inspect.getsource(self._obj.logic)
 
@@ -508,7 +517,7 @@ class HDLSimulationObjectScheduler(HDLObject):
             raise RuntimeError("Illegal code detected")
 
         # determine if it is puerely combinatorial
-        comb_check = CombinatorialChecker(self._obj)
+        comb_check = CombinatorialChecker(self._obj, **self._symbols)
         comb_only = comb_check.is_combinatorial_only()
 
         # sanitize
