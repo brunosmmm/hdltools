@@ -1,5 +1,6 @@
 """Assignment."""
 
+from . import HDLObject
 from .const import HDLIntegerConstant
 from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
@@ -8,6 +9,16 @@ from .stmt import HDLStatement
 from .port import HDLModulePort
 from .ifelse import HDLIfExp
 from .macro import HDLMacroValue
+
+
+class HDLLazyValue(HDLObject):
+    """Lazy evaluated value."""
+
+    def __init__(self, fn, *args, **kwargs):
+        """Initialize."""
+        self._fn = fn
+        self._args = args
+        self._kwargs = kwargs
 
 
 class HDLAssignment(HDLStatement):
@@ -47,6 +58,7 @@ class HDLAssignment(HDLStatement):
                 HDLConcatenation,
                 HDLIfExp,
                 HDLMacroValue,
+                HDLLazyValue,
             ),
         ):
             self.value = value

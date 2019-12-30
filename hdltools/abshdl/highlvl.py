@@ -9,7 +9,7 @@ from collections import deque
 from . import HDLObject
 from .expr import HDLExpression
 from .signal import HDLSignal, HDLSignalSlice
-from .assign import HDLAssignment
+from .assign import HDLAssignment, HDLLazyValue
 from .ifelse import HDLIfElse, HDLIfExp
 from ..hdllib.patterns import (
     ClockedBlock,
@@ -342,6 +342,18 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                     HDLAssignment(
                         self._signal_lookup(assignee),
                         HDLConcatenation(*items[::-1]),
+                    )
+                )
+        elif isinstance(node.value, ast.Call):
+            for assignee in assignees:
+                assignments.append(
+                    HDLAssignment(
+                        self._signal_lookup(assignee),
+                        HDLLazyValue(
+                            node.value.func.id,
+                            fnargs=node.value.args,
+                            fnkwargs=node.value.keywords,
+                        ),
                     )
                 )
         else:
