@@ -4,6 +4,7 @@ from . import HDLObject
 import hdltools.abshdl as hdl
 from .stmt import HDLStatement
 from .const import HDLIntegerConstant
+import hdltools.abshdl.concat
 
 # TODO allow multiple dimensions
 
@@ -285,6 +286,12 @@ class HDLSignal(HDLStatement):
     def part_select(self, offset, size):
         """Part-select signal slice."""
         return HDLSignalSlice(self, HDLSignalPartSelect(offset, size))
+
+    def concat(self, other):
+        """Concatenate."""
+        return hdltools.abshdl.concat.HDLConcatenation(
+            (self, other), direction="lr"
+        )
 
 
 class HDLSignalSlice(HDLObject):
