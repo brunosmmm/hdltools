@@ -30,3 +30,8 @@ class HDLCodeGenerator(CodeGenerator):
     def gen_HDLModulePort(self, element, **kwargs):
         """Generate ports."""
         raise NotImplementedError
+
+    def gen_HDLLazyValue(self, element, **kwargs):
+        """Lazy evaluation."""
+        ret = element.evaluate()
+        return self.dump_element(ret, **kwargs)

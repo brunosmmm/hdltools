@@ -3,6 +3,6 @@
 from ..abshdl.concat import HDLConcatenation
 
 
-def concat(*args):
+def concat(value, *args):
     """Concatenate."""
-    return HDLConcatenation(*args, direction="lr")
+    return HDLConcatenation(value, *args, direction="lr")

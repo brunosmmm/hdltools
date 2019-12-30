@@ -357,15 +357,21 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 )
         elif isinstance(node.value, ast.Call):
             for assignee in assignees:
+                args = [self._signal_lookup(arg.id) for arg in node.value.args]
+                kwargs = {
+                    kw.arg: self._signal_lookup(kw.value.id)
+                    for kw in node.value.keywords
+                }
+                if node.value.func.id in self._symbols:
+                    fn = self._symbols[node.value.func.id]
+                    # generate
+                    ret = fn(*args, **kwargs)
+                else:
+                    # dont do anything for now, lazy
+                    fn = node.value.func.id
+                    ret = (HDLLazyValue(fn, fnargs=args, fnkwargs=kwargs,),)
                 assignments.append(
-                    HDLAssignment(
-                        self._signal_lookup(assignee),
-                        HDLLazyValue(
-                            node.value.func.id,
-                            fnargs=node.value.args,
-                            fnkwargs=node.value.keywords,
-                        ),
-                    )
+                    HDLAssignment(self._signal_lookup(assignee), ret)
                 )
         else:
             try:
@@ -397,11 +403,27 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             raise NameError(
                 "unknown python function: '{}'".format(node.func.id)
             )
+        # FIXME disallow starred
+        args = []
         for arg in node.args:
-            self.visit_Name(arg)
+            if isinstance(arg, ast.Name):
+                self.visit_Name(arg)
+                args.append(self._signal_lookup(arg.id))
+            else:
+                args.append(arg)
+        kwargs = {}
         for kwarg in node.keywords:
-            self.generic_visit(kwarg)
+            if isinstance(kwarg.value, ast.Name):
+                self.visit_Name(kwarg.value)
+                kwargs[kwarg.arg] = self._signal_lookup(kwarg.value.id)
+            else:
+                kwargs[kwarg.arg] = kwarg.value
         self._verify_signal_name = False
+
+        # call?
+        # fn = self._symbols[node.func.id]
+        # ret = fn(*args, **kwargs)
+        # return ret
 
     def visit_IfExp(self, node):
         """Visit If expression."""

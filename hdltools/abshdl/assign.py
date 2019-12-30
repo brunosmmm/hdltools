@@ -16,9 +16,47 @@ class HDLLazyValue(HDLObject):
 
     def __init__(self, fn, *args, **kwargs):
         """Initialize."""
+        self._args = kwargs.pop("fnargs", [])
+        self._kwargs = kwargs.pop("fnkwargs", {})
         self._fn = fn
-        self._args = args
-        self._kwargs = kwargs
+
+    def evaluate(self, signals=None, symbols=None):
+        """Evaluate."""
+        if signals is None:
+            signals = {}
+        if symbols is None:
+            symbols = {}
+        if not callable(self._fn):
+            if self._fn not in symbols or not callable(symbols[self._fn]):
+                raise RuntimeError(
+                    "unresolved lazy function: '{}'".format(self._fn)
+                )
+            else:
+                self._fn = symbols[self._fn]
+
+        resolved_args = []
+        for arg in self._args:
+            if isinstance(arg, str) and arg in signals:
+                resolved_args.append(signals[arg])
+            elif isinstance(arg, HDLObject):
+                resolved_args.append(arg)
+            else:
+                raise RuntimeError(
+                    "unresolved argument in lazy eval: '{}'".format(arg)
+                )
+
+        resolved_kwargs = {}
+        for name, kwarg in self._kwargs.items():
+            if isinstance(kwarg, str) and arg in signals:
+                resolved_kwargs[name] = signals[kwarg]
+            elif isinstance(arg, HDLObject):
+                resolved_args[name] = kwarg
+            else:
+                raise RuntimeError(
+                    "unresolved argument in lazy eval: '{}'".format(kwarg)
+                )
+
+        return self._fn(*resolved_args, **resolved_kwargs)
 
 
 class HDLAssignment(HDLStatement):

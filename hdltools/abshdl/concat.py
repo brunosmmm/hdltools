@@ -9,11 +9,15 @@ import hdltools.abshdl.signal
 class HDLConcatenation(HDLObject):
     """Concatenation of HDLObjects."""
 
-    def __init__(self, *args, size=None, direction="rl"):
+    def __init__(self, value, *args, size=None, direction="rl"):
         """Initialize."""
         self.items = []
         self.size = size
         self.direction = direction
+
+        if not args:
+            # nothing to concatenate
+            raise ValueError("concatenation takes at least 2 elements")
 
         if self.size is not None:
             # fill with zeros
@@ -21,6 +25,7 @@ class HDLConcatenation(HDLObject):
                 self.append(HDLIntegerConstant(0, size=1, radix="b"))
 
         # HDLExpression is unconstrained!
+        self.items.append(self._check_item(value))
         for arg in args:
             self.items.append(self._check_item(arg))
 
