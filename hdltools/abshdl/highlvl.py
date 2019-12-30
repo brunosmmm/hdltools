@@ -33,6 +33,12 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
     """Build HDL blocks from python syntax."""
 
     _CUSTOM_TYPE_MAPPING = {}
+    _PATTERN_NAMES = [
+        "ClockedBlock",
+        "ClockedRstBlock",
+        "ParallelBlock",
+        "SequentialBlock",
+    ]
 
     def __init__(self, mod=None, symbols=None, **kwargs):
         """Initialize."""
@@ -378,6 +384,11 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def visit_Call(self, node):
         """Visit call."""
+        if (
+            isinstance(node.func, ast.Name)
+            and node.func.id in self._PATTERN_NAMES
+        ):
+            return
         self._verify_signal_name = True
         if (
             isinstance(node.func, ast.Name)
@@ -387,7 +398,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 "unknown python function: '{}'".format(node.func.id)
             )
         for arg in node.args:
-            self.generic_visit(arg)
+            self.visit_Name(arg)
         for kwarg in node.keywords:
             self.generic_visit(kwarg)
         self._verify_signal_name = False
