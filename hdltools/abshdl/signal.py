@@ -287,10 +287,10 @@ class HDLSignal(HDLStatement):
         """Part-select signal slice."""
         return HDLSignalSlice(self, HDLSignalPartSelect(offset, size))
 
-    def concat(self, other):
+    def concat(self, other, *others):
         """Concatenate."""
         return hdltools.abshdl.concat.HDLConcatenation(
-            (self, other), direction="lr"
+            self, other, *others, direction="lr"
         )
 
 
