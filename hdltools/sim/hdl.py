@@ -279,6 +279,10 @@ class CombinatorialChecker(ast.NodeVisitor):
 
     def visit_Attribute(self, node):
         """Visit attributes."""
+        if node.value.id != "self":
+            # all names are handled manually and not real python objects
+            # only name allowed to have members is self
+            raise RuntimeError(f"name '{node.value.id}' has no members")
         if self._state == "normal":
             return
         elif self._state == "assign":
