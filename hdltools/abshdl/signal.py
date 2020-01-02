@@ -26,7 +26,7 @@ class HDLSignal(HDLStatement):
 
     def __init__(self, sig_type, sig_name, size=1, default_val=None, **kwargs):
         """Initialize."""
-        super().__init__(stmt_type="par")
+        super().__init__(stmt_type="par", **kwargs)
         self.defer = False
         if sig_type not in self._types:
             raise ValueError('invalid signal type: "{}"'.format(sig_type))

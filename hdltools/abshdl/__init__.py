@@ -4,9 +4,11 @@
 class HDLObject:
     """Abstract class from which all HDL objects derive from."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, metadata=None, **kwargs):
         """Initialize."""
         self.parent = parent
+        if metadata is None:
+            self._metadata = {}
 
     def get_parent(self):
         """Get parent object."""
@@ -15,6 +17,11 @@ class HDLObject:
     def set_parent(self, parent):
         """Set parent object."""
         self.parent = parent
+
+    @property
+    def metadata(self):
+        """Get metadata."""
+        return self._metadata
 
 
 class HDLValue(HDLObject):
