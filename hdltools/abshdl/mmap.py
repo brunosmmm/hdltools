@@ -52,9 +52,9 @@ SignalSource:
 SignalDestination:
   'dest' '=' field=SourceDestField;
 SourceDestField:
-  BitAccessor | ID;
+  BitAccessor | TemplatedNameSubst | ID;
 BitAccessor:
-  register=ID '.' bit=ID;
+  register=TemplatedNameSubst '.' bit=ID;
 RegisterProperty:
   name=ID '=' '"' value=/[^"]+/ '"';
 StaticValue:
