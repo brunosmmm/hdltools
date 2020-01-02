@@ -181,8 +181,29 @@ if __name__ == "__main__":
         reg_addr = HDLIntegerConstant(reg.addr >> int(lsb_bits),
                                       size=addr_width,
                                       radix='h')
+        reg_fields = sorted(reg.fields, key=lambda x: min(x.get_range()))
+        if not reg_fields:
+            # no fields declared, so read entire register, respecting mask if available
+            rmask = reg.properties.get("rmask")
+            if rmask is None:
+                reg_read = HDLExpression(reg_sig)
+            else:
+                try:
+                    rmask = int(rmask)
+                except ValueError:
+                    try:
+                        rmask = int(rmask, 16)
+                    except ValueError:
+                        raise ValueError("malformed value")
+
+                reg_read = reg_sig & rmask
+            this_case = HDLCase(reg_addr,
+                                stmts=[HDLAssignment(reg_data_out,
+                                                     reg_read)])
+            reg_select.add_case(this_case)
+            continue
         reg_read = HDLConcatenation(None, size=reg.size, direction="lr")
-        for field in sorted(reg.fields, key=lambda x: min(x.get_range())):
+        for field in reg_fields:
             done = False
             for name, port in mmap.ports.items():
                 if port.direction == 'out':
