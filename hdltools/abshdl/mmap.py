@@ -341,8 +341,9 @@ class MemoryMappedInterface(object):
                     except:
                         raise RuntimeError("error in fragment rule")
                     for port in range(int(start), int(end)+1):
+                        fmt_str = "{{{}}}".format(src_reg.fragments[0].templates[0].arg)
                         _reg = (src_reg.fragments[0].fragment +
-                                src_reg.fragments[0].templates[0].arg.format(port))
+                                fmt_str.format(port))
                         if _reg not in self.registers:
                             raise KeyError('invalid register: "{}"'.format(_reg))
 
@@ -399,8 +400,9 @@ class MemoryMappedInterface(object):
                     except:
                         raise RuntimeError("error in fragment rule")
                     for port in range(int(start), int(end)+1):
+                        fmt_str = "{{{}}}".format(dest_reg.fragments[0].templates[0].arg)
                         _reg = (dest_reg.fragments[0].fragment +
-                                    dest_reg.fragments[0].templates[0].format(port))
+                                fmt_str.format(port))
                         if _reg not in self.registers:
                             raise KeyError('invalid register: "{}"'.format(_reg))
 
