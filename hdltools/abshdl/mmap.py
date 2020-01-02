@@ -17,14 +17,20 @@ ParameterStatement:
 Statement:
   (SlaveRegister | SlaveRegisterField | SlavePort) ';';
 SlaveRegister:
-  /register\s+/ name=RegisterName ('at' address=RegisterAddress )?
+  /register\s+/ name=TemplatedNameDecl ('at' address=RegisterAddress )?
   properties*=RegisterProperty;
-RegisterName[noskipws]:
-  fragments += RegisterNameFragment;
-RegisterNameFragment:
-  fragment=/[a-zA-Z0-9_]*/ templates*=RegisterNameTemplate;
-RegisterNameTemplate:
+TemplatedNameDecl[noskipws]:
+  fragments += TemplatedNameDeclFragment;
+TemplatedNameDeclFragment:
+  fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameDeclRule;
+TemplatedNameDeclRule:
   '[' rule=/[^\]]+/ ']';
+TemplatedNameSubst[noskipws]:
+  fragments += TemplatedNameSubstFragment;
+TemplatedNameSubstFragment:
+  fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameSubstFmt;
+TemplatedNameSubstFmt:
+  '{' arg=/[0-9]+/ '}';
 SlaveRegisterField:
   'field' ('source='? source=BitAccessor
            'position='? position=BitField
@@ -34,13 +40,13 @@ SlaveRegisterField:
 SlavePort:
   SlaveOutput | SlaveInput;
 SlaveOutput:
-  'output' descriptor=OutputDescriptor;
+  /output\s+/ descriptor=OutputDescriptor;
 SlaveInput:
-  'input'  descriptor=InputDescriptor;
+  /input\s+/  descriptor=InputDescriptor;
 OutputDescriptor:
-  name=ID source=SignalSource;
+  name=TemplatedNameDecl source=SignalSource;
 InputDescriptor:
-  name=ID dest=SignalDestination;
+  name=TemplatedNameDecl dest=SignalDestination;
 SignalSource:
   'source' '=' field=SourceDestField;
 SignalDestination:
@@ -305,8 +311,22 @@ class MemoryMappedInterface(object):
                 if src_bit is not None and src_reg.has_field(src_bit) is False:
                     raise KeyError('invalid field: "{}"'.format(src_bit))
 
-                port = FlagPort(src_reg, src_bit, "out", name)
-                self.add_port(port)
+                if len(name.fragments) > 1:
+                    raise NotImplementedError
+                if len(name.fragments[0].templates) > 1:
+                    raise NotImplementedError
+                elif not name.fragments[0].templates:
+                    # simple declaration
+                    port = FlagPort(src_reg, src_bit, "out", name.fragments[0].fragment)
+                    self.add_port(port)
+                else:
+                    try:
+                        start, end = name.fragments[0].templates[0].split("-")
+                    except:
+                        raise RuntimeError("error in fragment rule")
+                    for port in range(int(start), int(end)+1):
+                        port = FlagPort(src_reg, src_bit, "out", name.fragments[0].fragment + str(reg))
+                        self.add_port(port)
             elif statement.__class__.__name__ == "SlaveInput":
                 descriptor = statement.descriptor
                 name = descriptor.name
@@ -321,8 +341,22 @@ class MemoryMappedInterface(object):
                 if dest_reg.has_field(dest_bit) is False:
                     raise KeyError('invalid field: "{}"'.format(dest_bit))
 
-                port = FlagPort(dest_reg, dest_bit, "in", name)
-                self.add_port(port)
+                if len(name.fragments) > 1:
+                    raise NotImplementedError
+                if len(name.fragments[0].templates) > 1:
+                    raise NotImplementedError
+                elif not name.fragments[0].templates:
+                    # simple declaration
+                    port = FlagPort(src_reg, src_bit, "out", name.fragments[0].fragment)
+                    self.add_port(port)
+                else:
+                    try:
+                        start, end = name.fragments[0].templates[0].split("-")
+                    except:
+                        raise RuntimeError("error in fragment rule")
+                    for port in range(int(start), int(end)+1):
+                        port = FlagPort(src_reg, src_bit, "in", name.fragments[0].fragment + str(reg))
+                        self.add_port(port)
 
     def parse_file(self, filename):
         """Parse model from file."""
