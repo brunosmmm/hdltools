@@ -40,7 +40,10 @@ class HDLRegisterField(object):
     def get_range(self):
         """Get which bits are claimed by this field."""
         if len(self.reg_slice) > 1:
-            return list(range(self.reg_slice[1], self.reg_slice[0]+1))
+            if self.reg_slice[1] > self.reg_slice[0]:
+                return list(range(self.reg_slice[0], self.reg_slice[1]+1))
+            else:
+                return list(range(self.reg_slice[1], self.reg_slice[0]+1))
         else:
             return self.reg_slice
 
