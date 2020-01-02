@@ -17,8 +17,14 @@ ParameterStatement:
 Statement:
   (SlaveRegister | SlaveRegisterField | SlavePort) ';';
 SlaveRegister:
-  'register' name=ID ('at=' address=RegisterAddress )?
+  /register\s+/ name=RegisterName ('at' address=RegisterAddress )?
   properties*=RegisterProperty;
+RegisterName[noskipws]:
+  fragments += RegisterNameFragment;
+RegisterNameFragment:
+  fragment=/[a-zA-Z0-9_]*/ templates*=RegisterNameTemplate;
+RegisterNameTemplate:
+  '[' rule=/[^\]]+/ ']';
 SlaveRegisterField:
   'field' ('source='? source=BitAccessor
            'position='? position=BitField
@@ -185,15 +191,40 @@ class MemoryMappedInterface(object):
                 else:
                     reg_addr = self.next_available_address()
 
-                register = HDLRegister(
-                    statement.name, size=self.reg_size, addr=reg_addr
-                )
+                if len(statement.name.fragments) > 1:
+                    raise NotImplementedError("not implemented")
 
-                # add properties
-                for prop in statement.properties:
-                    register.add_properties(**{prop.name: prop.value})
+                # detect generator patterns
+                if len(statement.name.fragments) == 1:
+                    if not statement.name.fragments[0].templates:
+                        # simple declaration
+                        register = HDLRegister(statement.name.fragments[0].fragment,
+                                               size=self.reg_size, addr=reg_addr)
+                        # add properties
+                        for prop in statement.properties:
+                            register.add_properties(**{prop.name: prop.value})
 
-                self.add_register(register)
+                        self.add_register(register)
+                    else:
+                        if len(statement.name.fragments[0].templates) > 1:
+                            raise NotImplementedError("not implemented")
+
+                        template_str = statement.name.fragments[0].templates[0].rule
+                        try:
+                            start, end = template_str.split("-")
+                            addr = reg_addr
+                            for reg in range(int(start), int(end)+1):
+                                reg_name = statement.name.fragments[0].fragment + str(reg)
+                                register = HDLRegister(reg_name, size=self.reg_size, addr=addr)
+
+                                for prop in statement.properties:
+                                    register.add_properties(**{prop.name: prop.value})
+
+                                self.add_register(register)
+                                addr = self.next_available_address()
+                        except:
+                            raise RuntimeError("error in template rule")
+
             elif statement.__class__.__name__ == "SlaveRegisterField":
                 # parse
                 source_reg = statement.source.register
