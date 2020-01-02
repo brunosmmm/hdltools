@@ -13,7 +13,11 @@ class HDLConcatenation(HDLObject):
         """Initialize."""
         self.items = []
         self.size = size
-        self.direction = direction
+
+        if direction not in ("lr", "rl"):
+            raise ValueError("direction must be either lr or rl")
+
+        self._direction = direction
 
         if not args:
             # nothing to concatenate
@@ -25,9 +29,14 @@ class HDLConcatenation(HDLObject):
                 self.append(HDLIntegerConstant(0, size=1, radix="b"))
 
         # HDLExpression is unconstrained!
-        self.items.append(self._check_item(value))
+        self.append(value)
         for arg in args:
-            self.items.append(self._check_item(arg))
+            self.append(arg)
+
+    @property
+    def direction(self):
+        """Get direction."""
+        return self._direction
 
     def _check_item(self, item):
         if isinstance(item, hdltools.abshdl.expr.HDLExpression):
@@ -53,6 +62,13 @@ class HDLConcatenation(HDLObject):
 
     def append(self, item):
         """Add item."""
+        if self.direction == "lr":
+            self.appendright(item)
+        else:
+            self.appendleft(item)
+
+    def appendright(self, item):
+        """Append right."""
         self.items.append(self._check_item(item))
 
     def appendleft(self, item):
@@ -144,15 +160,8 @@ class HDLConcatenation(HDLObject):
 
     def dumps(self):
         """Get representation."""
-        if self.direction == "rl":
-            items = self.items[::-1]
-        elif self.direction == "lr":
-            items = self.items
-        else:
-            raise ValueError("undefined order")
-
         ret_str = "{"
-        ret_str += ",".join([item.dumps() for item in items])
+        ret_str += ",".join([item.dumps() for item in self.items])
         ret_str += "}"
 
         return ret_str
