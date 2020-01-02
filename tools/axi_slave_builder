@@ -121,9 +121,12 @@ if __name__ == "__main__":
         sig = HDLSignal('comb', name, port.vector)
         reg_sig = HDLSignal('reg', 'REG_'+port.target_register.name,
                             port.target_register.size)
-        target_field = port.target_register.get_field(port.target_field)
-        target_bits = target_field.get_slice()
-        assignment = HDLAssignment(sig, reg_sig[target_bits])
+        if port.target_field is not None:
+            target_field = port.target_register.get_field(port.target_field)
+            target_bits = target_field.get_slice()
+            assignment = HDLAssignment(sig, reg_sig[target_bits])
+        else:
+            assignment = HDLAssignment(sig, reg_sig)
         slave.insert_after('OUTPUT_ASSIGN', [assignment])
 
     # register write

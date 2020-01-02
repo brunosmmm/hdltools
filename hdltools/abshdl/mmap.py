@@ -42,9 +42,11 @@ OutputDescriptor:
 InputDescriptor:
   name=ID dest=SignalDestination;
 SignalSource:
-  'source' '=' field=BitAccessor;
+  'source' '=' field=SourceDestField;
 SignalDestination:
-  'dest' '=' field=BitAccessor;
+  'dest' '=' field=SourceDestField;
+SourceDestField:
+  BitAccessor | ID;
 BitAccessor:
   register=ID '.' bit=ID;
 RegisterProperty:
@@ -88,8 +90,11 @@ class FlagPort(HDLModulePort):
 
     def __init__(self, target_register, target_field, direction, name):
         """Initialize."""
-        field = target_register.get_field(target_field)
-        field_size = len(field.get_range())
+        if target_field is not None:
+            field = target_register.get_field(target_field)
+            field_size = len(field.get_range())
+        else:
+            field_size = target_register.size
         self.target_register = target_register
         self.target_field = target_field
         super().__init__(direction, name, field_size)
@@ -286,14 +291,18 @@ class MemoryMappedInterface(object):
                 descriptor = statement.descriptor
                 name = descriptor.name
                 source = descriptor.source.field
-                src_reg = source.register
-                src_bit = source.bit
+                if isinstance(source, str):
+                    src_reg = source
+                    src_bit = None
+                else:
+                    src_reg = source.register
+                    src_bit = source.bit
 
                 if src_reg not in self.registers:
                     raise KeyError('invalid register: "{}"'.format(src_reg))
 
                 src_reg = self.registers[src_reg]
-                if src_reg.has_field(src_bit) is False:
+                if src_bit is not None and src_reg.has_field(src_bit) is False:
                     raise KeyError('invalid field: "{}"'.format(src_bit))
 
                 port = FlagPort(src_reg, src_bit, "out", name)
