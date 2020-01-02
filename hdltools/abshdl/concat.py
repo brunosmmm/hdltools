@@ -121,9 +121,11 @@ class HDLConcatenation(HDLObject):
         actual_offset = self._find_offset(offset)
         if actual_offset is None:
             raise ValueError("could not determine insertion offset")
-        del self.items[actual_offset : actual_offset + item_size - 1]
-        # insert item
         self.items[actual_offset] = _item
+        if self.direction == "lr":
+            del self.items[actual_offset - item_size + 1: actual_offset]
+        else:
+            del self.items[actual_offset : actual_offset + item_size - 1]
 
     def __len__(self):
         """Get length."""
