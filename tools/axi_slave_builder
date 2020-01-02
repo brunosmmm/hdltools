@@ -178,7 +178,7 @@ if __name__ == "__main__":
         reg_addr = HDLIntegerConstant(reg.addr >> int(lsb_bits),
                                       size=addr_width,
                                       radix='h')
-        reg_read = HDLConcatenation(size=reg.size)
+        reg_read = HDLConcatenation(None, size=reg.size, direction="lr")
         for field in sorted(reg.fields, key=lambda x: min(x.get_range())):
             done = False
             for name, port in mmap.ports.items():
