@@ -135,6 +135,8 @@ class HDLConcatenation(HDLObject):
 
     def pack(self):
         """Pack constants together."""
+        if not self.items:
+            raise ValueError("cannot pack, concatenation is empty")
         items = []
         last_item = None
         current_pos = 0
@@ -165,7 +167,10 @@ class HDLConcatenation(HDLObject):
                 )
             )
 
-        return HDLConcatenation(*items)
+        if len(items) == 1:
+            return hdltools.abshdl.expr.HDLExpression(items[0])
+        else:
+            return HDLConcatenation(*items)
 
     def dumps(self):
         """Get representation."""
