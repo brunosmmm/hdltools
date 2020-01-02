@@ -186,7 +186,7 @@ if __name__ == "__main__":
                     continue
                 if port.target_field == field.name:
                     # print('found input target')
-                    reg_read.insert(+port, min(field.get_range()))
+                    reg_read.insert(HDLExpression(port.signal), min(field.get_range()))
                     done = True
             if done is True:
                 continue
