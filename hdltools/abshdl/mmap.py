@@ -32,7 +32,7 @@ TemplatedNameSubstFragment:
 TemplatedNameSubstFmt:
   '{' arg=/[0-9]+/ '}';
 SlaveRegisterField:
-  'field' ('source='? source=BitAccessor
+  'field' ('source='? source=FieldBitAccessor
            'position='? position=BitField
            'access='? access=AccessPermission
            ('default=' default=StaticValue)?
@@ -52,9 +52,11 @@ SignalSource:
 SignalDestination:
   'dest' '=' field=SourceDestField;
 SourceDestField:
-  BitAccessor | TemplatedNameSubst | ID;
-BitAccessor:
+  SourceBitAccessor | TemplatedNameSubst | ID;
+SourceBitAccessor:
   register=TemplatedNameSubst '.' bit=ID;
+FieldBitAccessor:
+  register=ID '.' bit=ID;
 RegisterProperty:
   name=ID '=' '"' value=/[^"]+/ '"';
 StaticValue:
@@ -300,16 +302,21 @@ class MemoryMappedInterface(object):
                 if isinstance(source, str):
                     src_reg = source
                     src_bit = None
-                else:
+                elif source.__class__.__name__ == "SourceBitAccessor":
+                    if len(source.register.fragments) > 1:
+                        raise NotImplementedError
+                    if len(source.register.fragments[0].templates) > 1:
+                        raise NotImplementedError
                     src_reg = source.register
                     src_bit = source.bit
-
-                if src_reg not in self.registers:
-                    raise KeyError('invalid register: "{}"'.format(src_reg))
-
-                src_reg = self.registers[src_reg]
-                if src_bit is not None and src_reg.has_field(src_bit) is False:
-                    raise KeyError('invalid field: "{}"'.format(src_bit))
+                else:
+                    # just a templated name
+                    if len(source.fragments) > 1:
+                        raise NotImplementedError
+                    if len(source.fragments[0].templates) > 1:
+                        raise NotImplementedError
+                    src_reg = source
+                    src_bit = None
 
                 if len(name.fragments) > 1:
                     raise NotImplementedError
@@ -317,29 +324,57 @@ class MemoryMappedInterface(object):
                     raise NotImplementedError
                 elif not name.fragments[0].templates:
                     # simple declaration
+                    if src_reg.fragments[0].templates:
+                        raise RuntimeError("no value to substitute in register templated name")
+                    src_reg = src_reg.fragments[0].fragment
+                    if src_reg not in self.registers:
+                        raise KeyError('invalid register: "{}"'.format(src_reg))
+
+                    src_reg = self.registers[src_reg]
+                    if src_bit is not None and src_reg.has_field(src_bit) is False:
+                        raise KeyError('invalid field: "{}"'.format(src_bit))
                     port = FlagPort(src_reg, src_bit, "out", name.fragments[0].fragment)
                     self.add_port(port)
                 else:
                     try:
-                        start, end = name.fragments[0].templates[0].split("-")
+                        start, end = name.fragments[0].templates[0].rule.split("-")
                     except:
                         raise RuntimeError("error in fragment rule")
                     for port in range(int(start), int(end)+1):
-                        port = FlagPort(src_reg, src_bit, "out", name.fragments[0].fragment + str(reg))
+                        _reg = (src_reg.fragments[0].fragment +
+                                src_reg.fragments[0].templates[0].arg.format(port))
+                        if _reg not in self.registers:
+                            raise KeyError('invalid register: "{}"'.format(_reg))
+
+                        _reg = self.registers[_reg]
+                        if src_bit is not None and _reg.has_field(src_bit) is False:
+                            raise KeyError('invalid field: "{}"'.format(src_bit))
+
+                        port = FlagPort(_reg, src_bit, "out", name.fragments[0].fragment + str(port))
                         self.add_port(port)
             elif statement.__class__.__name__ == "SlaveInput":
                 descriptor = statement.descriptor
                 name = descriptor.name
                 dest = descriptor.dest.field
-                dest_reg = dest.register
-                dest_bit = dest.bit
+                if isinstance(dest, str):
+                    dest_reg = dest
+                    dest_bit = None
+                elif dest.__class__.__name__ == "SourceBitAccessor":
+                    if len(dest.register.fragments) > 1:
+                        raise NotImplementedError
+                    if len(dest.register.fragments[0].templates) > 1:
+                        raise NotImplementedError
+                    dest_reg = dest.register
+                    dest_bit = dest.bit
+                else:
+                    # just a templated name
+                    if len(dest.fragments) > 1:
+                        raise NotImplementedError
+                    if len(dest.fragments[0].templates) > 1:
+                        raise NotImplementedError
+                    dest_reg = source
+                    dest_bit = None
 
-                if dest_reg not in self.registers:
-                    raise KeyError('invalid register: "{}"'.format(dest_reg))
-
-                dest_reg = self.registers[dest_reg]
-                if dest_reg.has_field(dest_bit) is False:
-                    raise KeyError('invalid field: "{}"'.format(dest_bit))
 
                 if len(name.fragments) > 1:
                     raise NotImplementedError
@@ -347,7 +382,16 @@ class MemoryMappedInterface(object):
                     raise NotImplementedError
                 elif not name.fragments[0].templates:
                     # simple declaration
-                    port = FlagPort(src_reg, src_bit, "out", name.fragments[0].fragment)
+                    if dest_reg.fragments[0].templates:
+                        raise RuntimeError("no value to substitute in register templated name")
+                    dest_reg = dest_reg.fragments[0].fragment
+                    if dest_reg not in self.registers:
+                        raise KeyError('invalid register: "{}"'.format(dest_reg))
+
+                    dest_reg = self.registers[dest_reg]
+                    if dest_bit is not None and dest_reg.has_field(dest_bit) is False:
+                        raise KeyError('invalid field: "{}"'.format(dest_bit))
+                    port = FlagPort(dest_reg, dest_bit, "in", name.fragments[0].fragment)
                     self.add_port(port)
                 else:
                     try:
@@ -355,7 +399,16 @@ class MemoryMappedInterface(object):
                     except:
                         raise RuntimeError("error in fragment rule")
                     for port in range(int(start), int(end)+1):
-                        port = FlagPort(src_reg, src_bit, "in", name.fragments[0].fragment + str(reg))
+                        _reg = (dest_reg.fragments[0].fragment +
+                                    dest_reg.fragments[0].templates[0].format(port))
+                        if _reg not in self.registers:
+                            raise KeyError('invalid register: "{}"'.format(_reg))
+
+                        _reg = self.registers[_reg]
+                        if dest_bit is not None and _reg.has_field(dest_bit) is False:
+                            raise KeyError('invalid field: "{}"'.format(dest_bit))
+
+                        port = FlagPort(_reg, dest_bit, "in", name.fragments[0].fragment + str(port))
                         self.add_port(port)
 
     def parse_file(self, filename):
@@ -428,8 +481,9 @@ class MemoryMappedInterface(object):
             else:
                 dir_str = "->"
 
-            ret_str += "{} {} {}.{}\n".format(
-                port.name, dir_str, port.target_register.name, port.target_field
+            ret_str += "{} {} {}{}\n".format(
+                port.name, dir_str, port.target_register.name,
+                "." + port.target_field if port.target_field is not None else ""
             )
 
         return ret_str
