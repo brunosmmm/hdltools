@@ -21,7 +21,7 @@ class HDLConcatenation(HDLObject):
 
         if self.size is not None:
             # fill with zeros
-            for i in range(size):
+            for i in range(size-len(args)-1):
                 self.append(HDLIntegerConstant(0, size=1, radix="b"))
 
         # HDLExpression is unconstrained!
