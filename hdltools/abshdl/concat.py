@@ -19,17 +19,23 @@ class HDLConcatenation(HDLObject):
 
         self._direction = direction
 
-        if not args:
-            # nothing to concatenate
-            raise ValueError("concatenation takes at least 2 elements")
+        if value is None:
+            if args:
+                raise ValueError("empty concatenation cannot have element list")
+        else:
+            if not args:
+                # nothing to concatenate
+                raise ValueError("concatenation takes at least 2 elements")
 
         if self.size is not None:
             # fill with zeros
-            for i in range(size-len(args)-1):
+            fill_len = size-len(args)-1 if value is not None else size
+            for i in range(fill_len):
                 self.append(HDLIntegerConstant(0, size=1, radix="b"))
 
         # HDLExpression is unconstrained!
-        self.append(value)
+        if value is not None:
+            self.append(value)
         for arg in args:
             self.append(arg)
 
@@ -82,7 +88,10 @@ class HDLConcatenation(HDLObject):
         _offset = 0
         for index, item in enumerate(self.items):
             if _offset == offset:
-                return index
+                if self.direction is "lr":
+                    return self.size-index-1
+                else:
+                    return index
             _offset += len(item)
 
     def insert(self, item, offset, size=None):
