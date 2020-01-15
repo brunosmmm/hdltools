@@ -9,14 +9,14 @@ import types
 class HDLScope(HDLObject):
     """Scope."""
 
-    _scope_types = ['seq', 'par']
+    _scope_types = ["seq", "par"]
 
     def __init__(self, scope_type, **kwargs):
         """Initialize."""
         super().__init__(**kwargs)
         self.statements = []
         if scope_type not in self._scope_types:
-            raise KeyError('invalid scope type')
+            raise KeyError("invalid scope type")
 
         self.scope_type = scope_type
 
@@ -25,17 +25,20 @@ class HDLScope(HDLObject):
             return make_comment(element)
 
         if not isinstance(element, HDLStatement):
-            raise TypeError('only HDLStatement allowed, got: '
-                            '{}'.format(element.__class__.__name__))
+            raise TypeError(
+                "only HDLStatement allowed, got: "
+                "{}".format(element.__class__.__name__)
+            )
 
         # check legality
-        if element.stmt_type != self.scope_type\
-           and element.stmt_type != 'null':
-            raise ValueError('cannot add sequential statements '
-                             'in parallel scopes and vice versa,'
-                             'tried {} into {} ({})'.format(element.stmt_type,
-                                                            self.scope_type,
-                                                            element.dumps()))
+        if element.stmt_type != self.scope_type and element.stmt_type != "null":
+            raise ValueError(
+                "cannot add sequential statements "
+                "in parallel scopes and vice versa,"
+                "tried {} into {} ({})".format(
+                    element.stmt_type, self.scope_type, element.dumps()
+                )
+            )
 
         return element
 
@@ -54,17 +57,17 @@ class HDLScope(HDLObject):
     def extend(self, scope):
         """Extend from another scope."""
         if not isinstance(scope, HDLScope):
-            raise TypeError('only HDLScope allowed')
+            raise TypeError("only HDLScope allowed")
 
         if scope.scope_type != self.scope_type:
-            raise ValueError('cannot extend from different type of scope')
+            raise ValueError("cannot extend from different type of scope")
 
         self.add(scope.statements)
 
     def insert(self, where, *elements):
         """Insert elements."""
         for index, element in enumerate(elements):
-            self.statements.insert(where+index, self._check_element(element))
+            self.statements.insert(where + index, self._check_element(element))
             if isinstance(element, HDLObject):
                 element.set_parent(self)
 
@@ -73,8 +76,7 @@ class HDLScope(HDLObject):
         try:
             scope, element = self.find_by_tag(tag)
         except (ValueError, TypeError):
-            raise IndexError('could not find tag:'
-                             ' {}'.format(tag))
+            raise IndexError("could not find tag:" " {}".format(tag))
 
         self.insert(element[0], *elements)
 
@@ -83,10 +85,9 @@ class HDLScope(HDLObject):
         try:
             scope, element = self.find_by_tag(tag)
         except (ValueError, TypeError):
-            raise IndexError('could not find tag:'
-                             ' {}'.format(tag))
+            raise IndexError("could not find tag:" " {}".format(tag))
 
-        scope.insert(element[0]+1, *elements)
+        scope.insert(element[0] + 1, *elements)
 
     def get_tags(self):
         """Get available tags in this scope."""
@@ -143,4 +144,4 @@ class HDLScope(HDLObject):
 
     def dumps(self):
         """Get intermediate representation."""
-        return '\n'.join([x.dumps() for x in self.statements])
+        return "\n".join([x.dumps() for x in self.statements])
