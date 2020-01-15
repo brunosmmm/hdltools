@@ -1,0 +1,39 @@
+
+VectorDescription:
+    directives*=ConfigurationDirective defines*=ValueDefinition initial=InitialElement sequence+=SequenceElement;
+
+ConfigurationDirective:
+    '#' directive=ID value=VectorValue;
+
+ValueDefinition:
+    /define\s+/ name=ID value=VectorValue;
+
+InitialElement:
+    /initial\s+/ val=SequenceValue;
+
+SequenceElement:
+    event=SequenceEvent mask=SequenceValue (/at\s+/ time=TimeValue)?;
+
+SequenceValue:
+    ID | VectorValue;
+
+TimeValue:
+    RelTimeValue | AbsTimeValue;
+
+AbsTimeValue:
+    time=INT;
+
+RelTimeValue:
+    "+" time=INT;
+
+VectorValue:
+    INT | HexValue | BinValue;
+
+HexValue:
+    "0x"? val=/[0-9a-fA-F]+/;
+
+BinValue:
+    "0b"? val=/[0-1]+/;
+
+SequenceEvent:
+    "set" | "clear" | "toggle";
