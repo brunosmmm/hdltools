@@ -126,6 +126,12 @@ class VecgenPass(SyntaxChecker):
         """Visit AST root."""
         ir = self._directives
         ir["sequence"] = node.sequence
-        print(ir)
 
+        # doesnt return, not sure why
+        self._sequence = ir
         return ir
+
+    def visit(self, node):
+        """Perform visit."""
+        ret = super().visit(node)
+        return self._sequence
