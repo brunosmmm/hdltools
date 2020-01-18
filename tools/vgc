@@ -1,0 +1,30 @@
+"""Test vecgen."""
+
+import os
+import json
+from argparse import ArgumentParser
+from hdltools.vecgen import parse_vecgen_file
+
+
+if __name__ == "__main__":
+
+    parser = ArgumentParser()
+    parser.add_argument("input", help="input filename")
+    paser.add_argument("--output", help="output filename")
+
+    args = parser.parse_args()
+
+    if args.output is None:
+        output_fname = os.path.basename(args.input)
+    else:
+        output_fname = args.output
+
+    ret = parse_vecgen_file(args.input)
+
+    try:
+        with open(output_fname, "w") as outf:
+            json.dump(ret, outf)
+
+    except OSError:
+        print("cannot write output file")
+        exit(1)
