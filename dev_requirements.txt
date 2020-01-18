@@ -16,3 +16,4 @@ snowballstemmer==1.2.1
 textX==1.8.0
 astunparse==1.6.2
 git+https://github.com/brunosmmm/scoff.git@master#egg=scoff
+git+https://github.com/brunosmmm/dictator.git@master#egg=dictator
