@@ -51,7 +51,6 @@ class VecgenPass(SyntaxChecker):
 
     def visit_InitialElement(self, node):
         """Visit initial element."""
-        print("hello")
         if isinstance(node.val, str):
             # symbol lookup
             if node.val not in self._definitions:
