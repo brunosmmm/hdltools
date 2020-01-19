@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument("input", help="input filename")
-    paser.add_argument("--output", help="output filename")
+    parser.add_argument("--output", help="output filename")
 
     args = parser.parse_args()
 
