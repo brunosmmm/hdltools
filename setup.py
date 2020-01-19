@@ -15,5 +15,10 @@ setup(
         "scoff @ git+https://github.com/brunosmmm/scoff@master#egg=scoff",
         "dictator @ git+https://github.com/brunosmmm/dictator@master#egg=dictator",
     ],
-    scripts=["tools/mmap_docgen", "tools/axi_slave_builder", "tools/inputgen"],
+    scripts=[
+        "tools/mmap_docgen",
+        "tools/axi_slave_builder",
+        "tools/inputgen",
+        "tools/vgc",
+    ],
 )
