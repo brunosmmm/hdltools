@@ -51,6 +51,7 @@ class VecgenPass(SyntaxChecker):
 
     def visit_InitialElement(self, node):
         """Visit initial element."""
+        print("hello")
         if isinstance(node.val, str):
             # symbol lookup
             if node.val not in self._definitions:
@@ -125,7 +126,7 @@ class VecgenPass(SyntaxChecker):
     def visit_VectorDescription(self, node):
         """Visit AST root."""
         ir = self._directives
-        ir["sequence"] = node.sequence
+        ir["sequence"] = [node.initial] + node.sequence
 
         # doesnt return, not sure why
         self._sequence = ir
