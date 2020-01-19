@@ -16,7 +16,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.output is None:
-        output_fname = os.path.basename(args.input)
+        base_fname, _ = os.path.splitext(os.path.basename(args.input))
+        output_fname = base_fname + ".json"
     else:
         output_fname = args.output
 
