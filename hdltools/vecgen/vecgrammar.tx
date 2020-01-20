@@ -6,7 +6,7 @@ ConfigurationDirective:
     '#' directive=ID value=VectorValue;
 
 ValueDefinition:
-    /define\s+/ name=ID value=VectorValue;
+    /define\s+/ name=ID value=SequenceValue;
 
 InitialElement:
     /initial\s+/ val=SequenceValue;
@@ -15,7 +15,7 @@ SequenceElement:
     event=SequenceEvent mask=SequenceValue (/at\s+/ time=TimeValue)?;
 
 SequenceValue:
-    ID | VectorValue;
+    ID | VectorValue | BooleanExpr;
 
 TimeValue:
     RelTimeValue | AbsTimeValue;
@@ -37,3 +37,21 @@ BinValue:
 
 SequenceEvent:
     "set" | "clear" | "toggle";
+
+BooleanExpr:
+    "(" op=BitwiseOperation ")";
+
+BitwiseOperation:
+    BitwiseBinOperation | BitwiseNegate;
+
+BitwiseBinOperation:
+    lhs=SequenceValue op=BitwiseOperator rhs=SequenceValue;
+
+BitwiseNegate:
+    "~" val=SequenceValue;
+
+BitwiseOperator:
+    "<<" | ">>" | "&" | "^" | "|";
+
+Comment:
+    /\/\/.*$/;

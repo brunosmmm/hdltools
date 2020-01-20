@@ -131,6 +131,33 @@ class VecgenPass(SyntaxChecker):
         self._sequence = ir
         return ir
 
+    def visit_BitwiseBinOperation(self, node):
+        """Visit binary bitwise operation."""
+        if node.op == "<<":
+            return node.lhs << node.rhs
+        elif node.op == ">>":
+            return node.lhs >> node.rhs
+        elif node.op == "|":
+            return node.lhs | node.rhs
+        elif node.op == "&":
+            return node.lhs & node.rhs
+        elif node.op == "^":
+            return node.lhs ^ node.rhs
+        else:
+            # cannot happen!
+            return None
+
+    def visit_BitwiseNegate(self, node):
+        """Visit negation."""
+        return ~node.val
+
+    def visit_BooleanExpr(self, node):
+        """Visit boolean expression."""
+        return node.op
+
+    def visit_Comment(self, node):
+        """Visit comment."""
+
     def visit(self, node):
         """Perform visit."""
         ret = super().visit(node)
