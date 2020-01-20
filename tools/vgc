@@ -11,22 +11,27 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument("input", help="input filename")
-    parser.add_argument("--output", help="output filename")
+    cmd_group = parser.add_mutually_exclusive_group()
+    cmd_group.add_argument("--output", help="output filename")
+    cmd_group.add_argument("--dump", help="dump to stdout", action="store_true")
 
     args = parser.parse_args()
 
-    if args.output is None:
-        base_fname, _ = os.path.splitext(os.path.basename(args.input))
-        output_fname = base_fname + ".json"
-    else:
-        output_fname = args.output
-
     ret = parse_vecgen_file(args.input)
 
-    try:
-        with open(output_fname, "w") as outf:
-            json.dump(ret, outf)
+    if args.dump is False:
+        if args.output is None:
+            base_fname, _ = os.path.splitext(os.path.basename(args.input))
+            output_fname = base_fname + ".json"
+        else:
+            output_fname = args.output
 
-    except OSError:
-        print("cannot write output file")
-        exit(1)
+        try:
+            with open(output_fname, "w") as outf:
+                json.dump(ret, outf)
+
+        except OSError:
+            print("cannot write output file")
+            exit(1)
+    else:
+        print(json.dumps(ret, indent=2))
