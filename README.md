@@ -16,4 +16,4 @@ Includes (everything is a WIP):
 * AXI Memory-mapped slave model using Intermediate Representation (hdltools.hdllib.aximm)
 * Simple simulation framework (hdltools.sim.*)
 * Simulation model HDL Compiler (hdltools.sim.hdl)
-
+* Vector generator DSL/compiler for testbench input (hdltools.vecgen, tools/vgc)
