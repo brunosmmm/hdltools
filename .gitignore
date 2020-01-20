@@ -1,6 +1,6 @@
 *.*~
 *.pyc
-.coverage
+.coverage*
 *.vcd
 cover/
 venv/
