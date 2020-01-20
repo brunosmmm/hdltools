@@ -1,0 +1,10 @@
+#vector_size 32
+
+// define arm 0x10000000
+define arm (1<<28)
+
+initial 0x00000000
+set arm at +2
+clear arm at +1
+set 0x01 at +10
+clear 0x01 at 20
