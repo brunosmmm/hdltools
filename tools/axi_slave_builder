@@ -14,6 +14,8 @@ from hdltools.abshdl.concat import HDLConcatenation
 from hdltools.abshdl.switch import HDLCase
 from hdltools.abshdl.ifelse import HDLIfElse
 from hdltools.hdllib.aximm import get_axi_mm_slave, get_register_write_logic
+from hdltools.mmap import parse_mmap_file
+from hdltools.mmap.builder import MMBuilder
 import sys
 
 
@@ -35,10 +37,13 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
 
     # the memory mapped interface descriptor
-    mmap = MemoryMappedInterface()
+    # mmap = MemoryMappedInterface()
 
     # parse file
-    mmap.parse_file(args.model)
+    # mmap.parse_file(args.model)
+    text, mmap_model = parse_mmap_file(args.model)
+    mmbuilder = MMBuilder(text)
+    mmap = mmbuilder.visit(mmap_model)
 
     sys.stderr.write(mmap.dumps())
 
@@ -46,9 +51,7 @@ if __name__ == "__main__":
     vlog = VerilogCodeGenerator(indent=True)
     vlog.add_class_alias("HDLModulePort", "FlagPort")
 
-    slave = get_axi_mm_slave(
-        args.modname, mmap.reg_size, len(mmap.get_register_list())
-    )
+    slave = get_axi_mm_slave(args.modname, mmap.reg_size, len(mmap.registers))
 
     # parameters (naive implementation)
     for name, value in mmap.parameters.items():

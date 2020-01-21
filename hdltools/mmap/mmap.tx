@@ -38,9 +38,9 @@ OutputDescriptor:
 InputDescriptor:
   name=TemplatedNameDecl sig=SignalDestination;
 SignalSource:
-  'source' '=' SourceDestField;
+  'source' '=' dest=SourceDestField;
 SignalDestination:
-  'dest' '=' SourceDestField;
+  'dest' '=' dest=SourceDestField;
 SourceDestField:
   SourceBitAccessor | TemplatedNameSubst | ID;
 SourceBitAccessor:
