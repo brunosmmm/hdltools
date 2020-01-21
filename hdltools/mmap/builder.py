@@ -4,7 +4,7 @@ from scoff.parsers.syntax import SyntaxChecker, SyntaxCheckerError
 from scoff.parsers.syntax import SyntaxErrorDescriptor
 
 from hdltools.abshdl.module import HDLModuleParameter
-from hdltools.abshdl.const import HDLIntegerConstant, HDLStringConstant
+from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.mmap import FlagPort, MemoryMappedInterface

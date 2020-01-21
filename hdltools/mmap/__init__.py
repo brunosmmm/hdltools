@@ -5,7 +5,6 @@ from textx.metamodel import metamodel_from_file
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.abshdl.port import HDLModulePort
 from hdltools.abshdl.module import HDLModuleParameter
-from hdltools.abshdl.const import HDLIntegerConstant, HDLStringConstant
 from hdltools.abshdl.expr import HDLExpression
 
 MMAP_COMPILER_GRAMMAR = pkg_resources.resource_filename(
