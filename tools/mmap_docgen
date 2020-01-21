@@ -29,34 +29,37 @@ if __name__ == "__main__":
     doc = GHMarkDownDocument()
 
     # build documentation
-    doc.append(MarkDownHeader('Memory Mapped Registers'), newline=True)
-    reg_table = GHMarkDownTable(['Address', 'Name', 'Description'])
+    doc.append(MarkDownHeader("Memory Mapped Registers"), newline=True)
+    reg_table = GHMarkDownTable(["Address", "Name", "Description"])
 
     for name, reg in mmap.registers.items():
-        if 'description' in reg.properties:
-            descr = reg.properties['description']
+        if "description" in reg.properties:
+            descr = reg.properties["description"]
         else:
-            descr = '---'
+            descr = "---"
         reg_table.add_line(reg.addr, name, descr)
 
     doc.append(reg_table)
 
     for name, reg in mmap.registers.items():
-        doc.append(MarkDownHeader('{} register details'.format(name),
-                                  level=2), newline=True)
+        doc.append(
+            MarkDownHeader("{} register details".format(name), level=2),
+            newline=True,
+        )
 
-        reg_fields = GHMarkDownTable(['Bits', 'Name', 'Access', 'Description'])
+        reg_fields = GHMarkDownTable(["Bits", "Name", "Access", "Description"])
         for field in reg.fields:
-            if 'description' in field.properties:
-                descr = field.properties['description']
+            if "description" in field.properties:
+                descr = field.properties["description"]
             else:
-                descr = '---'
-            reg_fields.add_line(field.dumps_slice(), field.name,
-                                field.permissions, descr)
+                descr = "---"
+            reg_fields.add_line(
+                field.dumps_slice(), field.name, field.permissions, descr
+            )
         doc.append(reg_fields)
 
     if args.output is not None:
-        with open(args.output, 'w') as f:
+        with open(args.output, "w") as f:
             f.write(doc.dumps())
 
     else:
