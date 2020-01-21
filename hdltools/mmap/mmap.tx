@@ -30,17 +30,17 @@ SlaveRegisterField:
 SlavePort:
   SlaveOutput | SlaveInput;
 SlaveOutput:
-  /output\s+/ descriptor=OutputDescriptor;
+  /output\s+/ desc=OutputDescriptor;
 SlaveInput:
-  /input\s+/  descriptor=InputDescriptor;
+  /input\s+/ desc=InputDescriptor;
 OutputDescriptor:
-  name=TemplatedNameDecl source=SignalSource;
+  name=TemplatedNameDecl sig=SignalSource;
 InputDescriptor:
-  name=TemplatedNameDecl dest=SignalDestination;
+  name=TemplatedNameDecl sig=SignalDestination;
 SignalSource:
-  'source' '=' field=SourceDestField;
+  'source' '=' SourceDestField;
 SignalDestination:
-  'dest' '=' field=SourceDestField;
+  'dest' '=' SourceDestField;
 SourceDestField:
   SourceBitAccessor | TemplatedNameSubst | ID;
 SourceBitAccessor:
