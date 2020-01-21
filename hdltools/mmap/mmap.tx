@@ -1,0 +1,65 @@
+AXIDescription:
+  static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement;
+StaticStatement:
+  '#' var=ID value=StaticValue ';';
+ParameterStatement:
+  'param' name=ID value=StaticValue ';';
+Statement:
+  (SlaveRegister | SlaveRegisterField | SlavePort) ';';
+SlaveRegister:
+  /register\s+/ name=TemplatedNameDecl ('at' address=RegisterAddress )?
+  properties*=RegisterProperty;
+TemplatedNameDecl[noskipws]:
+  fragments += TemplatedNameDeclFragment;
+TemplatedNameDeclFragment:
+  fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameDeclRule;
+TemplatedNameDeclRule:
+  '[' rule=/[^\]]+/ ']';
+TemplatedNameSubst[noskipws]:
+  fragments += TemplatedNameSubstFragment;
+TemplatedNameSubstFragment:
+  fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameSubstFmt;
+TemplatedNameSubstFmt:
+  '{' arg=/[0-9]+/ '}';
+SlaveRegisterField:
+  'field' ('source='? source=FieldBitAccessor
+           'position='? position=BitField
+           'access='? access=AccessPermission
+           ('default=' default=StaticValue)?
+           properties*=RegisterProperty)#;
+SlavePort:
+  SlaveOutput | SlaveInput;
+SlaveOutput:
+  /output\s+/ descriptor=OutputDescriptor;
+SlaveInput:
+  /input\s+/  descriptor=InputDescriptor;
+OutputDescriptor:
+  name=TemplatedNameDecl source=SignalSource;
+InputDescriptor:
+  name=TemplatedNameDecl dest=SignalDestination;
+SignalSource:
+  'source' '=' field=SourceDestField;
+SignalDestination:
+  'dest' '=' field=SourceDestField;
+SourceDestField:
+  SourceBitAccessor | TemplatedNameSubst | ID;
+SourceBitAccessor:
+  register=TemplatedNameSubst '.' bit=ID;
+FieldBitAccessor:
+  register=ID '.' bit=ID;
+RegisterProperty:
+  name=ID '=' '"' value=/[^"]+/ '"';
+StaticValue:
+  id=ID | posint=PositiveInteger | hex=Hex;
+RegisterAddress:
+  Hex | PositiveInteger;
+BitField:
+  left=PositiveInteger ('..' right=PositiveInteger)?;
+Hex:
+  '0x' /[0-9a-fA-F]+/;
+PositiveInteger:
+  /[0-9]+/;
+AccessPermission:
+  'RW' | 'R' | 'W' ;
+Comment:
+  /\/\/.*$/;

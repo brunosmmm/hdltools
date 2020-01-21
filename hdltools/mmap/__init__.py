@@ -1,79 +1,18 @@
 """Memory mapped interface description parser."""
 
-from textx.metamodel import metamodel_from_str
+import pkg_resources
+from textx.metamodel import metamodel_from_file
 from .registers import HDLRegister, HDLRegisterField
 from .port import HDLModulePort
 from .module import HDLModuleParameter
 from .const import HDLIntegerConstant, HDLStringConstant
 from .expr import HDLExpression
 
-MMAP_COMPILER_GRAMMAR = """
-AXIDescription:
-  static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement;
-StaticStatement:
-  '#' var=ID value=StaticValue ';';
-ParameterStatement:
-  'param' name=ID value=StaticValue ';';
-Statement:
-  (SlaveRegister | SlaveRegisterField | SlavePort) ';';
-SlaveRegister:
-  /register\s+/ name=TemplatedNameDecl ('at' address=RegisterAddress )?
-  properties*=RegisterProperty;
-TemplatedNameDecl[noskipws]:
-  fragments += TemplatedNameDeclFragment;
-TemplatedNameDeclFragment:
-  fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameDeclRule;
-TemplatedNameDeclRule:
-  '[' rule=/[^\]]+/ ']';
-TemplatedNameSubst[noskipws]:
-  fragments += TemplatedNameSubstFragment;
-TemplatedNameSubstFragment:
-  fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameSubstFmt;
-TemplatedNameSubstFmt:
-  '{' arg=/[0-9]+/ '}';
-SlaveRegisterField:
-  'field' ('source='? source=FieldBitAccessor
-           'position='? position=BitField
-           'access='? access=AccessPermission
-           ('default=' default=StaticValue)?
-           properties*=RegisterProperty)#;
-SlavePort:
-  SlaveOutput | SlaveInput;
-SlaveOutput:
-  /output\s+/ descriptor=OutputDescriptor;
-SlaveInput:
-  /input\s+/  descriptor=InputDescriptor;
-OutputDescriptor:
-  name=TemplatedNameDecl source=SignalSource;
-InputDescriptor:
-  name=TemplatedNameDecl dest=SignalDestination;
-SignalSource:
-  'source' '=' field=SourceDestField;
-SignalDestination:
-  'dest' '=' field=SourceDestField;
-SourceDestField:
-  SourceBitAccessor | TemplatedNameSubst | ID;
-SourceBitAccessor:
-  register=TemplatedNameSubst '.' bit=ID;
-FieldBitAccessor:
-  register=ID '.' bit=ID;
-RegisterProperty:
-  name=ID '=' '"' value=/[^"]+/ '"';
-StaticValue:
-  id=ID | posint=PositiveInteger | hex=Hex;
-RegisterAddress:
-  Hex | PositiveInteger;
-BitField:
-  left=PositiveInteger ('..' right=PositiveInteger)?;
-Hex:
-  '0x' /[0-9a-fA-F]+/;
-PositiveInteger:
-  /[0-9]+/;
-AccessPermission:
-  'RW' | 'R' | 'W' ;
-Comment:
-  /\/\/.*$/;
-"""
+MMAP_COMPILER_GRAMMAR = pkg_resources.resource_filename(
+    "hdltools", "mmap/mmap.tx"
+)
+
+MMAP_METAMODEL = metamodel_from_file(MMAP_COMPILER_GRAMMAR)
 
 
 def bitfield_pos_to_slice(pos):
@@ -108,7 +47,7 @@ class FlagPort(HDLModulePort):
         super().__init__(direction, name, field_size)
 
 
-class MemoryMappedInterface(object):
+class MemoryMappedInterface:
     """Memory mapped interface."""
 
     def __init__(self):
@@ -154,8 +93,7 @@ class MemoryMappedInterface(object):
 
     def parse_str(self, text):
         """Parse model from string."""
-        meta = metamodel_from_str(MMAP_COMPILER_GRAMMAR)
-        decl = meta.model_from_str(text)
+        decl = MMAP_METAMODEL.model_from_str(text)
 
         declared_reg_size = None
         for statement in decl.static_declarations:
@@ -211,8 +149,11 @@ class MemoryMappedInterface(object):
                 if len(statement.name.fragments) == 1:
                     if not statement.name.fragments[0].templates:
                         # simple declaration
-                        register = HDLRegister(statement.name.fragments[0].fragment,
-                                               size=self.reg_size, addr=reg_addr)
+                        register = HDLRegister(
+                            statement.name.fragments[0].fragment,
+                            size=self.reg_size,
+                            addr=reg_addr,
+                        )
                         # add properties
                         for prop in statement.properties:
                             register.add_properties(**{prop.name: prop.value})
@@ -222,16 +163,28 @@ class MemoryMappedInterface(object):
                         if len(statement.name.fragments[0].templates) > 1:
                             raise NotImplementedError("not implemented")
 
-                        template_str = statement.name.fragments[0].templates[0].rule
+                        template_str = (
+                            statement.name.fragments[0].templates[0].rule
+                        )
                         try:
                             start, end = template_str.split("-")
                             addr = reg_addr
-                            for reg in range(int(start), int(end)+1):
-                                reg_name = statement.name.fragments[0].fragment + str(reg)
-                                register = HDLRegister(reg_name, size=self.reg_size, addr=addr)
+                            for reg in range(int(start), int(end) + 1):
+                                reg_name = statement.name.fragments[
+                                    0
+                                ].fragment + str(reg)
+                                register = HDLRegister(
+                                    reg_name, size=self.reg_size, addr=addr
+                                )
 
                                 for prop in statement.properties:
-                                    register.add_properties(**{prop.name: prop.value.format(str(reg))})
+                                    register.add_properties(
+                                        **{
+                                            prop.name: prop.value.format(
+                                                str(reg)
+                                            )
+                                        }
+                                    )
 
                                 self.add_register(register)
                                 addr = self.next_available_address()
@@ -325,33 +278,57 @@ class MemoryMappedInterface(object):
                 elif not name.fragments[0].templates:
                     # simple declaration
                     if src_reg.fragments[0].templates:
-                        raise RuntimeError("no value to substitute in register templated name")
+                        raise RuntimeError(
+                            "no value to substitute in register templated name"
+                        )
                     src_reg = src_reg.fragments[0].fragment
                     if src_reg not in self.registers:
                         raise KeyError('invalid register: "{}"'.format(src_reg))
 
                     src_reg = self.registers[src_reg]
-                    if src_bit is not None and src_reg.has_field(src_bit) is False:
+                    if (
+                        src_bit is not None
+                        and src_reg.has_field(src_bit) is False
+                    ):
                         raise KeyError('invalid field: "{}"'.format(src_bit))
-                    port = FlagPort(src_reg, src_bit, "out", name.fragments[0].fragment)
+                    port = FlagPort(
+                        src_reg, src_bit, "out", name.fragments[0].fragment
+                    )
                     self.add_port(port)
                 else:
                     try:
-                        start, end = name.fragments[0].templates[0].rule.split("-")
+                        start, end = (
+                            name.fragments[0].templates[0].rule.split("-")
+                        )
                     except:
                         raise RuntimeError("error in fragment rule")
-                    for port in range(int(start), int(end)+1):
-                        fmt_str = "{{{}}}".format(src_reg.fragments[0].templates[0].arg)
-                        _reg = (src_reg.fragments[0].fragment +
-                                fmt_str.format(port))
+                    for port in range(int(start), int(end) + 1):
+                        fmt_str = "{{{}}}".format(
+                            src_reg.fragments[0].templates[0].arg
+                        )
+                        _reg = src_reg.fragments[0].fragment + fmt_str.format(
+                            port
+                        )
                         if _reg not in self.registers:
-                            raise KeyError('invalid register: "{}"'.format(_reg))
+                            raise KeyError(
+                                'invalid register: "{}"'.format(_reg)
+                            )
 
                         _reg = self.registers[_reg]
-                        if src_bit is not None and _reg.has_field(src_bit) is False:
-                            raise KeyError('invalid field: "{}"'.format(src_bit))
+                        if (
+                            src_bit is not None
+                            and _reg.has_field(src_bit) is False
+                        ):
+                            raise KeyError(
+                                'invalid field: "{}"'.format(src_bit)
+                            )
 
-                        port = FlagPort(_reg, src_bit, "out", name.fragments[0].fragment + str(port))
+                        port = FlagPort(
+                            _reg,
+                            src_bit,
+                            "out",
+                            name.fragments[0].fragment + str(port),
+                        )
                         self.add_port(port)
             elif statement.__class__.__name__ == "SlaveInput":
                 descriptor = statement.descriptor
@@ -376,7 +353,6 @@ class MemoryMappedInterface(object):
                     dest_reg = source
                     dest_bit = None
 
-
                 if len(name.fragments) > 1:
                     raise NotImplementedError
                 if len(name.fragments[0].templates) > 1:
@@ -384,33 +360,57 @@ class MemoryMappedInterface(object):
                 elif not name.fragments[0].templates:
                     # simple declaration
                     if dest_reg.fragments[0].templates:
-                        raise RuntimeError("no value to substitute in register templated name")
+                        raise RuntimeError(
+                            "no value to substitute in register templated name"
+                        )
                     dest_reg = dest_reg.fragments[0].fragment
                     if dest_reg not in self.registers:
-                        raise KeyError('invalid register: "{}"'.format(dest_reg))
+                        raise KeyError(
+                            'invalid register: "{}"'.format(dest_reg)
+                        )
 
                     dest_reg = self.registers[dest_reg]
-                    if dest_bit is not None and dest_reg.has_field(dest_bit) is False:
+                    if (
+                        dest_bit is not None
+                        and dest_reg.has_field(dest_bit) is False
+                    ):
                         raise KeyError('invalid field: "{}"'.format(dest_bit))
-                    port = FlagPort(dest_reg, dest_bit, "in", name.fragments[0].fragment)
+                    port = FlagPort(
+                        dest_reg, dest_bit, "in", name.fragments[0].fragment
+                    )
                     self.add_port(port)
                 else:
                     try:
                         start, end = name.fragments[0].templates[0].split("-")
                     except:
                         raise RuntimeError("error in fragment rule")
-                    for port in range(int(start), int(end)+1):
-                        fmt_str = "{{{}}}".format(dest_reg.fragments[0].templates[0].arg)
-                        _reg = (dest_reg.fragments[0].fragment +
-                                fmt_str.format(port))
+                    for port in range(int(start), int(end) + 1):
+                        fmt_str = "{{{}}}".format(
+                            dest_reg.fragments[0].templates[0].arg
+                        )
+                        _reg = dest_reg.fragments[0].fragment + fmt_str.format(
+                            port
+                        )
                         if _reg not in self.registers:
-                            raise KeyError('invalid register: "{}"'.format(_reg))
+                            raise KeyError(
+                                'invalid register: "{}"'.format(_reg)
+                            )
 
                         _reg = self.registers[_reg]
-                        if dest_bit is not None and _reg.has_field(dest_bit) is False:
-                            raise KeyError('invalid field: "{}"'.format(dest_bit))
+                        if (
+                            dest_bit is not None
+                            and _reg.has_field(dest_bit) is False
+                        ):
+                            raise KeyError(
+                                'invalid field: "{}"'.format(dest_bit)
+                            )
 
-                        port = FlagPort(_reg, dest_bit, "in", name.fragments[0].fragment + str(port))
+                        port = FlagPort(
+                            _reg,
+                            dest_bit,
+                            "in",
+                            name.fragments[0].fragment + str(port),
+                        )
                         self.add_port(port)
 
     def parse_file(self, filename):
@@ -484,8 +484,12 @@ class MemoryMappedInterface(object):
                 dir_str = "->"
 
             ret_str += "{} {} {}{}\n".format(
-                port.name, dir_str, port.target_register.name,
-                "." + port.target_field if port.target_field is not None else ""
+                port.name,
+                dir_str,
+                port.target_register.name,
+                "." + port.target_field
+                if port.target_field is not None
+                else "",
             )
 
         return ret_str
