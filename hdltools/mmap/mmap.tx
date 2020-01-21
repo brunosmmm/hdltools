@@ -7,7 +7,7 @@ ParameterStatement:
 Statement:
   (SlaveRegister | SlaveRegisterField | SlavePort) ';';
 SlaveRegister:
-  /register\s+/ name=TemplatedNameDecl ('at' address=RegisterAddress )?
+  /register\s+/ name=TemplatedNameDecl ('at' address=PositiveIntegerValue )?
   properties*=RegisterProperty;
 TemplatedNameDecl[noskipws]:
   fragments += TemplatedNameDeclFragment;
@@ -50,9 +50,9 @@ FieldBitAccessor:
 RegisterProperty:
   name=ID '=' '"' value=/[^"]+/ '"';
 StaticValue:
-  id=ID | posint=PositiveInteger | hex=Hex;
-RegisterAddress:
-  Hex | PositiveInteger;
+  ID | PositiveIntegerValue;
+PositiveIntegerValue:
+  hex=Hex | posint=PositiveInteger;
 BitField:
   left=PositiveInteger ('..' right=PositiveInteger)?;
 Hex:
