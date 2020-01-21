@@ -110,7 +110,7 @@ class MemoryMappedInterface:
                             "Identifier or expressions not" " supported"
                         )
                 elif statement.var == "addr_mode":
-                    if statement.value.id == "byte":
+                    if statement.value == "byte":
                         self.set_reg_addr_offset(int(self.reg_size / 8))
                     elif statement.value.id == "word":
                         self.set_reg_addr_offset(1)
