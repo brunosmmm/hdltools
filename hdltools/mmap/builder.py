@@ -7,7 +7,8 @@ from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
-from hdltools.mmap import FlagPort, MemoryMappedInterface
+from hdltools.mmap import FlagPort
+from hdltools.abshdl.mmap import MemoryMappedInterface
 
 
 class MMBuilder(SyntaxChecker):

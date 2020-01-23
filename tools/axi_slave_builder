@@ -3,7 +3,6 @@
 """Build AXI MM Slaves from specification files."""
 import argparse
 import os
-from hdltools.mmap import MemoryMappedInterface
 from hdltools.abshdl.macro import HDLMacro
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.verilog.codegen import VerilogCodeGenerator
@@ -36,11 +35,7 @@ if __name__ == "__main__":
 
     args = arg_parser.parse_args()
 
-    # the memory mapped interface descriptor
-    # mmap = MemoryMappedInterface()
-
     # parse file
-    # mmap.parse_file(args.model)
     text, mmap_model = parse_mmap_file(args.model)
     mmbuilder = MMBuilder(text)
     mmap = mmbuilder.visit(mmap_model)
