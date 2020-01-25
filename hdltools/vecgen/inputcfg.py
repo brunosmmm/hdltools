@@ -22,7 +22,7 @@ _EVENT_DEPS = {
 
 
 @validate_string
-@ValidateChoice(EVENT_TYPES)
+@ValidateChoice(*EVENT_TYPES)
 @KeyDependencyMap(**_EVENT_DEPS)
 def _validate_evt_type(evt_type, **kwargs):
     """Validate event type."""
@@ -30,7 +30,7 @@ def _validate_evt_type(evt_type, **kwargs):
 
 
 @validate_string
-@ValidateChoice(("abs", "rel"))
+@ValidateChoice("abs", "rel")
 def _validate_time_mode(mode, **kwargs):
     """Validate time mode."""
     return mode
