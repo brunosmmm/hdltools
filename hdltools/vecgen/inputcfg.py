@@ -1,15 +1,12 @@
 """Input generation."""
 
 from dictator.config import validate_config
-
 from dictator.validators import validate_string, ValidateChoice
-
+from dictator.default import DEFAULT_VALIDATORS
 from dictator.util import (
     AutoValidateList,
     KeyDependencyMap,
     AutoValidateDict,
-    default_validate_int,
-    default_validate_pos_int,
 )
 
 EVENT_TYPES = ("initial", "set", "clear", "toggle")
@@ -38,7 +35,10 @@ def _validate_time_mode(mode, **kwargs):
 
 @AutoValidateDict(
     {"mode": _validate_time_mode},
-    {"delta": default_validate_pos_int, "time": default_validate_pos_int},
+    {
+        "delta": DEFAULT_VALIDATORS.positive_integer,
+        "time": DEFAULT_VALIDATORS.positive_integer,
+    },
 )
 def _validate_time(time, **kwargs):
     """Validate time."""
@@ -47,9 +47,9 @@ def _validate_time(time, **kwargs):
 
 EVENT_REQ = {"event": _validate_evt_type}
 EVENT_OPT = {
-    "mask": default_validate_int,
+    "mask": int,
     "time": _validate_time,
-    "value": default_validate_pos_int,
+    "value": DEFAULT_VALIDATORS.positive_integer,
 }
 
 
@@ -60,7 +60,7 @@ def _validate_sequence(seq_data, **kwargs):
 
 
 INPUT_REQ = {"sequence": _validate_sequence}
-INPUT_OPT = {"vector_size": default_validate_pos_int}
+INPUT_OPT = {"vector_size": DEFAULT_VALIDATORS.positive_integer}
 
 
 def validate_input_config(input_config):
