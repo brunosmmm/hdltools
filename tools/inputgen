@@ -4,7 +4,7 @@
 from argparse import ArgumentParser
 import json
 
-from dictator.config import ConfigurationError
+from dictator.errors import ConfigurationError
 from hdltools.vecgen.inputcfg import validate_input_config
 
 DEFAULT_VECTOR_SIZE = 32
