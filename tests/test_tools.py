@@ -1,7 +1,8 @@
 """Test tools."""
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
-from hdltools.abshdl.mmap import MemoryMappedInterface
+from hdltools.mmap import parse_mmap_str
+from hdltools.mmap.builder import MMBuilder
 import os
 
 
@@ -49,6 +50,7 @@ def test_mmap():
     """Test memory-mapped AXI slave generator."""
     TEST_STR = """
     #register_size 32;
+    #addr_mode byte;
     //registers
     register control;
     register status;
@@ -67,5 +69,6 @@ def test_mmap():
     //output UNKNOWN source=unknown.UNKNOWN;
     """
 
-    mmap = MemoryMappedInterface()
-    mmap.parse_str(TEST_STR)
+    decl = parse_mmap_str(TEST_STR)
+    mmap = MMBuilder(TEST_STR)
+    mmap.visit(decl)
