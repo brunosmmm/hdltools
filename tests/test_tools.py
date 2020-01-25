@@ -1,7 +1,7 @@
 """Test tools."""
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
-from hdltools.mmap import MemoryMappedInterface
+from hdltools.abshdl.mmap import MemoryMappedInterface
 import os
 
 
