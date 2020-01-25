@@ -29,7 +29,7 @@ class HDLConcatenation(HDLObject):
 
         if self.size is not None:
             # fill with zeros
-            fill_len = size-len(args)-1 if value is not None else size
+            fill_len = size - len(args) - 1 if value is not None else size
             for i in range(fill_len):
                 self.append(HDLIntegerConstant(0, size=1, radix="b"))
 
@@ -88,8 +88,8 @@ class HDLConcatenation(HDLObject):
         _offset = 0
         for index, item in enumerate(self.items):
             if _offset == offset:
-                if self.direction is "lr":
-                    return self.size-index-1
+                if self.direction == "lr":
+                    return self.size - index - 1
                 else:
                     return index
             _offset += len(item)
@@ -123,7 +123,7 @@ class HDLConcatenation(HDLObject):
             raise ValueError("could not determine insertion offset")
         self.items[actual_offset] = _item
         if self.direction == "lr":
-            del self.items[actual_offset - item_size + 1: actual_offset]
+            del self.items[actual_offset - item_size + 1 : actual_offset]
         else:
             del self.items[actual_offset : actual_offset + item_size - 1]
 
