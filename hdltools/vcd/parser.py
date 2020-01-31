@@ -2,7 +2,7 @@
 
 from collections import deque
 from scoff.parsers.token import SimpleTokenField
-from scoff.parsers.generic import DataParser, ParserError
+from scoff.parsers.generic import DataParser
 from scoff.parsers.linematch import LineMatcher
 from hdltools.vcd.tokens import (
     SEP,
