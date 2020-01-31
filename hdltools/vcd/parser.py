@@ -98,7 +98,6 @@ class VCDParser(DataParser):
         """Initialize."""
         super().__init__("header")
         self._state_stack = deque()
-        self._state = "header"
 
     def _state_header(self, data):
         """Parse."""
