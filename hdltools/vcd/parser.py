@@ -102,10 +102,15 @@ class VCDParser(DataParser):
 
     def _state_header(self, data):
         """Parse."""
-        return self._try_parse(VCD_DEFINITION_LINES, data)
+        size, fields, stmt = self._try_parse(VCD_DEFINITION_LINES, data)
+        return size
 
     def _state_initial(self, data):
-        return self._try_parse(VCD_VAR_LINES + [END_PARSER], data)
+        size, fields, stmt = self._try_parse(
+            VCD_VAR_LINES + [END_PARSER], data
+        )
+        return size
 
     def _state_vars(self, data):
-        return self._try_parse(VCD_VAR_LINES, data)
+        size, fields, stmt = self._try_parse(VCD_VAR_LINES, data)
+        return size
