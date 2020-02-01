@@ -1,10 +1,10 @@
 """Value change dump stuff."""
 
-from ..sim import HDLSimulationPort
+from hdltools.sim import HDLSimulationPort
 
 
 class VCDObject:
-    """Abstract class."""
+    """Abstract VCD object class."""
 
     def __init__(self, **kwargs):
         """Initialize."""
@@ -14,19 +14,44 @@ class VCDObject:
 class VCDVariable(VCDObject):
     """Variable declaration."""
 
-    def __init__(self, *identifiers, var_type="wire", size=1):
+    def __init__(self, *identifiers, var_type="wire", size=1, name=None):
         """Initialize."""
         super().__init__()
-        self.var_type = var_type
-        self.size = size
-        self.identifiers = identifiers
+        self._vartype = var_type
+        self._size = size
+        self._identifiers = identifiers
+        self._name = name
+
+    @property
+    def var_type(self):
+        """Get variable type."""
+        return self._vartype
+
+    @property
+    def size(self):
+        """Get variable size."""
+        return self._size
+
+    def __len__(self):
+        """Get variable size."""
+        return self.size
+
+    @property
+    def varid(self):
+        """Get variable identifier."""
+        return self._identifiers
+
+    @property
+    def name(self):
+        """Get variable name."""
+        return self._name
 
     def get_first_identifier(self):
         """Get identifier."""
         if isinstance(self.identifiers, (tuple, list)):
-            return self.identifiers[0]
+            return self._identifiers[0]
         else:
-            return self.identifiers
+            return self._identifiers
 
 
 class VCDDump(VCDObject):
@@ -100,7 +125,9 @@ class VCDDump(VCDObject):
             if len(self.vcd) == 0:
                 changes = self._detect_changes(signals, self.initial)
             else:
-                changes = self._detect_changes(signals, self.last_signal_values)
+                changes = self._detect_changes(
+                    signals, self.last_signal_values
+                )
 
             formatted_changes = {}
             for name, value in changes.items():
