@@ -35,7 +35,7 @@ class PatternMatcher:
     def matched(self):
         """Sequential pattern match complete."""
         if self._match_cb is not None:
-            self._match_cb()
+            self._match_cb(self)
 
     def restart(self):
         """Restart matching sequence."""
