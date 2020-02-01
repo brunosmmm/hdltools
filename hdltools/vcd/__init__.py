@@ -46,9 +46,15 @@ class VCDVariable(VCDObject):
         """Get variable name."""
         return self._name
 
+    # FIXME: "identifiers" does not make sense, why would it be a list?
+    @property
+    def identifiers(self):
+        """Get identifiers."""
+        return self._identifiers
+
     def get_first_identifier(self):
         """Get identifier."""
-        if isinstance(self.identifiers, (tuple, list)):
+        if isinstance(self._identifiers, (tuple, list)):
             return self._identifiers[0]
         else:
             return self._identifiers
