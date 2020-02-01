@@ -8,8 +8,13 @@ class PatternMatcherError(Exception):
     """Pattern matcher error."""
 
 
+# TODO: implement multivariable parser with interdependent states
 class PatternMatcher:
     """Sequential pattern matcher.
+
+    This matches only one value at a time, that is,
+    only one variable is analyzed; multiple states cannot be combined
+    to form a more complex trigger system.
 
     Arguments
     ---------
@@ -78,6 +83,16 @@ class PatternMatcher:
     def restart(self):
         """Restart matching sequence."""
         self._progress = 0
+
+    @property
+    def match_cb(self):
+        """Get match callback."""
+        return self._match_cb
+
+    @match_cb.setter
+    def match_cb(self, cb: Callable):
+        """Set match callback."""
+        self._match_cb = cb
 
     @property
     def progress(self):
