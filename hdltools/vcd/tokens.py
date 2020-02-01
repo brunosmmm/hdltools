@@ -32,6 +32,7 @@ VCD_VAR_TYPES = [
 ]
 VAR_TYPE = r"(" + r"|".join(VCD_VAR_TYPES) + r")"
 SIM_TIME = r"#([0-9]+)"
-SIG_VALUE = r"([01xXzZ])"
-BINARY_NUMBER = r"[bB](" + SIG_VALUE + r"+)"
+_SIG_VALUE = r"[01xXzZ]"
+SIG_VALUE = r"(" + _SIG_VALUE + ")"
+BINARY_NUMBER = r"[bB](" + _SIG_VALUE + r"+)"
 # REAL_NUMBER = r"[rR](" + SIG_VALUE + r"+)"
