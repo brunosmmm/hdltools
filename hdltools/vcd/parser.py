@@ -105,6 +105,15 @@ class BaseVCDParser(DataParser):
         """Get current time."""
         return self._ticks
 
+    def header_statement_handler(self, stmt, fields):
+        """Handle header stateent."""
+
+    def initial_value_handler(self, stmt, fields):
+        """Handle initial value assignment."""
+
+    def value_change_handler(self, stmt, fields):
+        """Handle value change."""
+
     def _advance_clock(self, ticks):
         """Advance wall clock."""
         self._ticks = ticks
@@ -112,16 +121,19 @@ class BaseVCDParser(DataParser):
     def _state_header(self, data):
         """Parse."""
         size, stmt, fields = self._try_parse(VCD_DEFINITION_LINES, data)
+        self.header_statement_handler(stmt, fields)
         return size
 
     def _state_initial(self, data):
         size, stmt, fields = self._try_parse(
             VCD_VAR_LINES + [END_PARSER], data
         )
+        self.initial_value_handler(stmt, fields)
         return size
 
     def _state_dump(self, data):
         size, stmt, fields = self._try_parse(VCD_VAR_LINES, data)
         if stmt == SIM_TIME_PARSER:
             self._advance_clock(fields["time"])
+        self.value_change_handler(stmt, fields)
         return size
