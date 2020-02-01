@@ -26,7 +26,7 @@ class PatternMatcher:
     def __init__(
         self,
         *expected_sequence: Pattern,
-        restart_on_unmatched: bool = True
+        restart_on_unmatched: bool = True,
         match_cb: Optional[Callable] = None,
         initial: Optional[str] = None
     ):
