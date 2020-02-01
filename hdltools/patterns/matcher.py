@@ -1,5 +1,6 @@
 """Pattern matcher."""
 
+from typing import Callable, Optional
 from hdltools.patterns import Pattern
 
 
@@ -10,13 +11,20 @@ class PatternMatcherError(Exception):
 class PatternMatcher:
     """Sequential pattern matcher."""
 
-    def __init__(self, *expected_sequence: Pattern):
+    def __init__(
+        self, *expected_sequence: Pattern, match_cb: Optional[Callable] = None
+    ):
         """Initialize."""
         for pattern in expected_sequence:
             if not isinstance(pattern, Pattern):
                 raise TypeError(
                     "elements from expected sequence must be Pattern objects"
                 )
+
+        # optional callback
+        if match_cb is not None and not callable(match_cb):
+            raise TypeError("match_cb must be a callable")
+        self._match_cb = match_cb
 
         # expected sequence
         self._sequence = expected_sequence
@@ -26,6 +34,8 @@ class PatternMatcher:
 
     def matched(self):
         """Sequential pattern match complete."""
+        if self._match_cb is not None:
+            self._match_cb()
 
     def restart(self):
         """Restart matching sequence."""
