@@ -31,7 +31,7 @@ class Pattern:
         """Get length."""
         return len(self._pattern)
 
-    def match(self, value):
+    def match(self, value: str) -> bool:
         """Match against value."""
         if not isinstance(value, str):
             raise TypeError("value must be string")
