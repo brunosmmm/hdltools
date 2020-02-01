@@ -1,6 +1,6 @@
 """Generate pass."""
 
-from scoff.ast.syntax import (
+from scoff.ast.visits.syntax import (
     SyntaxChecker,
     SyntaxCheckerError,
     SyntaxErrorDescriptor,

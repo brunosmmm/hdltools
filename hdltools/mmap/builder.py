@@ -1,6 +1,6 @@
 """Memory mapped interface builder."""
 
-from scoff.ast.syntax import SyntaxChecker
+from scoff.ast.visits.syntax import SyntaxChecker
 
 from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.const import HDLIntegerConstant
