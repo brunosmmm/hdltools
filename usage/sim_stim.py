@@ -199,7 +199,7 @@ if __name__ == "__main__":
     dump = sim.simulate(100)
 
     vcd_dump = VCDDump("spi")
-    vcd_dump.add_variables(**sim.report_signals())
+    vcd_dump.add_variables(**sim.signals)
     vcd_dump.load_dump(dump)
     vcd = VCDGenerator()
     print(vcd.dump_element(vcd_dump))

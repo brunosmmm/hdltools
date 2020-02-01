@@ -18,7 +18,7 @@ class HDLSimulation(HDLObject):
         """Add stimulus."""
         for obj in stim:
             if not isinstance(obj, HDLSimulationObject):
-                raise TypeError('only HDLSimulationObject allowed')
+                raise TypeError("only HDLSimulationObject allowed")
 
             if obj.identifier is None:
                 identifier = obj.__class__.__name__
@@ -28,28 +28,30 @@ class HDLSimulation(HDLObject):
             self.sim_objects[identifier] = obj
 
             # add signals
-            for name, out in obj.report_outputs().items():
+            for name, out in obj.outputs.items():
                 if obj.identifier is None:
                     identifier = obj.__class__.__name__
                 else:
                     identifier = obj.identifier
 
-                self._signals['{}.{}'.format(identifier,
-                                             name)] = out
-            for name, inp in obj.report_inputs().items():
+                self._signals["{}.{}".format(identifier, name)] = out
+            for name, inp in obj.inputs.items():
                 if obj.identifier is None:
                     identifier = obj.__class__.__name__
                 else:
                     identifier = obj.identifier
 
-                self._signals['{}.{}'.format(identifier,
-                                             name)] = inp
+                self._signals["{}.{}".format(identifier, name)] = inp
 
     def simulate(self, stop_time):
         """Generate stimulus."""
         value_dump = []
-        iterator = zip(*[obj.next({}, prefix=name) for name, obj in
-                         self.sim_objects.items()])
+        iterator = zip(
+            *[
+                obj.next({}, prefix=name)
+                for name, obj in self.sim_objects.items()
+            ]
+        )
         for time, values in enumerate(iterator):
             self.current_time += 1
             # propagate
@@ -74,7 +76,7 @@ class HDLSimulation(HDLObject):
 
     def connect(self, outgoing, incoming):
         """Connect ports."""
-        signals = self.report_signals()
+        signals = self.signals
         if outgoing not in signals:
             raise IOError('port not found: "{}"'.format(outgoing))
         if incoming not in signals:
@@ -85,6 +87,7 @@ class HDLSimulation(HDLObject):
         else:
             self.connection_matrix[outgoing] = set([incoming])
 
-    def report_signals(self):
+    @property
+    def signals(self):
         """Get all identified signals."""
         return self._signals
