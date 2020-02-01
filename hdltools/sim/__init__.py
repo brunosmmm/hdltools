@@ -5,7 +5,6 @@ from ..abshdl.const import HDLIntegerConstant
 from ..abshdl.expr import HDLExpression
 from .ports import HDLSimulationPort
 from .state import HDLSimulationState
-import re
 
 
 class HDLSimulationObject(HDLObject):
