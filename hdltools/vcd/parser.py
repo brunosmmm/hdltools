@@ -47,7 +47,7 @@ VAR_PARSER = LineMatcher(
 )
 
 END_DEFS_PARSER = LineMatcher(
-    r"\$enddefinitions", SEP, DIRECTIVE_TERM, change_state="vars"
+    r"\$enddefinitions", SEP, DIRECTIVE_TERM, change_state="dump"
 )
 
 GENERIC_PARSER = LineMatcher(
@@ -98,18 +98,25 @@ class VCDParser(DataParser):
         """Initialize."""
         super().__init__("header")
         self._state_stack = deque()
+        self._ticks = 0
+
+    def _advance_clock(self, ticks):
+        """Advance wall clock."""
+        self._ticks = ticks
 
     def _state_header(self, data):
         """Parse."""
-        size, fields, stmt = self._try_parse(VCD_DEFINITION_LINES, data)
+        size, stmt, fields = self._try_parse(VCD_DEFINITION_LINES, data)
         return size
 
     def _state_initial(self, data):
-        size, fields, stmt = self._try_parse(
+        size, stmt, fields = self._try_parse(
             VCD_VAR_LINES + [END_PARSER], data
         )
         return size
 
-    def _state_vars(self, data):
-        size, fields, stmt = self._try_parse(VCD_VAR_LINES, data)
+    def _state_dump(self, data):
+        size, stmt, fields = self._try_parse(VCD_VAR_LINES, data)
+        if stmt == SIM_TIME_PARSER:
+            self._advance_clock(fields["time"])
         return size
