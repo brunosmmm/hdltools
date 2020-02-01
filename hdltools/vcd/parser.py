@@ -97,7 +97,6 @@ class BaseVCDParser(DataParser):
     def __init__(self):
         """Initialize."""
         super().__init__("header")
-        self._state_stack = deque()
         self._ticks = 0
 
     @property
