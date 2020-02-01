@@ -17,3 +17,5 @@ Includes (everything is a WIP):
 * Simple simulation framework (hdltools.sim.*)
 * Simulation model HDL Compiler (hdltools.sim.hdl)
 * Vector generator DSL/compiler for testbench input (hdltools.vecgen, tools/vgc)
+* VCD parser / generator / intermediate representation (hdltools.vcd)
+* Sequential pattern matching (hdltools.pattern)
