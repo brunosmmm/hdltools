@@ -1,7 +1,6 @@
 """Memory mapped interface builder."""
 
-from scoff.parsers.syntax import SyntaxChecker, SyntaxCheckerError
-from scoff.parsers.syntax import SyntaxErrorDescriptor
+from scoff.ast.syntax import SyntaxChecker
 
 from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.const import HDLIntegerConstant
@@ -156,7 +155,9 @@ class MMBuilder(SyntaxChecker):
         ssize = self.slice_size(self.bitfield_pos_to_slice(node.position))
         if node.default is not None:
             if isinstance(node.default, int):
-                param_size = HDLIntegerConstant.minimum_value_size(node.default)
+                param_size = HDLIntegerConstant.minimum_value_size(
+                    node.default
+                )
                 defval = node.default
             else:
                 if node.default.strip() in self._parameters:
@@ -260,7 +261,9 @@ class MMBuilder(SyntaxChecker):
             except:
                 raise RuntimeError("error in fragment rule")
             for port in range(int(start), int(end) + 1):
-                fmt_str = "{{{}}}".format(src_reg.fragments[0].templates[0].arg)
+                fmt_str = "{{{}}}".format(
+                    src_reg.fragments[0].templates[0].arg
+                )
                 _reg = src_reg.fragments[0].fragment + fmt_str.format(port)
                 if _reg not in self._registers:
                     raise KeyError('invalid register: "{}"'.format(_reg))

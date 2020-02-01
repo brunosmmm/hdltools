@@ -1,8 +1,10 @@
 """Generate pass."""
 
-from scoff.parsers.syntax import SyntaxChecker, SyntaxCheckerError
-from scoff.parsers.syntax import SyntaxErrorDescriptor
-import json
+from scoff.ast.syntax import (
+    SyntaxChecker,
+    SyntaxCheckerError,
+    SyntaxErrorDescriptor,
+)
 
 
 class VecgenPass(SyntaxChecker):
