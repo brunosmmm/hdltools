@@ -91,7 +91,7 @@ VCD_VAR_LINES = [
 ]
 
 
-class VCDParser(DataParser):
+class BaseVCDParser(DataParser):
     """Simple VCD parser."""
 
     def __init__(self):
