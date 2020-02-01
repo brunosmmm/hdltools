@@ -68,7 +68,6 @@ class VCDPatternMatcher(BaseVCDParser):
         )
         if var is not None:
             value = fields["value"]
-            var_name = self._var_map[fields["var"]]
             # try to match
             if not self._oneshot or (self._oneshot and not var.finished):
                 var.new_state(value)
