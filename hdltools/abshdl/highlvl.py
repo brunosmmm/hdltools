@@ -38,6 +38,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         "ClockedRstBlock",
         "ParallelBlock",
         "SequentialBlock",
+        "HDLBlock",
     ]
 
     def __init__(self, mod=None, symbols=None, **kwargs):
@@ -405,7 +406,9 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         if (
             isinstance(node.func, ast.Name)
             and node.func.id not in self._symbols
+            and node.func.id not in self._CUSTOM_TYPE_MAPPING
         ):
+            # unless it is a callable object, in which case the name is here
             raise NameError(
                 "unknown python function: '{}'".format(node.func.id)
             )
