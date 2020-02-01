@@ -35,9 +35,17 @@ class Pattern:
         """Match against value."""
         if not isinstance(value, str):
             raise TypeError("value must be string")
-        if len(value) != len(self._pattern):
-            raise ValueError("cannot compare, different lengths")
-        for value_bit, expected_bit in zip(value, self._pattern):
+
+        pattern = self._pattern
+        if len(value) < len(self._pattern):
+            # zero-extend incomin value
+            count = len(self._pattern) - len(value)
+            value = "0" * count + value
+        elif len(value) > len(self._pattern):
+            # zero-extend pattern
+            count = len(value) - len(self._pattern)
+            pattern = "0" * count + self._pattern
+        for value_bit, expected_bit in zip(value, pattern):
             if expected_bit in ("x", "X"):
                 # don't care
                 continue
