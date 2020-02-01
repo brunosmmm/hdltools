@@ -9,11 +9,24 @@ class PatternMatcherError(Exception):
 
 
 class PatternMatcher:
-    """Sequential pattern matcher."""
+    """Sequential pattern matcher.
+
+    Arguments
+    ---------
+    expected_sequence
+      List of expected patterns in order
+    restart_on_unmatched
+      Restart matching sequence on new state that does not match expected
+    match_cb
+      Optional callback to be called on match
+    initial
+      Optional initial value
+    """
 
     def __init__(
         self,
         *expected_sequence: Pattern,
+        restart_on_unmatched: bool = True
         match_cb: Optional[Callable] = None,
         initial: Optional[str] = None
     ):
@@ -39,6 +52,7 @@ class PatternMatcher:
 
         # progress tracking
         self._progress = 0
+        self._restart_unmatch = restart_on_unmatched
 
     @property
     def initial(self):
@@ -91,5 +105,9 @@ class PatternMatcher:
                 self.matched()
             self._progress += 1
             return True
+
+        # restart sequence
+        if self._restart_unmatch:
+            self._progress = 0
 
         return False
