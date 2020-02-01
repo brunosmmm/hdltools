@@ -99,6 +99,10 @@ class PatternMatcher:
         """Get progress."""
         return self._progress
 
+    def restart(self):
+        """Restart matching."""
+        self._progress = 0
+
     def __len__(self):
         """Get sequence length."""
         return len(self._sequence)
