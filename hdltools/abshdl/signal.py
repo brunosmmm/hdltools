@@ -6,7 +6,7 @@ from .stmt import HDLStatement
 from .const import HDLIntegerConstant
 import hdltools.abshdl.concat
 
-# TODO allow multiple dimensions
+# TODO: allow multiple dimensions
 
 
 class HDLSignalPartSelect(HDLObject):
@@ -78,7 +78,8 @@ class HDLSignal(HDLStatement):
                 self.var_type = kwargs["var_type"]
         else:
             raise TypeError(
-                "size can only be of types: int, list or" " HDLVectorDescriptor"
+                "size can only be of types: int, list or"
+                " HDLVectorDescriptor"
             )
 
     def __getitem__(self, key):
@@ -121,7 +122,7 @@ class HDLSignal(HDLStatement):
         """Check legality."""
         return True
 
-    # TODO rewrite docstrings
+    # TODO: rewrite docstrings
 
     def __add__(self, other):
         """Add expressions.

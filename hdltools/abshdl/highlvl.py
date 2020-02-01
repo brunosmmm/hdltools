@@ -406,7 +406,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             raise NameError(
                 "unknown python function: '{}'".format(node.func.id)
             )
-        # FIXME disallow starred
+        # FIXME: disallow starred
         args = []
         for arg in node.args:
             if isinstance(arg, ast.Name):

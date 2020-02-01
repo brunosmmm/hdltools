@@ -246,7 +246,7 @@ class HDLModule(HDLObject):
 
         ret_str += "}"
 
-        # TODO dump scope
+        # TODO: dump scope
 
         return ret_str
 

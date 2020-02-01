@@ -85,7 +85,11 @@ class CombinatorialChecker(ast.NodeVisitor):
                         ):
                             # will infer a sequential block
                             self._inferred_sequential_blocks.append(
-                                [node.test.func.attr, node.test.args, node.body]
+                                [
+                                    node.test.func.attr,
+                                    node.test.args,
+                                    node.body,
+                                ]
                             )
                         else:
                             raise IllegalCodeError(
@@ -141,7 +145,9 @@ class CombinatorialChecker(ast.NodeVisitor):
                     self.visit_Assign(stmt, manual_visit=True)
                 )
             elif isinstance(stmt, ast.If):
-                if_assigned_stmts.extend(self.visit_If(stmt, manual_visit=True))
+                if_assigned_stmts.extend(
+                    self.visit_If(stmt, manual_visit=True)
+                )
             else:
                 self.visit(stmt)
 
@@ -463,6 +469,7 @@ class LogicSanitizer(ast.NodeTransformer):
 
     def visit_Attribute(self, node):
         """Remove attributes."""
+        # FIXME: this is wrong, just lookup in signal list for outer element
         if node.value.id == "self":
             self._globals.add(node.attr)
             if node.attr in self._proxy_list:
@@ -581,14 +588,18 @@ class HDLSimulationObjectScheduler(HDLObject):
                 for name, signal in signals.items():
                     if name != sig[0].s:
                         arg_list_inner.append(ast.arg(name, None))
-                args_inner = ast.arguments(arg_list_inner, None, [], [], [], [])
+                args_inner = ast.arguments(
+                    arg_list_inner, None, [], [], [], []
+                )
                 seqfn = ast.FunctionDef(
                     name="gen_{}".format(block_num),
                     args=args_inner,
                     body=body,
                     decorator_list=[
                         ast.Call(
-                            func=ast.Name(id="SequentialBlock", ctx=ast.Load()),
+                            func=ast.Name(
+                                id="SequentialBlock", ctx=ast.Load()
+                            ),
                             args=[ast.Name(id=sig[0].s, ctx=ast.Load())],
                             keywords=[],
                             starargs=None,
@@ -600,7 +611,7 @@ class HDLSimulationObjectScheduler(HDLObject):
                 sequential_blocks.append(seqfn)
 
             # create proxy register assignments
-            # TODO recover size
+            # TODO: recover size
             inferred_regs = comb_check.get_inferred_regs()
             proxies = {
                 "reg_" + name: HDLSignal("reg", "reg_" + name)
@@ -639,9 +650,18 @@ class HDLSimulationObjectScheduler(HDLObject):
 
             block = HDLBlock(symbols=self._symbols, **signals)
             # sanitize (and insert proxies)
-            tree = LogicSanitizer(
-                insert_reg_list=[name for name, is_reg in inferred_regs.items()]
-            )
+            infer_reg_list = [name for name, is_reg in inferred_regs.items()]
+
+            reg_list = []
+            for name in infer_reg_list:
+                if "reg_" + name in state:
+                    #     reg_list.append("reg_" + name)
+                    continue
+                else:
+                    reg_list.append(name)
+
+            print(reg_list)
+            tree = LogicSanitizer(insert_reg_list=reg_list)
             tree.apply_on_ast(topfn)
             final_ast = tree.get_sanitized(rebuild=False)
             # print(astunparse.unparse(final_ast))
