@@ -12,7 +12,10 @@ class PatternMatcher:
     """Sequential pattern matcher."""
 
     def __init__(
-        self, *expected_sequence: Pattern, match_cb: Optional[Callable] = None
+        self,
+        *expected_sequence: Pattern,
+        match_cb: Optional[Callable] = None,
+        initial: Optional[str] = None
     ):
         """Initialize."""
         for pattern in expected_sequence:
@@ -26,11 +29,32 @@ class PatternMatcher:
             raise TypeError("match_cb must be a callable")
         self._match_cb = match_cb
 
+        # initial value
+        if initial is not None and not isinstance(initial, str):
+            raise TypeError("initial value must be string")
+        self._initial = initial
+
         # expected sequence
         self._sequence = expected_sequence
 
         # progress tracking
         self._progress = 0
+
+    @property
+    def initial(self):
+        """Get initial value."""
+        return self._initial
+
+    @initial.setter
+    def initial(self, value: str):
+        """Set initial value."""
+        if not isinstance(value, str):
+            raise TypeError("value must be string")
+        if self._progress > 0:
+            raise PatternMatcherError(
+                "matching in progress, cannot set initial value"
+            )
+        self._initial = value
 
     def matched(self):
         """Sequential pattern match complete."""
