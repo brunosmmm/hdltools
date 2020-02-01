@@ -1,9 +1,10 @@
 """Test tools."""
+import pytest
+import os
 from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.template import HDLTemplateParser
 from hdltools.mmap import parse_mmap_str
 from hdltools.mmap.builder import MMBuilder
-import os
 
 
 def test_vec():
@@ -12,17 +13,11 @@ def test_vec():
     print(VerilogCodeGenerator.dumps_vector(1, 32, "d"))
     print(VerilogCodeGenerator.dumps_vector(1, 32, "b"))
 
-    try:
+    with pytest.raises(ValueError):
         _ = VerilogCodeGenerator.dumps_vector(256, 8, "b")
-        raise
-    except ValueError:
-        pass
 
-    try:
+    with pytest.raises(ValueError):
         _ = VerilogCodeGenerator.dumps_vector(256, 8, "x")
-        raise
-    except ValueError:
-        pass
 
 
 def test_define():
@@ -39,11 +34,8 @@ def test_template():
         list(parser.locations.keys())[0], "line1\nline2\nline3"
     )
 
-    try:
+    with pytest.raises(ValueError):
         parser.dump_templated("test.v")
-        raise
-    except ValueError:
-        pass
 
 
 def test_mmap():

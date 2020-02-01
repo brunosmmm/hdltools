@@ -1,7 +1,7 @@
 """Test vector generation."""
 
-from hdltools.vecgen import parse_vecgen_file
 import os
+from hdltools.vecgen import parse_vecgen_file
 
 
 def test_vecgen():

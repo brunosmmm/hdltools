@@ -1,4 +1,7 @@
 """Test documentation generator."""
+
+import pytest
+
 from hdltools.docgen.markdown import (
     MarkDownList,
     MarkDownHeader,
@@ -14,65 +17,47 @@ from hdltools.docgen.ghmd import GHMarkDownTable
 
 def test_mdlist():
 
-    bullets = MarkDownList(["some", "items"])
-    ordered = MarkDownList(["ordered", "items"], ordered=True)
-
-    print(bullets)
-    print(ordered)
+    MarkDownList(["some", "items"])
+    MarkDownList(["ordered", "items"], ordered=True)
 
 
 def test_mdheader():
 
-    heading_1 = MarkDownHeader("Header 1")
-    heading_2 = MarkDownHeader("Header 2", level=2)
-
-    print(heading_1)
-    print(heading_2)
+    MarkDownHeader("Header 1")
+    MarkDownHeader("Header 2", level=2)
 
 
 def test_mdlink():
 
-    link_1 = MarkDownLink("http://hello.world")
-    link_2 = MarkDownLink("http://hello.world", "Hello World!")
-
-    print(link_1)
-    print(link_2)
+    MarkDownLink("http://hello.world")
+    MarkDownLink("http://hello.world", "Hello World!")
 
 
 def test_mdquote():
 
-    quote_ungob = MarkDownQuote("Some Multiline\n   Text.", gobble=False)
-    quote_gob = MarkDownQuote("Some Multiline\n   Text.", gobble=True)
-
-    print(quote_ungob)
-    print(quote_gob)
+    MarkDownQuote("Some Multiline\n   Text.", gobble=False)
+    MarkDownQuote("Some Multiline\n   Text.", gobble=True)
 
 
 def test_mdtext():
 
-    bold = MarkDownBold("Bold Text")
-    italic = MarkDownItalic("Italic Text")
-
-    print(bold)
-    print(italic)
+    MarkDownBold("Bold Text")
+    MarkDownItalic("Italic Text")
 
 
 def test_mdcode():
 
-    code = MarkDownCode("lambda x : x**2")
-
-    print(code)
+    MarkDownCode("lambda x : x**2")
 
 
 def test_mdstr():
 
-    text = (
+    _ = (
         MarkDownHeader("My header")
         + "\n"
         + MarkDownItalic("Some Italic Text")
         + "\nSome regular text"
     )
-    print(text)
 
 
 def test_mddoc():
@@ -83,18 +68,12 @@ def test_mddoc():
     doc.append("Some Text!!", newline=True)
     doc.append(MarkDownList(["An element", "Another Element"]))
 
-    print(doc)
-
 
 def test_ghtable():
 
     table = GHMarkDownTable(["Name", "Description", "Misc"])
     table.add_line("test", "A test", "??")
-    print(table)
 
     # errors
-    try:
+    with pytest.raises(IndexError):
         table.add_line("test")
-        raise Exception
-    except IndexError:
-        pass

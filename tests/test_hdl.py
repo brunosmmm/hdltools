@@ -1,4 +1,7 @@
 """HDL Primitives."""
+import pytest
+import ast
+
 from hdltools.abshdl.vector import HDLVectorDescriptor
 from hdltools.abshdl.module import HDLModule, HDLModuleParameter
 from hdltools.abshdl.port import HDLModulePort
@@ -9,16 +12,12 @@ from hdltools.abshdl.sens import HDLSensitivityList, HDLSensitivityDescriptor
 from hdltools.abshdl.seq import HDLSequentialBlock
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.concat import HDLConcatenation
-import ast
 
 
 def test_constants():
     """Test constants."""
-    try:
+    with pytest.raises(ValueError):
         fit_1 = HDLIntegerConstant(256, size=8)
-        raise Exception
-    except ValueError:
-        pass
 
     fit_1 = HDLIntegerConstant(255, size=8)
     fit_2 = HDLIntegerConstant(128, size=9)
@@ -31,38 +30,24 @@ def test_constants():
     ret = 2 * fit_1
     ret = fit_1 * 2
 
-    try:
+    with pytest.raises(TypeError):
         _ = HDLIntegerConstant(2) - "123"
-        raise Exception
-    except TypeError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         _ = HDLIntegerConstant(2) + "123"
-        raise Exception
-    except TypeError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         _ = HDLIntegerConstant(2) * 1.0
-        raise Exception
-    except TypeError:
-        pass
 
     ret = HDLIntegerConstant(2) == 2
-    if ret is False:
-        raise Exception
+    assert ret == True
 
-    try:
+    with pytest.raises(TypeError):
         _ = HDLIntegerConstant(2) == "x"
-        raise Exception
-    except TypeError:
-        pass
 
     _ = abs(HDLIntegerConstant(-1))
 
-    s = HDLStringConstant(value="some_value")
-    print(s.dumps())
+    HDLStringConstant(value="some_value")
 
 
 # test HDL primitives
@@ -71,44 +56,28 @@ def test_vector_descriptor():
     # basic testing
     vec = HDLVectorDescriptor(0, 0)
     print(vec.dumps())
-    if len(vec) != 1:
-        raise Exception
+    assert len(vec) == 1
 
     vec = HDLVectorDescriptor(7)
 
     # test failure modes
-    try:
+    with pytest.raises(ValueError):
         vec = HDLVectorDescriptor(-1, 0)
-        raise Exception
-    except ValueError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         vec = HDLVectorDescriptor("1", 0)
-        raise Exception
-    except TypeError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         vec = HDLVectorDescriptor(left_size=1, right_size="1")
-        raise Exception
-    except TypeError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         vec = HDLVectorDescriptor(7, stored_value="a")
-        raise Exception
-    except TypeError:
-        pass
 
     vec = HDLVectorDescriptor(8, stored_value=256)
     left, right = vec.evaluate()
 
-    try:
+    with pytest.raises(ValueError):
         HDLVectorDescriptor(7, stored_value=256)
-        raise Exception
-    except ValueError:
-        pass
 
 
 def test_module_port():
@@ -116,32 +85,19 @@ def test_module_port():
     port = HDLModulePort("in", "myport", 3)
     port = HDLModulePort("out", "myport", (2, 0))
     port = HDLModulePort("inout", "myport", HDLVectorDescriptor(2, 0))
-    print(port.dumps())
 
     # fail cases
-    try:
-        port = HDLModulePort("unknown", "myport", 0)
-        raise Exception
-    except ValueError:
-        pass
+    with pytest.raises(ValueError):
+        HDLModulePort("unknown", "myport", 0)
 
-    try:
-        port = HDLModulePort("in", "myport", -1)
-        raise Exception
-    except ValueError:
-        pass
+    with pytest.raises(ValueError):
+        HDLModulePort("in", "myport", -1)
 
-    try:
-        port = HDLModulePort("in", "myport", (2, 3, 0))
-        raise Exception
-    except ValueError:
-        pass
+    with pytest.raises(ValueError):
+        HDLModulePort("in", "myport", (2, 3, 0))
 
-    try:
-        port = HDLModulePort("in", "myport", "INVALID")
-        raise Exception
-    except TypeError:
-        pass
+    with pytest.raises(TypeError):
+        HDLModulePort("in", "myport", "INVALID")
 
 
 def test_hdl_parameter():
@@ -173,29 +129,17 @@ def test_hdl_module():
     _ = mod.get_port_names()
 
     # failures
-    try:
+    with pytest.raises(TypeError):
         mod = HDLModule("my_module", 0)
-        raise Exception
-    except TypeError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         mod = HDLModule("my_module", [0])
-        raise Exception
-    except TypeError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         mod = HDLModule("my_module", params=[0])
-        raise Exception
-    except TypeError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         mod = HDLModule("my_module", params=0)
-        raise Exception
-    except TypeError:
-        pass
 
 
 def test_hdl_expression():
@@ -283,37 +227,22 @@ def test_hdl_signal():
     _ = HDLSignal("reg", "sig", HDLVectorDescriptor(1, 0))
 
     # exceptions
-    try:
+    with pytest.raises(ValueError):
         _ = HDLSignal("unknown", "sig", 1)
-        raise Exception
-    except ValueError:
-        pass
 
-    try:
+    with pytest.raises(ValueError):
         _ = HDLSignal("reg", "sig", -1)
-        raise Exception
-    except ValueError:
-        pass
 
-    try:
+    with pytest.raises(ValueError):
         _ = HDLSignal("reg", "sig", (1, 2, 3))
-        raise Exception
-    except ValueError:
-        pass
 
-    try:
+    with pytest.raises(TypeError):
         _ = HDLSignal("reg", "sig", "invalid")
-        raise Exception
-    except TypeError:
-        pass
 
     _ = HDLSignalSlice(my_sig, HDLVectorDescriptor(1, 0))
 
-    try:
+    with pytest.raises(TypeError):
         _ = HDLSignalSlice(my_sig, "invalid")
-        raise Exception
-    except TypeError:
-        pass
 
 
 def test_sens():
@@ -355,25 +284,18 @@ def test_assign():
     print(assign.dumps())
 
     # test fail cases
-    try:
+    with pytest.raises(TypeError):
         _ = HDLAssignment("not_allowed", 0)
-        raise Exception
-    except TypeError:
-        pass
 
 
 def test_concat():
     """Test concatenation."""
     sig = HDLSignal("comb", "my_signal", size=4)
     concat = HDLConcatenation(sig, HDLExpression(0x0C, size=8))
-    if len(concat) != 12:
-        raise ValueError
+    assert len(concat) == 12
 
     concat.append(HDLExpression(0x1, size=1))
 
     # failures
-    try:
+    with pytest.raises(TypeError):
         _ = HDLConcatenation(sig, "not_allowed")
-        raise Exception
-    except TypeError:
-        pass

@@ -2,7 +2,7 @@
 
 echo "Running Tests..."
 
-python $(which nosetests) --with-coverage --cover-package=hdltools tests/*
+python $(which pytest) --cov=hdltools/
 mv .coverage{,.tests}
 
 echo "Running usage examples / other..."
