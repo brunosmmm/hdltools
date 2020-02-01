@@ -10,3 +10,7 @@ def test_parser():
 
     vparser = BaseVCDParser()
     vparser.parse(vcd_data)
+
+
+if __name__ == "__main__":
+    test_parser()
