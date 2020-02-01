@@ -6,21 +6,21 @@ import textwrap
 import sys
 import re
 from collections import deque
-from . import HDLObject
-from .expr import HDLExpression
-from .signal import HDLSignal, HDLSignalSlice
-from .assign import HDLAssignment, HDLLazyValue
-from .ifelse import HDLIfElse, HDLIfExp
-from ..hdllib.patterns import (
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
+from hdltools.abshdl.assign import HDLAssignment, HDLLazyValue
+from hdltools.abshdl.ifelse import HDLIfElse, HDLIfExp
+from hdltools.hdllib.patterns import (
     ClockedBlock,
     ClockedRstBlock,
     ParallelBlock,
     SequentialBlock,
 )
-from ..hdllib.fsm import FSM
-from .concat import HDLConcatenation
-from .vector import HDLVectorDescriptor
-from .macro import HDLMacroValue
+from hdltools.hdllib.fsm import FSM
+from hdltools.abshdl.concat import HDLConcatenation
+from hdltools.abshdl.vector import HDLVectorDescriptor
+from hdltools.abshdl.macro import HDLMacroValue
 
 
 class PatternNotAllowedError(Exception):
@@ -51,7 +51,10 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             self._add_to_scope(**mod.get_signal_scope())
             self._hdlmod = mod
         self._add_to_scope(**kwargs)
-        self._symbols = symbols
+        if symbols is None:
+            self._symbols = {}
+        else:
+            self._symbols = symbols
         self.fsms = {}
 
     def _init(self):
