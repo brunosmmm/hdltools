@@ -100,6 +100,11 @@ class BaseVCDParser(DataParser):
         self._state_stack = deque()
         self._ticks = 0
 
+    @property
+    def current_time(self):
+        """Get current time."""
+        return self._ticks
+
     def _advance_clock(self, ticks):
         """Advance wall clock."""
         self._ticks = ticks
