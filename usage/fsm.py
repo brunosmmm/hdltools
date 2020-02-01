@@ -61,7 +61,7 @@ if __name__ == "__main__":
             def myfsm():
                 pass
 
-            # TODO state variable cannot be the same, detect and prevent
+            # TODO: state variable cannot be the same, detect and prevent
             # in generation code
             @TestFSM(clk, rst, state2, initial="zero")
             def mysecondfsm():
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     print("* Module *")
     # generate module
-    # FIXME doesnt work with keyword arguments
+    # FIXME: doesnt work with keyword arguments
     fsm = fsm_module(16)
 
     print(fsm.dumps())
