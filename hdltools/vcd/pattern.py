@@ -5,7 +5,7 @@ from hdltools.patterns.matcher import PatternMatcher
 from hdltools.vcd.parser import BaseVCDParser, VAR_PARSER
 from hdltools.vcd import VCDVariable
 
-
+# TODO: extract pattern matching logic and abstract to generic data source
 class VCDPatternMatcher(BaseVCDParser):
     """VCD pattern matcher."""
 
