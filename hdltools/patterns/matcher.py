@@ -99,6 +99,11 @@ class PatternMatcher:
         """Get progress."""
         return self._progress
 
+    @property
+    def finished(self):
+        """Get whether finished."""
+        return self._progress == len(self._sequence)
+
     def restart(self):
         """Restart matching."""
         self._progress = 0
