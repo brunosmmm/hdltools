@@ -14,13 +14,16 @@ class VCDObject:
 class VCDVariable(VCDObject):
     """Variable declaration."""
 
-    def __init__(self, *identifiers, var_type="wire", size=1, name=None):
+    def __init__(
+        self, *identifiers, var_type="wire", size=1, name=None, scope=None
+    ):
         """Initialize."""
         super().__init__()
         self._vartype = var_type
         self._size = size
         self._identifiers = identifiers
         self._name = name
+        self._scope = scope
 
     @property
     def var_type(self):
@@ -46,6 +49,11 @@ class VCDVariable(VCDObject):
         """Get variable name."""
         return self._name
 
+    @property
+    def scope(self):
+        """Get scope."""
+        return self._scope
+
     # FIXME: "identifiers" does not make sense, why would it be a list?
     @property
     def identifiers(self):
@@ -58,6 +66,14 @@ class VCDVariable(VCDObject):
             return self._identifiers[0]
         else:
             return self._identifiers
+
+    @staticmethod
+    def from_tokens(vtype, width, id, name, **kwargs):
+        """Build from parser tokens."""
+        scope = kwargs.get("scope", None)
+        return VCDVariable(
+            id, var_type=vtype, size=width, name=name, scope=scope
+        )
 
 
 class VCDDump(VCDObject):
