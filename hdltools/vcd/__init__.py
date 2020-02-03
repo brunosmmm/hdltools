@@ -75,6 +75,13 @@ class VCDVariable(VCDObject):
             id, var_type=vtype, size=width, name=name, scope=scope
         )
 
+    def __repr__(self):
+        """Get representation."""
+        scope = (
+            "::".join(self._scope) + "::" if self._scope is not None else ""
+        )
+        return "{}{} ({})".format(scope, self._name, self._identifiers[0])
+
 
 class VCDDump(VCDObject):
     """Complete VCD dump."""
