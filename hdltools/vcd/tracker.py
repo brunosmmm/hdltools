@@ -3,6 +3,7 @@
 from collections import deque
 from hdltools.vcd.parser import (
     BaseVCDParser,
+    VCDParserError,
     SCOPE_PARSER,
     UPSCOPE_PARSER,
     VAR_PARSER,
@@ -66,6 +67,7 @@ class VCDValueTracker(BaseVCDParser):
         self._track_history = []
         self._scope_stack = deque()
         self._scope_map = ScopeMap()
+        self._stmt_count = 0
         self._vars = {}
 
     def _enter_scope(self, name):
@@ -77,11 +79,17 @@ class VCDValueTracker(BaseVCDParser):
         """Exit scope."""
         self._scope_stack.pop()
 
+    def _parse_progress(self):
+        """Track parsing progress."""
+        self._stmt_count += 1
+        # print("DEBUG: #lines = {}".format(self._current_line))
+
     def header_statement_handler(self, stmt, fields):
         """Handle header statements.
 
         Build variable-scope map.
         """
+        self._parse_progress()
         if stmt == SCOPE_PARSER:
             # enter scope
             self._enter_scope(fields["sname"])
@@ -97,6 +105,7 @@ class VCDValueTracker(BaseVCDParser):
 
     def initial_value_handler(self, stmt, fields):
         """Handle initial values."""
+        self._parse_progress()
         if self._track_value.match(fields["value"]):
             # found
             var = self._vars[fields["var"]]
@@ -104,7 +113,14 @@ class VCDValueTracker(BaseVCDParser):
 
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
+        self._parse_progress()
         if self._track_value.match(fields["value"]):
+            if fields["var"] not in self._vars:
+                raise VCDParserError(
+                    'unknown variable in change event: "{}"'.format(
+                        fields["var"]
+                    )
+                )
             var = self._vars[fields["var"]]
             self._add_to_history(var.scope, var.name, self.current_time)
 
@@ -126,3 +142,8 @@ class VCDValueTracker(BaseVCDParser):
     def _add_to_history(self, scope, signal, time):
         """Add to history."""
         self._track_history.append((scope, signal, time))
+
+    def parse(self, data):
+        """Parse."""
+        self._stmt_count = 0
+        return super().parse(data)
