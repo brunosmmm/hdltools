@@ -16,6 +16,7 @@ from hdltools.vcd.tokens import (
     SIM_TIME,
     SIG_VALUE,
     BINARY_NUMBER,
+    EXTENTS,
 )
 
 
@@ -42,6 +43,8 @@ VAR_PARSER = LineMatcher(
     SEP,
     SimpleTokenField("name", NAME),
     SEP,
+    SimpleTokenField("extents", EXTENTS),
+    SEP_OPT,
     DIRECTIVE_TERM,
 )
 
@@ -127,9 +130,7 @@ class BaseVCDParser(DataParser):
         return size
 
     def _state_initial(self, data):
-        size, stmt, fields = self._try_parse(
-            VCD_VAR_LINES + [END_PARSER], data
-        )
+        size, stmt, fields = self._try_parse(VCD_VAR_LINES + [END_PARSER], data)
         if stmt != END_PARSER:
             self.initial_value_handler(stmt, fields)
         return size
