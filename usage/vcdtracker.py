@@ -1,11 +1,18 @@
 """VCD tracker debug."""
 
+from argparse import ArgumentParser
 from hdltools.vcd.tracker import VCDValueTracker
 from hdltools.patterns import Pattern
 
+
 if __name__ == "__main__":
 
-    with open("tests/assets/example.vcd", "r") as data:
+    parser = ArgumentParser()
+    parser.add_argument("vcd")
+
+    args = parser.parse_args()
+
+    with open(args.vcd, "r") as data:
         vcddata = data.read()
 
     tracker = VCDValueTracker(Pattern("1010"))
