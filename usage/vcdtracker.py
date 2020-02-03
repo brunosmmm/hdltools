@@ -9,6 +9,7 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument("vcd")
+    parser.add_argument("--dump-hier", action="store_true")
 
     args = parser.parse_args()
 
@@ -18,4 +19,5 @@ if __name__ == "__main__":
     tracker = VCDValueTracker(Pattern("1010"))
     tracker.parse(vcddata)
 
-    tracker.scope_hier.dump()
+    if args.dump_hier:
+        tracker.scope_hier.dump()
