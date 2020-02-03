@@ -8,7 +8,6 @@ from hdltools.vcd.parser import (
     UPSCOPE_PARSER,
     VAR_PARSER,
 )
-from hdltools.vcd import VCDVariable
 from hdltools.vcd.mixins import VCDHierarchyAnalysisMixin
 from hdltools.patterns import Pattern
 
@@ -28,7 +27,6 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         self._track_value = track
         self._track_history = []
         self._stmt_count = 0
-        self._vars = {}
 
     def _parse_progress(self):
         """Track parsing progress."""
@@ -41,10 +39,6 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         Build variable-scope map.
         """
         self._parse_progress()
-
-        if stmt == VAR_PARSER:
-            var = VCDVariable.from_tokens(scope=self.current_scope, **fields)
-            self._vars[fields["id"]] = var
 
     def initial_value_handler(self, stmt, fields):
         """Handle initial values."""

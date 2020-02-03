@@ -1,7 +1,8 @@
 """VCD Parser mixins."""
 
 from collections import deque
-from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER
+from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
+from hdltools.vcd import VCDVariable
 
 
 class ScopeMap:
@@ -64,6 +65,7 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
         super().__init__()
         self._scope_stack = deque()
         self._scope_map = ScopeMap()
+        self._vars = {}
 
     def _enter_scope(self, name):
         """Enter scope."""
@@ -88,3 +90,7 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
         if stmt == UPSCOPE_PARSER:
             self._exit_scope()
             return
+
+        if stmt == VAR_PARSER:
+            var = VCDVariable.from_tokens(scope=self.current_scope, **fields)
+            self._vars[fields["id"]] = var
