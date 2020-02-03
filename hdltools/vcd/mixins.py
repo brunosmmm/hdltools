@@ -94,3 +94,8 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
         if stmt == VAR_PARSER:
             var = VCDVariable.from_tokens(scope=self.current_scope, **fields)
             self._vars[fields["id"]] = var
+
+    @property
+    def variables(self):
+        """Get variables."""
+        return self._vars

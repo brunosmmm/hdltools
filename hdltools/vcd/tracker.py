@@ -45,20 +45,20 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         self._parse_progress()
         if self._track_value.match(fields["value"]):
             # found
-            var = self._vars[fields["var"]]
+            var = self.variables[fields["var"]]
             self._add_to_history(var.scope, var.name)
 
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
         self._parse_progress()
         if self._track_value.match(fields["value"]):
-            if fields["var"] not in self._vars:
+            if fields["var"] not in self.variables:
                 raise VCDParserError(
                     'unknown variable in change event: "{}"'.format(
                         fields["var"]
                     )
                 )
-            var = self._vars[fields["var"]]
+            var = self.variables[fields["var"]]
             self._add_to_history(var.scope, var.name, self.current_time)
 
     @property
@@ -75,6 +75,11 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
     def scope_hier(self):
         """Get scope hierarchy."""
         return self._scope_map
+
+    @property
+    def history(self):
+        """Get tracking history."""
+        return tuple(self._track_history)
 
     def _add_to_history(self, scope, signal, time):
         """Add to history."""
