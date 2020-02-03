@@ -7,6 +7,7 @@ STRING = r"([^$]+)"
 DIRECTIVE_TERM = r"\$end"
 VAR_ID = r"([^\s]+)"
 NAME = r"(\w+)"
+SCOPE_NAME = r"([\w\[\]]+)"
 VCD_SCOPE_TYPES = ["begin", "fork", "module", "function", "task"]
 SCOPE_TYPE = r"(" + r"|".join(VCD_SCOPE_TYPES) + r")"
 VCD_VAR_TYPES = [

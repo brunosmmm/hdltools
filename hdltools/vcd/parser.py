@@ -7,6 +7,7 @@ from hdltools.vcd.tokens import (
     SEP,
     SEP_OPT,
     SCOPE_TYPE,
+    SCOPE_NAME,
     NAME,
     DIRECTIVE_TERM,
     VAR_TYPE,
@@ -25,7 +26,7 @@ SCOPE_PARSER = LineMatcher(
     SEP,
     SimpleTokenField("stype", SCOPE_TYPE),
     SEP,
-    SimpleTokenField("sname", NAME),
+    SimpleTokenField("sname", SCOPE_NAME),
     SEP,
     DIRECTIVE_TERM,
 )
