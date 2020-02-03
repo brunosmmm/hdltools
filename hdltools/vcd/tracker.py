@@ -52,6 +52,12 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         """Handle value change."""
         self._parse_progress()
         if self._track_value.match(fields["value"]):
+            print("DEBUG: current time = {}".format(self.current_time))
+            print(
+                "DEBUG: found value match, variable is {}".format(
+                    self.variables[fields["var"]]
+                )
+            )
             if fields["var"] not in self.variables:
                 raise VCDParserError(
                     'unknown variable in change event: "{}"'.format(
