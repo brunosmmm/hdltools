@@ -21,8 +21,12 @@ from hdltools.vcd.tokens import (
 )
 
 
+class VCDParserError(Exception):
+    """VCD Parser error."""
+
+
 SCOPE_PARSER = LineMatcher(
-    r"\$scope",
+    b"\$scope",
     SEP,
     SimpleTokenField("stype", SCOPE_TYPE),
     SEP,
@@ -31,10 +35,10 @@ SCOPE_PARSER = LineMatcher(
     DIRECTIVE_TERM,
 )
 
-UPSCOPE_PARSER = LineMatcher(r"\$upscope", SEP, DIRECTIVE_TERM)
+UPSCOPE_PARSER = LineMatcher(b"\$upscope", SEP, DIRECTIVE_TERM)
 
 VAR_PARSER = LineMatcher(
-    r"\$var",
+    b"\$var",
     SEP,
     SimpleTokenField("vtype", VAR_TYPE),
     SEP,
@@ -50,11 +54,11 @@ VAR_PARSER = LineMatcher(
 )
 
 END_DEFS_PARSER = LineMatcher(
-    r"\$enddefinitions", SEP, DIRECTIVE_TERM, change_state="dump"
+    b"\$enddefinitions", SEP, DIRECTIVE_TERM, change_state="dump"
 )
 
 GENERIC_PARSER = LineMatcher(
-    SimpleTokenField("dtype", r"\$(\w+)"),
+    SimpleTokenField("dtype", b"\$(\w+)"),
     SEP,
     SimpleTokenField("body", STRING),
     SEP,
@@ -75,8 +79,8 @@ VECTOR_VALUE_CHANGE_PARSER = LineMatcher(
 
 SIM_TIME_PARSER = LineMatcher(SimpleTokenField("time", SIM_TIME))
 
-DUMPVARS_PARSER = LineMatcher(r"\$dumpvars", push_state="initial")
-END_PARSER = LineMatcher(r"\$end", pop_state=1)
+DUMPVARS_PARSER = LineMatcher(b"\$dumpvars", push_state="initial")
+END_PARSER = LineMatcher(b"\$end", pop_state=1)
 
 VCD_DEFINITION_LINES = [
     SCOPE_PARSER,
@@ -126,10 +130,12 @@ class BaseVCDParser(DataParser):
         self.clock_change_handler(ticks)
         self._ticks = ticks
 
-    def _state_header(self, data):
+    def _state_header(self, position):
         """Parse."""
         try:
-            size, stmt, fields = self._try_parse(VCD_DEFINITION_LINES, data)
+            size, stmt, fields = self._try_parse(
+                VCD_DEFINITION_LINES, position
+            )
         except ParserError:
             if DEBUG is False:
                 raise
@@ -139,21 +145,23 @@ class BaseVCDParser(DataParser):
                     self.current_line
                 )
             )
-            print(data.split("\n")[0])
+            print(self._data[position:].split(b"\n")[0].decode())
             print("DEBUG: aborting")
             exit(1)
 
         self.header_statement_handler(stmt, fields)
         return size
 
-    def _state_initial(self, data):
-        size, stmt, fields = self._try_parse(VCD_VAR_LINES + [END_PARSER], data)
+    def _state_initial(self, position):
+        size, stmt, fields = self._try_parse(
+            VCD_VAR_LINES + [END_PARSER], position
+        )
         if stmt != END_PARSER:
             self.initial_value_handler(stmt, fields)
         return size
 
-    def _state_dump(self, data):
-        size, stmt, fields = self._try_parse(VCD_VAR_LINES, data)
+    def _state_dump(self, position):
+        size, stmt, fields = self._try_parse(VCD_VAR_LINES, position)
         if stmt == SIM_TIME_PARSER:
             self._advance_clock(fields["time"])
         elif stmt != DUMPVARS_PARSER:
