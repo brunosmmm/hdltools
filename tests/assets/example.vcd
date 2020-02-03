@@ -7,8 +7,9 @@ $end
 $comment
    Any comment text.
 $end
+
 $timescale 1ps $end
-$scope module logic $end
+ $scope module logic $end
 $var wire 8 # data $end
 $var wire 1 $ data_valid $end
 $var wire 1 % en $end
