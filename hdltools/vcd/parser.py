@@ -114,7 +114,7 @@ class BaseVCDParser(DataParser):
         return self._ticks
 
     def header_statement_handler(self, stmt, fields):
-        """Handle header stateent."""
+        """Handle header statement."""
 
     def initial_value_handler(self, stmt, fields):
         """Handle initial value assignment."""
@@ -150,7 +150,7 @@ class BaseVCDParser(DataParser):
             exit(1)
 
         self.header_statement_handler(stmt, fields)
-        return size
+        return (size, stmt, fields)
 
     def _state_initial(self, position):
         size, stmt, fields = self._try_parse(
@@ -158,7 +158,7 @@ class BaseVCDParser(DataParser):
         )
         if stmt != END_PARSER:
             self.initial_value_handler(stmt, fields)
-        return size
+        return (size, stmt, fields)
 
     def _state_dump(self, position):
         size, stmt, fields = self._try_parse(VCD_VAR_LINES, position)
@@ -166,4 +166,4 @@ class BaseVCDParser(DataParser):
             self._advance_clock(fields["time"])
         elif stmt != DUMPVARS_PARSER:
             self.value_change_handler(stmt, fields)
-        return size
+        return (size, stmt, fields)
