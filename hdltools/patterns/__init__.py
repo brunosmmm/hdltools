@@ -18,7 +18,14 @@ class Pattern:
         """Initialize."""
         if not isinstance(pattern, (str, bytes)):
             raise TypeError("pattern must be a string or bytes")
+
+        # tolerate some variations
         if isinstance(pattern, str):
+            if pattern.endswith("h"):
+                pattern = bin(int(pattern[:-1], 16))
+            if pattern.startswith("0b"):
+                pattern = pattern[2:]
+
             m = self.PATTERN_REGEX.match(pattern)
         else:
             m = self.PATTERN_REGEX_BYTES.match(pattern)
