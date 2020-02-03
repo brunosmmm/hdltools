@@ -75,7 +75,7 @@ class VCDValueTracker(BaseVCDParser):
 
     def _exit_scope(self):
         """Exit scope."""
-        self._scope_stack.popleft()
+        self._scope_stack.pop()
 
     def header_statement_handler(self, stmt, fields):
         """Handle header statements.
