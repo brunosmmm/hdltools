@@ -1,7 +1,7 @@
 """VCD parser."""
 
 from scoff.parsers.token import SimpleTokenField
-from scoff.parsers.generic import DataParser
+from scoff.parsers.generic import DataParser, ParserError
 from scoff.parsers.linematch import LineMatcher
 from hdltools.vcd.tokens import (
     SEP,
@@ -93,13 +93,15 @@ VCD_VAR_LINES = [
     DUMPVARS_PARSER,
 ]
 
+DEBUG = True
+
 
 class BaseVCDParser(DataParser):
     """Simple VCD parser."""
 
     def __init__(self):
         """Initialize."""
-        super().__init__("header")
+        super().__init__("header", consume_spaces=True)
         self._ticks = 0
 
     @property
@@ -126,7 +128,21 @@ class BaseVCDParser(DataParser):
 
     def _state_header(self, data):
         """Parse."""
-        size, stmt, fields = self._try_parse(VCD_DEFINITION_LINES, data)
+        try:
+            size, stmt, fields = self._try_parse(VCD_DEFINITION_LINES, data)
+        except ParserError:
+            if DEBUG is False:
+                raise
+
+            print(
+                "DEBUG: parsing failed at line {}, offending line next".format(
+                    self.current_line
+                )
+            )
+            print(data.split("\n")[0])
+            print("DEBUG: aborting")
+            exit(1)
+
         self.header_statement_handler(stmt, fields)
         return size
 
