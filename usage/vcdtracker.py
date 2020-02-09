@@ -22,6 +22,18 @@ if __name__ == "__main__":
     with open(args.vcd, "r") as data:
         vcddata = data.read()
 
+    inclusive_src = (
+        True
+        if args.restrict_src is not None and args.restrict_src.endswith("::")
+        else False
+    )
+
+    inclusive_dest = (
+        True
+        if args.restrict_dest is not None and args.restrict_dest.endswith("::")
+        else False
+    )
+
     restrict_src = (
         VCDScope.from_str(args.restrict_src)
         if args.restrict_src is not None
@@ -38,6 +50,8 @@ if __name__ == "__main__":
         Pattern(args.pattern),
         restrict_src=restrict_src,
         restrict_dest=restrict_dest,
+        inclusive_src=inclusive_src,
+        inclusive_dest=inclusive_dest,
     )
     tracker.parse(vcddata)
 

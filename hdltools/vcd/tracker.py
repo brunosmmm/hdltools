@@ -19,6 +19,8 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         track: Pattern,
         restrict_src: Optional[Union[Tuple[str], VCDScope]] = None,
         restrict_dest: Optional[Union[Tuple[str], VCDScope]] = None,
+        inclusive_src=False,
+        inclusive_dest=False,
     ):
         """Initialize."""
         super().__init__()
@@ -33,6 +35,8 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
             restrict_dest = VCDScope(*restrict_dest)
         self._restrict_src = restrict_src
         self._restrict_dest = restrict_dest
+        self._inclusive_src = inclusive_src
+        self._inclusive_dest = inclusive_dest
 
     def _parse_progress(self):
         """Track parsing progress."""
@@ -58,19 +62,21 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         """Handle value change."""
         self._parse_progress()
         var_scope = self.variables[fields["var"]].scope
-        if (
-            self._restrict_src is not None
-            and var_scope != self._restrict_src
-            and not self._restrict_src.contains(var_scope)
+        in_src_scope = self._restrict_src is not None and (
+            var_scope == self._restrict_src
+            or (self._restrict_src.contains(var_scope) and self._inclusive_src)
+        )
+
+        in_dest_scope = self._restrict_dest is not None and (
+            var_scope == self._restrict_dest
+            or (
+                self._restrict_dest.contains(var_scope)
+                and self._inclusive_dest
+            )
+        )
+        if (self._restrict_src is not None and not in_src_scope) and (
+            self._restrict_dest is not None and not in_dest_scope
         ):
-            # ignore
-            return
-        if (
-            self._restrict_dest is not None
-            and var_scope != self._restrict_dest
-            and not self._restrict_dest.contains(var_scope)
-        ):
-            # ignore
             return
         if self._track_value.match(fields["value"]):
             print("DEBUG: current time = {}".format(self.current_time))
