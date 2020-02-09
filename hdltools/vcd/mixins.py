@@ -2,7 +2,7 @@
 
 from collections import deque
 from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
-from hdltools.vcd import VCDVariable
+from hdltools.vcd import VCDVariable, VCDScope
 
 
 class ScopeMap:
@@ -92,7 +92,8 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
             return
 
         if stmt == VAR_PARSER:
-            var = VCDVariable.from_tokens(scope=self.current_scope, **fields)
+            cur_scope = VCDScope(*self.current_scope)
+            var = VCDVariable.from_tokens(scope=cur_scope, **fields)
             self._vars[fields["id"]] = var
 
     @property

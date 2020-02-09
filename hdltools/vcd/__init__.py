@@ -11,6 +11,53 @@ class VCDObject:
         pass
 
 
+class VCDScope(VCDObject):
+    """VCD scope."""
+
+    def __init__(self, *scopes):
+        """Initialize."""
+        for scope in scopes:
+            if not isinstance(scope, str):
+                raise TypeError("scope name must be string")
+
+        self._scopes = scopes
+
+    def __repr__(self):
+        """Get representation."""
+        return "::".join(self._scopes)
+
+    def __len__(self):
+        """Get scope length."""
+        return len(self._scopes)
+
+    def __getitem__(self, idx):
+        """Get scope by index."""
+        return self._scopes[idx]
+
+    def __eq__(self, other):
+        """Scope equality."""
+        return self._scopes == other._scopes
+
+    def contains(self, other):
+        """Get whether this scope contains other scope."""
+        if len(self) >= len(other):
+            # cannot contain, length must be less
+            return False
+
+        for idx, this_subscope in enumerate(self._scopes):
+            if other[idx] != this_subscope:
+                return False
+
+        return True
+
+    @staticmethod
+    def from_str(scope_str):
+        """Build from string."""
+        if not isinstance(scope_str, str):
+            raise TypeError("must be a string")
+        return VCDScope(*scope_str.split("::"))
+
+
 class VCDVariable(VCDObject):
     """Variable declaration."""
 
@@ -77,10 +124,8 @@ class VCDVariable(VCDObject):
 
     def __repr__(self):
         """Get representation."""
-        scope = (
-            "::".join(self._scope) + "::" if self._scope is not None else ""
-        )
-        return "{}{} ({})".format(scope, self._name, self._identifiers[0])
+        scope_str = str(self._scope) + "::" if self._scope else ""
+        return "{}{} ({})".format(scope_str, self._name, self._identifiers[0])
 
 
 class VCDDump(VCDObject):

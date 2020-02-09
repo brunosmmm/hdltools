@@ -1,13 +1,8 @@
 """VCD Value tracker."""
 
-from collections import deque
-from hdltools.vcd.parser import (
-    BaseVCDParser,
-    VCDParserError,
-    SCOPE_PARSER,
-    UPSCOPE_PARSER,
-    VAR_PARSER,
-)
+from typing import Tuple, Optional, Union
+from hdltools.vcd import VCDScope
+from hdltools.vcd.parser import BaseVCDParser, VCDParserError
 from hdltools.vcd.mixins import VCDHierarchyAnalysisMixin
 from hdltools.patterns import Pattern
 
@@ -19,7 +14,12 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
     Track a tagged value through system hierarchy.
     """
 
-    def __init__(self, track: Pattern):
+    def __init__(
+        self,
+        track: Pattern,
+        restrict_src: Optional[Union[Tuple[str], VCDScope]] = None,
+        restrict_dest: Optional[Union[Tuple[str], VCDScope]] = None,
+    ):
         """Initialize."""
         super().__init__()
         if not isinstance(track, Pattern):
@@ -27,6 +27,12 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         self._track_value = track
         self._track_history = []
         self._stmt_count = 0
+        if isinstance(restrict_src, tuple):
+            restrict_src = VCDScope(*restrict_src)
+        if isinstance(restrict_dest, tuple):
+            restrict_dest = VCDScope(*restrict_dest)
+        self._restrict_src = restrict_src
+        self._restrict_dest = restrict_dest
 
     def _parse_progress(self):
         """Track parsing progress."""
@@ -51,6 +57,21 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
         self._parse_progress()
+        var_scope = self.variables[fields["var"]].scope
+        if (
+            self._restrict_src is not None
+            and var_scope != self._restrict_src
+            and not self._restrict_src.contains(var_scope)
+        ):
+            # ignore
+            return
+        if (
+            self._restrict_dest is not None
+            and var_scope != self._restrict_dest
+            and not self._restrict_dest.contains(var_scope)
+        ):
+            # ignore
+            return
         if self._track_value.match(fields["value"]):
             print("DEBUG: current time = {}".format(self.current_time))
             print(
