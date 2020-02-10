@@ -1,5 +1,6 @@
 """VCD Value tracker."""
 
+import re
 from typing import Tuple, Optional, Union
 from hdltools.vcd import VCDScope
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
@@ -21,6 +22,8 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         restrict_dest: Optional[Union[Tuple[str], VCDScope]] = None,
         inclusive_src=False,
         inclusive_dest=False,
+        ignore_signals: Optional[Tuple[str]] = None,
+        ignore_scopes: Optional[Tuple[str]] = None,
     ):
         """Initialize."""
         super().__init__()
@@ -37,6 +40,14 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         self._restrict_dest = restrict_dest
         self._inclusive_src = inclusive_src
         self._inclusive_dest = inclusive_dest
+        if ignore_signals is not None:
+            self._ignore_sig = [re.compile(ign) for ign in ignore_signals]
+        else:
+            self._ignore_sig = None
+        if ignore_scopes is not None:
+            self._ignore_scope = [re.compile(ign) for ign in ignore_scopes]
+        else:
+            self._ignore_scope = None
 
     def _parse_progress(self):
         """Track parsing progress."""
@@ -79,6 +90,14 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         ):
             return
         if self._track_value.match(fields["value"]):
+            if self._ignore_sig is not None:
+                for patt in self._ignore_sig:
+                    if (
+                        patt.match(self.variables[fields["var"]].name)
+                        is not None
+                    ):
+                        # ignore
+                        return
             print("DEBUG: current time = {}".format(self.current_time))
             print(
                 "DEBUG: found value match, variable is {}".format(
