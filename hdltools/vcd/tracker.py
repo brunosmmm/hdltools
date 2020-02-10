@@ -185,21 +185,6 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
                         self._maybe_dest = idx
 
     @property
-    def current_scope_depth(self):
-        """Get current sope depth."""
-        return len(self._scope_stack)
-
-    @property
-    def current_scope(self):
-        """Get current scope."""
-        return tuple(self._scope_stack)
-
-    @property
-    def scope_hier(self):
-        """Get scope hierarchy."""
-        return self._scope_map
-
-    @property
     def history(self):
         """Get tracking history."""
         return tuple(self._track_history)

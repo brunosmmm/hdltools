@@ -67,6 +67,21 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
         self._scope_map = ScopeMap()
         self._vars = {}
 
+    @property
+    def current_scope_depth(self):
+        """Get current sope depth."""
+        return len(self._scope_stack)
+
+    @property
+    def current_scope(self):
+        """Get current scope."""
+        return tuple(self._scope_stack)
+
+    @property
+    def scope_hier(self):
+        """Get scope hierarchy."""
+        return self._scope_map
+
     def _enter_scope(self, name):
         """Enter scope."""
         self._scope_map.add_hierarchy(self.current_scope, name)
