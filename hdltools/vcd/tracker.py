@@ -15,7 +15,8 @@ class VCDValueHistory(VCDObject):
         """Initialize."""
         self._scope = scope
         self._signal = signal
-        self._time = time
+        # FIXME: convert value to integer in VCD parser, not here
+        self._time = int(time)
 
     @property
     def scope(self):
