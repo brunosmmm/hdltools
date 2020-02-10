@@ -162,21 +162,58 @@ class VCDTriggerDescriptor(VCDObject):
 class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
     """Trigger mixin."""
 
-    def __init__(self, *trigger_levels, trigger_callback=None):
+    def __init__(self):
         """Initialize."""
         super().__init__()
-        for trig in trigger_levels:
-            if not isinstance(trig, VCDTriggerDescriptor):
-                raise TypeError(
-                    "trigger level must be VCDTriggerDescriptor object"
-                )
-        self._levels = trigger_levels
+        self._levels = []
         self._current_level = 0
-        self._trigger_cb = trigger_callback
+        self._trigger_cb = None
         self._armed = False
         self._triggered = False
 
         self.add_state_hook("dump", self._dump_hook)
+
+    def add_trigger_level(self, trig):
+        """Add a trigger level."""
+        if self._armed:
+            raise VCDTriggerError("cannot modify trigger levels while armed")
+        if not isinstance(trig, VCDTriggerDescriptor):
+            raise TypeError(
+                "trigger level must be VCDTriggerDescriptor object"
+            )
+        self.levels.append(trig)
+
+    def remove_trigger_level(self, trig_level):
+        """Remove a trigger level."""
+        if self._armed:
+            raise VCDTriggerError("cannot modify trigger levels while armed")
+        del self.levels[trig_level]
+
+    def trigger_reset(self):
+        """Reset trigger configurations."""
+        if self._armed:
+            raise VCDTriggerError(
+                "cannot modify trigger configuration while armed"
+            )
+        self._levels = []
+        self._current_level = 0
+        self._trigger_cb = None
+        self._armed = False
+        self._triggered = False
+
+    @property
+    def trigger_callback(self):
+        """Get trigger callback."""
+        return self._trigger_cb
+
+    @trigger_callback.setter
+    def trigger_callback(self, cb):
+        """Set trigger callback."""
+        if self._armed:
+            raise VCDTriggerError("cannot change callback while armed")
+        if not callable(cb):
+            raise TypeError("trigger callback must be a callable")
+        self._trigger_cb = cb
 
     @property
     def current_trigger_level(self):
