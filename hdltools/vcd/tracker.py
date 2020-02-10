@@ -137,7 +137,7 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
                     ):
                         # new probable source
                         self._maybe_src = idx
-                else:
+                elif self._maybe_dest is None:
                     # anything that appears is probable source
                     self._maybe_src = idx
 
