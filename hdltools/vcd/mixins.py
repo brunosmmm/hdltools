@@ -2,7 +2,8 @@
 
 from collections import deque
 from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
-from hdltools.vcd import VCDVariable, VCDScope
+from hdltools.vcd import VCDVariable, VCDScope, VCDObject
+from hdltools.patterns import Pattern
 
 
 class ScopeMap:
@@ -67,6 +68,8 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
         self._scope_map = ScopeMap()
         self._vars = {}
 
+        self.add_state_hook("header", self._header_hook)
+
     @property
     def current_scope_depth(self):
         """Get current sope depth."""
@@ -93,7 +96,6 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
 
     def _mixin_init(self):
         """Mixin initialization."""
-        self.add_state_hook("header", self._header_hook)
 
     def _header_hook(self, state, stmt, fields):
         """Header state hook."""
@@ -115,3 +117,127 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
     def variables(self):
         """Get variables."""
         return self._vars
+
+
+class VCDTriggerError(Exception):
+    """Trigger error."""
+
+
+class VCDTriggerDescriptor(VCDObject):
+    """VCD Trigger descriptor."""
+
+    def __init__(self, scope, name, value):
+        """Initialize."""
+        super().__init__()
+        if isinstance(scope, VCDScope):
+            self._scope = scope
+        elif isinstance(scope, str):
+            self._scope = VCDScope.from_str(scope)
+        else:
+            raise TypeError("scope must be either string or VCDScope object")
+        self._name = name
+        if isinstance(value, Pattern):
+            self._value = value
+        elif isinstance(value, (str, bytes)):
+            self._value = Pattern(value)
+        else:
+            raise TypeError("value must be Pattern object or str or bytes")
+
+    @property
+    def scope(self):
+        """Get scope."""
+        return self._scope
+
+    @property
+    def name(self):
+        """Get name."""
+        return self._name
+
+    @property
+    def value(self):
+        """Get value."""
+        return self._value
+
+
+class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
+    """Trigger mixin."""
+
+    def __init__(self, *trigger_levels, trigger_callback=None):
+        """Initialize."""
+        super().__init__()
+        for trig in trigger_levels:
+            if not isinstance(trig, VCDTriggerDescriptor):
+                raise TypeError(
+                    "trigger level must be VCDTriggerDescriptor object"
+                )
+        self._levels = trigger_levels
+        self._current_level = 0
+        self._trigger_cb = trigger_callback
+        self._armed = False
+        self._triggered = False
+
+        self.add_state_hook("dump", self._dump_hook)
+
+    @property
+    def current_trigger_level(self):
+        """Get current trigger level."""
+        return self._current_level
+
+    @property
+    def current_trigger(self):
+        """Get current trigger level description."""
+        return self._levels[self._current_level]
+
+    @property
+    def trigger_levels(self):
+        """Get trigger level count."""
+        return len(self._levels)
+
+    @property
+    def trigger_armed(self):
+        """Get whether trigger is armed."""
+        return self._armed
+
+    @property
+    def triggered(self):
+        """Get whether triggered."""
+        return self._triggered
+
+    def arm_trigger(self):
+        """Arm trigger."""
+        if self._armed:
+            raise VCDTriggerError("already armed")
+        self._triggered = False
+        self._current_level = 0
+        self._armed = True
+
+    def disarm_trigger(self):
+        """Disarm trigger."""
+        if self._armed is False:
+            raise VCDTriggerError("not armed")
+        self._armed = False
+
+    def _mixin_init(self):
+        """Mixin initialization."""
+
+    def _dump_hook(self, state, stmt, fields):
+        """Value change hook."""
+        if self._armed is False:
+            return
+
+        # match
+        trig = self.current_trigger
+        var = self._vars[fields["vars"]]
+        if (
+            var.scope == trig.scope
+            and var.name == trig.name
+            and trig.value.match(fields["value"])
+        ):
+            # is a match
+            self._current_level += 1
+
+        if self._current_level == self.trigger_levels:
+            self.disarm_trigger()
+            self._triggered = True
+            if self._trigger_cb is not None:
+                self._trigger_cb()
