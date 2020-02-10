@@ -11,7 +11,9 @@ class VCDTriggerError(Exception):
 class VCDTriggerDescriptor(VCDObject):
     """VCD Trigger descriptor."""
 
-    DESCRIPTOR_REGEX = re.compile(r"([a-zA-Z_0-9:]+)\s*==\s*([Xx0-9A-Fa-f])h?")
+    DESCRIPTOR_REGEX = re.compile(
+        r"([a-zA-Z_0-9:]+)\s*==\s*([Xx0-9A-Fa-f]+h?)"
+    )
 
     def __init__(self, scope, name, value):
         """Initialize."""
@@ -55,5 +57,5 @@ class VCDTriggerDescriptor(VCDObject):
             raise VCDTriggerError("invalid descriptor")
         fragments = m.group(1).split("::")
         name = fragments[-1]
-        scope = "::".join(fragments[:-2])
+        scope = "::".join(fragments[:-1])
         return VCDTriggerDescriptor(scope, name, m.group(2))
