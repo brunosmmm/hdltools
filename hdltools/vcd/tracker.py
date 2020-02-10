@@ -4,7 +4,7 @@ import re
 from typing import Tuple, Optional, Union
 from hdltools.vcd import VCDScope, VCDObject
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
-from hdltools.vcd.mixins import VCDHierarchyAnalysisMixin
+from hdltools.vcd.mixins import VCDTriggerMixin
 from hdltools.patterns import Pattern
 
 
@@ -39,7 +39,7 @@ class VCDValueHistory(VCDObject):
 
 
 # TODO: multi value tracker
-class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
+class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     """VCD Value tracker.
 
     Track a tagged value through system hierarchy.
