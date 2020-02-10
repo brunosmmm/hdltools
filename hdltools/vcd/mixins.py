@@ -271,6 +271,11 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
             and trig.value.match(fields["value"])
         ):
             # is a match
+            print(
+                "DEBUG: reached trigger level {}".format(
+                    self._current_level + 1
+                )
+            )
             self._current_level += 1
 
         if self._current_level == self.trigger_levels:
