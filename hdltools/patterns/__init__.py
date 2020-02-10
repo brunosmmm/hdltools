@@ -30,7 +30,7 @@ class Pattern:
         else:
             m = self.PATTERN_REGEX_BYTES.match(pattern)
         if m is None:
-            raise PatternError("pattern is invalid")
+            raise PatternError(f"pattern is invalid: {pattern}")
 
         self._pattern = pattern
 
