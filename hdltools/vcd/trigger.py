@@ -59,3 +59,7 @@ class VCDTriggerDescriptor(VCDObject):
         name = fragments[-1]
         scope = "::".join(fragments[:-1])
         return VCDTriggerDescriptor(scope, name, m.group(2))
+
+    def __repr__(self):
+        """Get representation."""
+        return "{{{}::{}=={}}}".format(str(self.scope), self.name, self.value)

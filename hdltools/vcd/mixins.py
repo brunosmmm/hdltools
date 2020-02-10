@@ -236,8 +236,8 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
         ):
             # is a match
             print(
-                "DEBUG: reached trigger level {}".format(
-                    self._current_level + 1
+                "DEBUG: reached trigger level {} ({})".format(
+                    self._current_level + 1, self._levels[self._current_level]
                 )
             )
             self._current_level += 1

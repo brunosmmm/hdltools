@@ -39,6 +39,10 @@ class Pattern:
         """Get pattern."""
         return self._pattern
 
+    def __repr__(self):
+        """Get representation."""
+        return self.pattern
+
     def __len__(self):
         """Get length."""
         return len(self._pattern)

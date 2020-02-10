@@ -114,7 +114,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     # FIXME: this is a placeholder
     def _precondition_callback(self):
         """Precondition callback."""
-        print("DEBUG: reached precondition")
+        print("DEBUG: reached preconditions")
 
     def _parse_progress(self):
         """Track parsing progress."""
