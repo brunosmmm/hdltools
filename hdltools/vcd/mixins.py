@@ -141,13 +141,13 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
             raise TypeError(
                 "trigger level must be VCDTriggerDescriptor object"
             )
-        self.levels.append(trig)
+        self._levels.append(trig)
 
     def remove_trigger_level(self, trig_level):
         """Remove a trigger level."""
         if self._armed:
             raise VCDTriggerError("cannot modify trigger levels while armed")
-        del self.levels[trig_level]
+        del self._levels[trig_level]
 
     def trigger_reset(self):
         """Reset trigger configurations."""
@@ -223,8 +223,12 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
             return
 
         # match
+        # FIXME: match against proper statement
+        if "var" not in fields:
+            return
+
         trig = self.current_trigger
-        var = self._vars[fields["vars"]]
+        var = self._vars[fields["var"]]
         if (
             var.scope == trig.scope
             and var.name == trig.name
