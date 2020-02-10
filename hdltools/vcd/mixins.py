@@ -1,5 +1,6 @@
 """VCD Parser mixins."""
 
+import re
 from collections import deque
 from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
 from hdltools.vcd import VCDVariable, VCDScope, VCDObject
@@ -126,6 +127,8 @@ class VCDTriggerError(Exception):
 class VCDTriggerDescriptor(VCDObject):
     """VCD Trigger descriptor."""
 
+    DESCRIPTOR_REGEX = re.compile(r"([a-zA-Z_0-9:]+)\s*==\s*([Xx0-9A-Fa-f])h?")
+
     def __init__(self, scope, name, value):
         """Initialize."""
         super().__init__()
@@ -157,6 +160,19 @@ class VCDTriggerDescriptor(VCDObject):
     def value(self):
         """Get value."""
         return self._value
+
+    @staticmethod
+    def from_str(descr):
+        """Build from string."""
+        # string will look like this:
+        # scope::scope::scope::variable==PATTERN
+        m = VCDTriggerDescriptor.DESCRIPTOR_REGEX.match(descr)
+        if m is None:
+            raise VCDTriggerError("invalid descriptor")
+        fragments = m.group(1).split("::")
+        name = fragments[-1]
+        scope = "::".join(fragments[:-2])
+        return VCDTriggerDescriptor(scope, name, m.group(2))
 
 
 class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
