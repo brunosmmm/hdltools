@@ -6,6 +6,7 @@ from hdltools.vcd import VCDScope, VCDObject
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
 from hdltools.vcd.mixins import VCDTriggerMixin
 from hdltools.patterns import Pattern
+from hdltools.vcd.trigger import VCDTriggerDescriptor
 
 
 class VCDValueHistory(VCDObject):
@@ -55,6 +56,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         ignore_signals: Optional[Tuple[str]] = None,
         ignore_scopes: Optional[Tuple[str]] = None,
         anchors: Optional[Tuple[str, str]] = None,
+        preconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
     ):
         """Initialize."""
         super().__init__()
@@ -92,6 +94,27 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         )
         self._maybe_src = None
         self._maybe_dest = None
+        self._wait_precondition = False
+        if preconditions is not None:
+            self._wait_precondition = True
+            if isinstance(preconditions, VCDTriggerDescriptor):
+                self.add_trigger_level(preconditions)
+            else:
+                for precondition in preconditions:
+                    if not isinstance(precondition, VCDTriggerDescriptor):
+                        raise TypeError(
+                            "precondition must be a VCDTriggerDescriptor object"
+                        )
+                    self.add_trigger_level(precondition)
+
+            # arm trigger
+            self.trigger_callback = self._precondition_callback
+            self.arm_trigger()
+
+    # FIXME: this is a placeholder
+    def _precondition_callback(self):
+        """Precondition callback."""
+        print("DEBUG: reached precondition")
 
     def _parse_progress(self):
         """Track parsing progress."""
@@ -116,6 +139,8 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
         self._parse_progress()
+        if self._wait_precondition and self._triggered is False:
+            return
         var_scope = self.variables[fields["var"]].scope
         in_src_scope = self._restrict_src is not None and (
             var_scope == self._restrict_src

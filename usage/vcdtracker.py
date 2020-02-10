@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from hdltools.vcd import VCDScope
 from hdltools.vcd.tracker import VCDValueTracker
 from hdltools.patterns import Pattern
+from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
 
 
 if __name__ == "__main__":
@@ -38,6 +39,11 @@ if __name__ == "__main__":
         "--dest-anchor",
         help="anchor destination to signal name by regex match",
     )
+    parser.add_argument(
+        "--precondition",
+        help="wait for a series of pre-conditions before tracking starts",
+        nargs="+",
+    )
 
     args = parser.parse_args()
 
@@ -53,6 +59,17 @@ if __name__ == "__main__":
             print(
                 "ERROR: --restrict-endpoints takes two arguments separated by a comma"
             )
+            exit(1)
+
+    preconditions = None
+    if args.precondition is not None:
+        try:
+            preconditions = [
+                VCDTriggerDescriptor.from_str(precondition)
+                for precondition in args.precondition
+            ]
+        except VCDTriggerError:
+            print("ERROR: precondition is malformed")
             exit(1)
 
     inclusive_src = (
@@ -84,6 +101,7 @@ if __name__ == "__main__":
         ignore_signals=args.ignore_sig,
         ignore_scopes=args.ignore_scope,
         anchors=(args.src_anchor, args.dest_anchor),
+        preconditions=preconditions,
     )
     tracker.parse(vcddata)
 
