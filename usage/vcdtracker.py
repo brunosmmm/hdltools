@@ -91,6 +91,8 @@ if __name__ == "__main__":
         tracker.scope_hier.dump()
 
     # print(tracker.history)
+    origin = None
+    arrival = None
     print("INFO: {} occurrences".format(len(tracker.history)))
     if tracker.maybe_src is not None:
         print(
@@ -98,9 +100,17 @@ if __name__ == "__main__":
                 tracker.history[tracker.maybe_src]
             )
         )
+        origin = tracker.history[tracker.maybe_src].time
     if tracker.maybe_dest is not None:
         print(
             "INFO: probable destination is {}".format(
                 tracker.history[tracker.maybe_dest]
             )
         )
+        arrival = tracker.history[tracker.maybe_dest].time
+        if origin is not None:
+            print(
+                "INFO: probable travel time was {} cycles".format(
+                    arrival - origin
+                )
+            )
