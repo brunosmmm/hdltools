@@ -24,6 +24,7 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         inclusive_dest=False,
         ignore_signals: Optional[Tuple[str]] = None,
         ignore_scopes: Optional[Tuple[str]] = None,
+        anchors: Optional[Tuple[str, str]] = None,
     ):
         """Initialize."""
         super().__init__()
@@ -48,6 +49,19 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
             self._ignore_scope = [re.compile(ign) for ign in ignore_scopes]
         else:
             self._ignore_scope = None
+
+        # source, destination anchors
+        src_anchor, dest_anchor = (
+            anchors if anchors is not None else (None, None)
+        )
+        self._src_anchor = (
+            re.compile(src_anchor) if src_anchor is not None else None
+        )
+        self._dest_anchor = (
+            re.compile(dest_anchor) if dest_anchor is not None else None
+        )
+        self._maybe_src = None
+        self._maybe_dest = None
 
     def _parse_progress(self):
         """Track parsing progress."""
@@ -111,7 +125,34 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
                     )
                 )
             var = self.variables[fields["var"]]
-            self._add_to_history(var.scope, var.name, self.current_time)
+            idx = self._add_to_history(var.scope, var.name, self.current_time)
+            # FIXME: make sure that anchors are not used without scope restriction
+            if in_src_scope:
+                if self._src_anchor is not None and self._maybe_dest is None:
+                    if (
+                        self._src_anchor.match(
+                            self.variables[fields["var"]].name
+                        )
+                        is not None
+                    ):
+                        # new probable source
+                        self._maybe_src = idx
+                else:
+                    # anything that appears is probable source
+                    self._maybe_src = idx
+
+            if in_dest_scope:
+                if self._maybe_dest is None and self._maybe_src is not None:
+                    if (
+                        self._dest_anchor is not None
+                        and self._dest_anchor.match(
+                            self.variables[fields["var"]].name
+                        )
+                        is not None
+                    ):
+                        self._maybe_dest = idx
+                    elif self._dest_anchor is None:
+                        self._maybe_dest = idx
 
     @property
     def current_scope_depth(self):
@@ -133,9 +174,20 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
         """Get tracking history."""
         return tuple(self._track_history)
 
+    @property
+    def maybe_src(self):
+        """Get probable source."""
+        return self._maybe_src
+
+    @property
+    def maybe_dest(self):
+        """Get probable destination."""
+        return self._maybe_dest
+
     def _add_to_history(self, scope, signal, time):
         """Add to history."""
         self._track_history.append((scope, signal, time))
+        return len(self._track_history) - 1
 
     def parse(self, data):
         """Parse."""
