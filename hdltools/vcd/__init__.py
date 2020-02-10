@@ -16,11 +16,14 @@ class VCDScope(VCDObject):
 
     def __init__(self, *scopes):
         """Initialize."""
+        self._scopes = []
         for scope in scopes:
             if not isinstance(scope, str):
                 raise TypeError("scope name must be string")
-
-        self._scopes = scopes
+            if len(scope) < 1:
+                # empty, ignore
+                continue
+            self._scopes.append(scope)
 
     def __repr__(self):
         """Get representation."""
