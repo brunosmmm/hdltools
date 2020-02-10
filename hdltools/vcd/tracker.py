@@ -2,10 +2,39 @@
 
 import re
 from typing import Tuple, Optional, Union
-from hdltools.vcd import VCDScope
+from hdltools.vcd import VCDScope, VCDObject
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
 from hdltools.vcd.mixins import VCDHierarchyAnalysisMixin
 from hdltools.patterns import Pattern
+
+
+class VCDValueHistory(VCDObject):
+    """Value history tracking."""
+
+    def __init__(self, scope, signal, time):
+        """Initialize."""
+        self._scope = scope
+        self._signal = signal
+        self._time = time
+
+    @property
+    def scope(self):
+        """Get scope."""
+        return self._scope
+
+    @property
+    def signal(self):
+        """Get signal name."""
+        return self._signal
+
+    @property
+    def time(self):
+        """Get time."""
+        return self._time
+
+    def __repr__(self):
+        """Get representation."""
+        return "{{{}::{} @{}}}".format(str(self.scope), self.signal, self.time)
 
 
 # TODO: multi value tracker
@@ -186,7 +215,7 @@ class VCDValueTracker(BaseVCDParser, VCDHierarchyAnalysisMixin):
 
     def _add_to_history(self, scope, signal, time):
         """Add to history."""
-        self._track_history.append((scope, signal, time))
+        self._track_history.append(VCDValueHistory(scope, signal, time))
         return len(self._track_history) - 1
 
     def parse(self, data):
