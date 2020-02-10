@@ -31,6 +31,13 @@ if __name__ == "__main__":
         help="ignore scopes by regular expression matching",
         nargs="+",
     )
+    parser.add_argument(
+        "--src-anchor", help="anchor source to signal name by regex match"
+    )
+    parser.add_argument(
+        "--dest-anchor",
+        help="anchor destination to signal name by regex match",
+    )
 
     args = parser.parse_args()
 
@@ -76,6 +83,7 @@ if __name__ == "__main__":
         inclusive_dest=inclusive_dest,
         ignore_signals=args.ignore_sig,
         ignore_scopes=args.ignore_scope,
+        anchors=(args.src_anchor, args.dest_anchor),
     )
     tracker.parse(vcddata)
 
@@ -84,3 +92,15 @@ if __name__ == "__main__":
 
     # print(tracker.history)
     print("INFO: {} occurrences".format(len(tracker.history)))
+    if tracker.maybe_src is not None:
+        print(
+            "INFO: probable source is {}".format(
+                tracker.history[tracker.maybe_src]
+            )
+        )
+    if tracker.maybe_dest is not None:
+        print(
+            "INFO: probable destination is {}".format(
+                tracker.history[tracker.maybe_dest]
+            )
+        )
