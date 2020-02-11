@@ -22,9 +22,16 @@ if __name__ == "__main__":
     restrict_group.add_argument(
         "--restrict-scope", help="restrict to single scope"
     )
-    parser.add_argument(
+    signal_lists = parser.add_mutually_exclusive_group()
+    signal_lists.add_argument(
         "--ignore-sig",
         help="ignore signals by regular expression matching",
+        nargs="+",
+    )
+    # TODO: implement
+    signal_lists.add_argument(
+        "--restrict-sig",
+        help="restrict to signal names by regular expression matching",
         nargs="+",
     )
     parser.add_argument(
@@ -42,6 +49,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--precondition",
         help="wait for a series of pre-conditions before tracking starts",
+        nargs="+",
+    )
+    parser.add_argument(
+        "--postcondition",
+        help="stop tracking after pre-conditions are met, under postconditions",
         nargs="+",
     )
 
@@ -70,6 +82,21 @@ if __name__ == "__main__":
             ]
         except VCDTriggerError:
             print("ERROR: precondition is malformed")
+            exit(1)
+
+    postconditions = None
+    if args.postcondition is not None:
+        if args.precondition is None:
+            print(
+                "WARNING: specifying postconditions without preconditions has no effect"
+            )
+        try:
+            postconditions = [
+                VCDTriggerDescriptor.from_str(postcondition)
+                for postcondition in args.postcondition
+            ]
+        except VCDTriggerError:
+            print("ERROR: postcondition is malformed")
             exit(1)
 
     inclusive_src = (
@@ -102,6 +129,7 @@ if __name__ == "__main__":
         ignore_scopes=args.ignore_scope,
         anchors=(args.src_anchor, args.dest_anchor),
         preconditions=preconditions,
+        postconditions=postconditions,
     )
     tracker.parse(vcddata)
 

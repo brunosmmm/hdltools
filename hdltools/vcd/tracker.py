@@ -57,6 +57,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         ignore_scopes: Optional[Tuple[str]] = None,
         anchors: Optional[Tuple[str, str]] = None,
         preconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
+        postconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
     ):
         """Initialize."""
         super().__init__()
@@ -95,6 +96,19 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         self._maybe_src = None
         self._maybe_dest = None
         self._wait_precondition = False
+        self._wait_postcondition = False
+        self._postconditions = []
+
+        if postconditions is not None:
+            if isinstance(postconditions, VCDTriggerDescriptor):
+                self._postconditions.append(postconditions)
+            else:
+                for postcondition in postconditions:
+                    if not isinstance(postcondition, VCDTriggerDescriptor):
+                        raise TypeError(
+                            "precondition must be a VCDTriggerDescriptor object"
+                        )
+                    self._postconditions.append(postcondition)
         if preconditions is not None:
             self._wait_precondition = True
             if isinstance(preconditions, VCDTriggerDescriptor):
@@ -115,6 +129,22 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     def _precondition_callback(self):
         """Precondition callback."""
         print("DEBUG: reached preconditions")
+        self._wait_precondition = False
+        # setup postconditions
+        if self._postconditions:
+            self._wait_postcondition = True
+            self.trigger_reset()
+            for postcondition in self._postconditions:
+                self.add_trigger_level(postcondition)
+
+            self.trigger_callback = self._postcondition_callback
+            self.arm_trigger()
+
+    def _postcondition_callback(self):
+        """Postcondition callback."""
+        print("DEBUG: reached postconditions; stopping")
+        self._wait_postcondition = False
+        self._abort_parser()
 
     def _parse_progress(self):
         """Track parsing progress."""
