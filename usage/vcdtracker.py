@@ -56,6 +56,9 @@ if __name__ == "__main__":
         help="stop tracking after pre-conditions are met, under postconditions",
         nargs="+",
     )
+    parser.add_argument(
+        "--restrict-time", help="restrict tracking to simulation time range"
+    )
 
     args = parser.parse_args()
 
@@ -119,6 +122,22 @@ if __name__ == "__main__":
         VCDScope.from_str(restrict_dest) if restrict_dest is not None else None
     )
 
+    if args.restrict_time is not None:
+        restrict_time = args.restrict_time.split(",")
+        if len(restrict_time) != 2:
+            print("ERROR: invalid time range specification")
+            exit(1)
+        start, end = restrict_time
+        try:
+            start = int(start)
+            end = int(end)
+        except ValueError:
+            print("ERROR: invalid values in time range specification")
+            exit(1)
+        restrict_time = (start, end)
+    else:
+        restrict_time = None
+
     tracker = VCDValueTracker(
         Pattern(args.pattern),
         restrict_src=restrict_src,
@@ -130,6 +149,7 @@ if __name__ == "__main__":
         anchors=(args.src_anchor, args.dest_anchor),
         preconditions=preconditions,
         postconditions=postconditions,
+        time_range=restrict_time,
     )
     tracker.parse(vcddata)
 

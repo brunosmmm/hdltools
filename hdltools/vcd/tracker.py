@@ -58,6 +58,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         anchors: Optional[Tuple[str, str]] = None,
         preconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         postconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
+        time_range: Optional[Tuple[int, int]] = None,
     ):
         """Initialize."""
         super().__init__()
@@ -98,6 +99,20 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         self._wait_precondition = False
         self._wait_postcondition = False
         self._postconditions = []
+
+        if time_range is not None:
+            if not isinstance(time_range, (tuple, list)):
+                raise TypeError("time_range must be a list")
+            if len(time_range) != 2:
+                raise ValueError("time_range must have 2 elements exactly")
+            start, end = time_range
+            if not isinstance(start, int) or not isinstance(end, int):
+                raise TypeError("start and end in time_range must be integers")
+            self._hist_start = start
+            self._hist_end = end
+        else:
+            self._hist_start = None
+            self._hist_end = None
 
         if postconditions is not None:
             if isinstance(postconditions, VCDTriggerDescriptor):
@@ -169,6 +184,15 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
         self._parse_progress()
+        # handle start time
+        if (
+            self._hist_start is not None
+            and self.current_time < self._hist_start
+        ):
+            return
+        if self._hist_end is not None and self.current_time > self._hist_end:
+            # done
+            self._abort_parser()
         if self._wait_precondition and self._triggered is False:
             return
         var_scope = self.variables[fields["var"]].scope
