@@ -163,7 +163,7 @@ class BaseVCDParser(DataParser):
     def _state_dump(self, position):
         size, stmt, fields = self._try_parse(VCD_VAR_LINES, position)
         if stmt == SIM_TIME_PARSER:
-            self._advance_clock(fields["time"])
+            self._advance_clock(int(fields["time"]))
         elif stmt != DUMPVARS_PARSER:
             self.value_change_handler(stmt, fields)
         return (size, stmt, fields)
