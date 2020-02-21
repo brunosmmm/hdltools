@@ -39,6 +39,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         self._track_value = track
         self._track_all = track_all
         self._track_history = VCDValueHistory()
+        self._complete_value_history = VCDValueHistory()
         self._full_history = VCDValueHistory()
         self._stmt_count = 0
         if isinstance(restrict_src, tuple):
@@ -156,6 +157,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         if self._track_value.match(fields["value"]):
             # found
             self._add_to_tracked_history(var.scope, var.name, 0)
+            self._add_to_value_history(var.scope, var.name, 0)
 
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
@@ -164,6 +166,9 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         if self._track_all:
             self._add_to_history(var.scope, var.name, self.current_time)
         # handle start time
+        if self._track_value.match(fields["value"]):
+            # add to complete tracking history
+            self._add_to_value_history(var.scope, var.name, self.current_time)
         if (
             self._hist_start is not None
             and self.current_time < self._hist_start
@@ -264,6 +269,13 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     def maybe_dest(self):
         """Get probable destination."""
         return self._maybe_dest
+
+    def _add_to_value_history(self, scope, signal, time):
+        """Add to value history."""
+        self._complete_value_history.add_entry(
+            VCDValueHistory(scope, signal, time)
+        )
+        return len(self._full_history - 1)
 
     def _add_to_history(self, scope, signal, time):
         """Add to history."""
