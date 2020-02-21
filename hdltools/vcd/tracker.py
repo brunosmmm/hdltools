@@ -32,9 +32,10 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         postconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         time_range: Optional[Tuple[int, int]] = None,
         track_all: bool = False,
+        debug: bool = False
     ):
         """Initialize."""
-        super().__init__()
+        super().__init__(debug=debug)
         if not isinstance(track, Pattern):
             raise TypeError("track must be a Pattern object")
         self._track_value = track
@@ -119,7 +120,8 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     # FIXME: this is a placeholder
     def _precondition_callback(self):
         """Precondition callback."""
-        print("DEBUG: reached preconditions")
+        if self._debug:
+            print("DEBUG: reached preconditions")
         self._wait_precondition = False
         # setup postconditions
         if self._postconditions:
@@ -133,7 +135,8 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
 
     def _postcondition_callback(self):
         """Postcondition callback."""
-        print("DEBUG: reached postconditions; stopping")
+        if self._debug:
+            print("DEBUG: reached postconditions; stopping")
         self._wait_postcondition = False
         self._abort_parser()
 
@@ -206,12 +209,13 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
                     ):
                         # ignore
                         return
-            print("DEBUG: current time = {}".format(self.current_time))
-            print(
-                "DEBUG: found value match, variable is {}".format(
-                    self.variables[fields["var"]]
+            if self._debug:
+                print("DEBUG: current time = {}".format(self.current_time))
+                print(
+                    "DEBUG: found value match, variable is {}".format(
+                        self.variables[fields["var"]]
+                    )
                 )
-            )
             if fields["var"] not in self.variables:
                 raise VCDParserError(
                     'unknown variable in change event: "{}"'.format(
