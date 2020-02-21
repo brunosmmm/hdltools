@@ -281,7 +281,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         self._complete_value_history.add_entry(
             VCDValueHistoryEntry(scope, signal, time)
         )
-        return len(self._full_history - 1)
+        return len(self._full_history) - 1
 
     def _add_to_history(self, scope, signal, time):
         """Add to history."""
