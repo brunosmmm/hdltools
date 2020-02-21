@@ -48,9 +48,9 @@ class ScopeMap:
 class VCDParserMixin:
     """VCD Parser mixin abstract class."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__()
+        super().__init__(**kwargs)
         self._mixin_init()
 
     def _mixin_init(self):
@@ -61,12 +61,13 @@ class VCDParserMixin:
 class VCDHierarchyAnalysisMixin(VCDParserMixin):
     """Hierarchical analysis mixin."""
 
-    def __init__(self):
+    def __init__(self, debug=False, **kwargs):
         """Initialize."""
         super().__init__()
         self._scope_stack = deque()
         self._scope_map = ScopeMap()
         self._vars = {}
+        self._debug = debug
 
         self.add_state_hook("header", self._header_hook)
 
@@ -122,9 +123,9 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
 class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
     """Trigger mixin."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__()
+        super().__init__(**kwargs)
         self._levels = []
         self._current_level = 0
         self._trigger_cb = None
@@ -241,11 +242,12 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
             and trig.value.match(fields["value"])
         ):
             # is a match
-            print(
-                "DEBUG: reached trigger level {} ({})".format(
-                    self._current_level + 1, self._levels[self._current_level]
-                )
-            )
+            if self._debug:
+              print(
+                  "DEBUG: reached trigger level {} ({})".format(
+                      self._current_level + 1, self._levels[self._current_level]
+                  )
+              )
             self._trigger_history.append(VCDTriggerEvent("condition",
                                                          self.current_time,
                                                          trig))
