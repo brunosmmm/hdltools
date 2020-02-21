@@ -103,8 +103,11 @@ class BaseVCDParser(DataParser):
 
     def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__("header", consume_spaces=True, debug=False, **kwargs)
-        self._debug = debug
+        super().__init__("header", consume_spaces=True, **kwargs)
+        if "debug" in kwargs:
+            self._debug = kwargs["debug"]
+        else:
+            self._debug = False
         self._ticks = 0
 
     @property
