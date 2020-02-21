@@ -20,7 +20,7 @@ class VCDHierarchyExplorer(BaseVCDParser, VCDHierarchyAnalysisMixin):
         super().__init__()
         self._allowed_scopes = (
             [
-                (VCDScope.from_str(scope), scope.endswith("::"))
+                VCDScope.from_str(scope)
                 for scope in restrict_scopes
             ]
             if restrict_scopes is not None

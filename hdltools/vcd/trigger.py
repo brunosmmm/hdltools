@@ -21,7 +21,7 @@ class VCDTriggerDescriptor(VCDObject):
         if isinstance(scope, VCDScope):
             self._scope = scope
         elif isinstance(scope, str):
-            self._scope = VCDScope.from_str(scope)
+            self._scope, _ = VCDScope.from_str(scope)
         else:
             raise TypeError("scope must be either string or VCDScope object")
         self._name = name
