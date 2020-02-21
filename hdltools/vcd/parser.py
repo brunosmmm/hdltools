@@ -97,15 +97,14 @@ VCD_VAR_LINES = [
     DUMPVARS_PARSER,
 ]
 
-DEBUG = True
-
 
 class BaseVCDParser(DataParser):
     """Simple VCD parser."""
 
     def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__("header", consume_spaces=True, **kwargs)
+        super().__init__("header", consume_spaces=True, debug=False, **kwargs)
+        self._debug = debug
         self._ticks = 0
 
     @property
@@ -137,7 +136,7 @@ class BaseVCDParser(DataParser):
                 VCD_DEFINITION_LINES, position
             )
         except ParserError:
-            if DEBUG is False:
+            if self._debug is False:
                 raise
 
             print(
