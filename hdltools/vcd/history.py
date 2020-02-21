@@ -33,6 +33,25 @@ class VCDValueHistoryEntry(VCDObject):
         """Get representation."""
         return "{{{}::{} @{}}}".format(str(self.scope), self.signal, self.time)
 
+    def __eq__(self, other):
+        """Test equality."""
+        if not isinstance(other, VCDValueHistoryEntry):
+            raise TypeError("other must be a VCDValueHistoryEntry object")
+        if other.scope != self.scope:
+            return False
+
+        if other.signal != self.signal:
+            return False
+
+        if other.time != self.time:
+            return False
+
+        return True
+
+    def __hash__(self):
+        """Get hash."""
+        return has(tuple(self.scope, self.signal, self.time))
+
 
 class VCDValueHistory(VCDObject):
     """VCD Value history."""
