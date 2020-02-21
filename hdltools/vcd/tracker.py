@@ -32,10 +32,10 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         postconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         time_range: Optional[Tuple[int, int]] = None,
         track_all: bool = False,
-        debug: bool = False
+        **kwargs
     ):
         """Initialize."""
-        super().__init__(debug=debug)
+        super().__init__(**kwargs)
         if not isinstance(track, Pattern):
             raise TypeError("track must be a Pattern object")
         self._track_value = track
