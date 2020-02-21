@@ -39,10 +39,14 @@ class VCDScope(VCDObject):
 
     def __eq__(self, other):
         """Scope equality."""
+        if not isinstance(other, VCDScope):
+            raise TypeError("other must be a VCDScope object")
         return self._scopes == other._scopes
 
     def contains(self, other):
         """Get whether this scope contains other scope."""
+        if not isinstance(other, VCDScope):
+            raise TypeError("other must be a VCDScope object")
         if len(self) >= len(other):
             # cannot contain, length must be less
             return False
