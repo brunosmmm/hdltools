@@ -10,8 +10,14 @@ class VCDObject:
 class VCDScope(VCDObject):
     """VCD scope."""
 
-    def __init__(self, *scopes):
-        """Initialize."""
+    def __init__(self, *scopes: str):
+        """Initialize.
+
+        Parameters
+        ----------
+        scopes
+          List of scope names
+        """
         self._scopes = []
         for scope in scopes:
             if not isinstance(scope, str):
@@ -43,8 +49,14 @@ class VCDScope(VCDObject):
         """Get hash."""
         return hash(tuple(self._scopes))
 
-    def contains(self, other):
-        """Get whether this scope contains other scope."""
+    def contains(self, other) -> bool:
+        """Get whether this scope contains other scope.
+
+        Arguments
+        ----------
+        other
+          other scope to compare against
+        """
         if not isinstance(other, VCDScope):
             raise TypeError("other must be a VCDScope object")
         if len(self) >= len(other):
