@@ -103,9 +103,9 @@ DEBUG = True
 class BaseVCDParser(DataParser):
     """Simple VCD parser."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__("header", consume_spaces=True)
+        super().__init__("header", consume_spaces=True, **kwargs)
         self._ticks = 0
 
     @property
