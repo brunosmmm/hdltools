@@ -6,10 +6,6 @@ from hdltools.sim import HDLSimulationPort
 class VCDObject:
     """Abstract VCD object class."""
 
-    def __init__(self, **kwargs):
-        """Initialize."""
-        pass
-
 
 class VCDScope(VCDObject):
     """VCD scope."""
