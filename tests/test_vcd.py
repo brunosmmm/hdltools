@@ -3,6 +3,7 @@
 import pytest
 from hdltools.vcd.parser import BaseVCDParser
 from hdltools.vcd import VCDScope
+from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
 
 
 def test_parser():
@@ -43,7 +44,22 @@ def test_vcd_scope_fromstr():
     with pytest.raises(TypeError):
         scope = VCDScope.from_str(123)
 
+def test_vcd_value_history():
+    """Test VCD value history."""
+    scope_1, _ = VCDScope.from_str("outer::inner")
+    scope_2, _ = VCDScope.from_str("outer::inner::deeper")
+    scope_3, _ = VCDScope.from_str("outer::inner::deeper2")
+
+    hist = VCDValueHistory()
+    hist.add_entry(VCDValueHistoryEntry(scope_1, "foo", 0))
+    hist.add_entry(VCDValueHistoryEntry(scope_2, "bar", 1))
+    hist.add_entry(VCDValueHistoryEntry(scope_2, "bar_2", 2))
+    hist.add_entry(VCDValueHistoryEntry(scope_3, "baz", 3))
+
+    visited = hist.visited_scopes
+    return visited
 
 
 if __name__ == "__main__":
     test_parser()
+    print(test_vcd_value_history())

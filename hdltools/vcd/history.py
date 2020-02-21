@@ -82,3 +82,8 @@ class VCDValueHistory(VCDObject):
     def __len__(self):
         """Get length."""
         return len(self._history)
+
+    @property
+    def visited_scopes(self):
+        """Determine all visited scopes."""
+        return {entry.scope for entry in self._history}
