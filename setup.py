@@ -12,8 +12,8 @@ setup(
     author_email="brunosmmm@gmail.com",
     description="HDL Tools",
     install_requires=[
-        "scoff @ git+https://github.com/brunosmmm/scoff@master#egg=scoff",
-        "dictator @ git+https://github.com/brunosmmm/dictator@master#egg=dictator",
+        "scoff @ git+https://github.com/brunosmmm/scoff.git@master#egg=scoff",
+        "dictator @ git+https://github.com/brunosmmm/dictator.git@master#egg=dictator",
     ],
     scripts=[
         "tools/mmap_docgen",
