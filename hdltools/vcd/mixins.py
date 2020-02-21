@@ -3,7 +3,7 @@
 from collections import deque
 from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
 from hdltools.vcd import VCDVariable, VCDScope
-from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
+from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError, VCDTriggerEvent
 
 
 class ScopeMap:
@@ -130,6 +130,7 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
         self._trigger_cb = None
         self._armed = False
         self._triggered = False
+        self._trigger_history = []
 
         self.add_state_hook("dump", self._dump_hook)
 
@@ -200,6 +201,11 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
         """Get whether triggered."""
         return self._triggered
 
+    @property
+    def trigger_history(self):
+        """Get trigger event history."""
+        return self._trigger_history
+
     def arm_trigger(self):
         """Arm trigger."""
         if self._armed:
@@ -240,10 +246,15 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
                     self._current_level + 1, self._levels[self._current_level]
                 )
             )
+            self._trigger_history.append(VCDTriggerEvent("condition",
+                                                         self.current_time,
+                                                         trig))
             self._current_level += 1
 
         if self._current_level == self.trigger_levels:
             self.disarm_trigger()
             self._triggered = True
+            self._trigger_history.append(VCDTriggerEvent("trigger",
+                                                         self.current_time))
             if self._trigger_cb is not None:
                 self._trigger_cb()
