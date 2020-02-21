@@ -11,6 +11,7 @@ from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
 
 
 # TODO: multi value tracker
+# FIXME: avoid expensive duplications of data
 class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     """VCD Value tracker.
 
@@ -259,6 +260,11 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         if self._track_all:
             return self._full_history
         return self.history
+
+    @property
+    def full_value_history(self):
+        """Get full value match history."""
+        return self._complete_value_history
 
     @property
     def maybe_src(self):
