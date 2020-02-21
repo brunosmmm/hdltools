@@ -39,6 +39,10 @@ class VCDScope(VCDObject):
             raise TypeError("other must be a VCDScope object")
         return self._scopes == other._scopes
 
+    def __hash__(self):
+        """Get hash."""
+        return hash(tuple(self._scopes))
+
     def contains(self, other):
         """Get whether this scope contains other scope."""
         if not isinstance(other, VCDScope):
