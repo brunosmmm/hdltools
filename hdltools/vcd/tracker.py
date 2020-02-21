@@ -2,41 +2,12 @@
 
 import re
 from typing import Tuple, Optional, Union
-from hdltools.vcd import VCDScope, VCDObject
+from hdltools.vcd import VCDScope
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
 from hdltools.vcd.mixins import VCDTriggerMixin
 from hdltools.patterns import Pattern
 from hdltools.vcd.trigger import VCDTriggerDescriptor
-
-
-class VCDValueHistory(VCDObject):
-    """Value history tracking."""
-
-    def __init__(self, scope, signal, time):
-        """Initialize."""
-        self._scope = scope
-        self._signal = signal
-        # FIXME: convert value to integer in VCD parser, not here
-        self._time = int(time)
-
-    @property
-    def scope(self):
-        """Get scope."""
-        return self._scope
-
-    @property
-    def signal(self):
-        """Get signal name."""
-        return self._signal
-
-    @property
-    def time(self):
-        """Get time."""
-        return self._time
-
-    def __repr__(self):
-        """Get representation."""
-        return "{{{}::{} @{}}}".format(str(self.scope), self.signal, self.time)
+from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
 
 
 # TODO: multi value tracker
@@ -59,13 +30,16 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         preconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         postconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         time_range: Optional[Tuple[int, int]] = None,
+        track_all: bool = False,
     ):
         """Initialize."""
         super().__init__()
         if not isinstance(track, Pattern):
             raise TypeError("track must be a Pattern object")
         self._track_value = track
-        self._track_history = []
+        self._track_all = track_all
+        self._track_history = VCDValueHistory()
+        self._full_history = VCDValueHistory()
         self._stmt_count = 0
         if isinstance(restrict_src, tuple):
             restrict_src = VCDScope(*restrict_src)
@@ -176,14 +150,19 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     def initial_value_handler(self, stmt, fields):
         """Handle initial values."""
         self._parse_progress()
+        var = self.variables[fields["var"]]
+        if self._track_all:
+            self._add_to_history(var.scope, var.name, 0)
         if self._track_value.match(fields["value"]):
             # found
-            var = self.variables[fields["var"]]
-            self._add_to_history(var.scope, var.name)
+            self._add_to_tracked_history(var.scope, var.name, 0)
 
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
         self._parse_progress()
+        var = self.variables[fields["var"]]
+        if self._track_all:
+            self._add_to_history(var.scope, var.name, self.current_time)
         # handle start time
         if (
             self._hist_start is not None
@@ -195,7 +174,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
             self._abort_parser()
         if self._wait_precondition and self._triggered is False:
             return
-        var_scope = self.variables[fields["var"]].scope
+        var_scope = var.scope
         in_src_scope = self._restrict_src is not None and (
             var_scope == self._restrict_src
             or (self._restrict_src.contains(var_scope) and self._inclusive_src)
@@ -233,8 +212,9 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
                         fields["var"]
                     )
                 )
-            var = self.variables[fields["var"]]
-            idx = self._add_to_history(var.scope, var.name, self.current_time)
+            idx = self._add_to_tracked_history(
+                var.scope, var.name, self.current_time
+            )
             # FIXME: make sure that anchors are not used without scope restriction
             if in_src_scope:
                 if self._src_anchor is not None and self._maybe_dest is None:
@@ -266,7 +246,14 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     @property
     def history(self):
         """Get tracking history."""
-        return tuple(self._track_history)
+        return self._track_history
+
+    @property
+    def full_history(self):
+        """Get full history if available."""
+        if self._track_all:
+            return self._full_history
+        return self.history
 
     @property
     def maybe_src(self):
@@ -280,7 +267,14 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
 
     def _add_to_history(self, scope, signal, time):
         """Add to history."""
-        self._track_history.append(VCDValueHistory(scope, signal, time))
+        self._full_history.add_entry(VCDValueHistoryEntry(scope, signal, time))
+        return len(self._full_history) - 1
+
+    def _add_to_tracked_history(self, scope, signal, time):
+        """Add to history."""
+        self._track_history.add_entry(
+            VCDValueHistoryEntry(scope, signal, time)
+        )
         return len(self._track_history) - 1
 
     def parse(self, data):
