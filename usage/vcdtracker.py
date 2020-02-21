@@ -102,24 +102,12 @@ if __name__ == "__main__":
             print("ERROR: postcondition is malformed")
             exit(1)
 
-    inclusive_src = (
-        True
-        if restrict_src is not None and restrict_src.endswith("::")
-        else False
+    restrict_src, inclusive_src = (
+        VCDScope.from_str(restrict_src) if restrict_src is not None else (None, False)
     )
 
-    inclusive_dest = (
-        True
-        if restrict_dest is not None and restrict_dest.endswith("::")
-        else False
-    )
-
-    restrict_src = (
-        VCDScope.from_str(restrict_src) if restrict_src is not None else None
-    )
-
-    restrict_dest = (
-        VCDScope.from_str(restrict_dest) if restrict_dest is not None else None
+    restrict_dest, inclusive_dest = (
+        VCDScope.from_str(restrict_dest) if restrict_dest is not None else (None, False)
     )
 
     if args.restrict_time is not None:

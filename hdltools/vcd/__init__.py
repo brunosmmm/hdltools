@@ -58,7 +58,9 @@ class VCDScope(VCDObject):
         """Build from string."""
         if not isinstance(scope_str, str):
             raise TypeError("must be a string")
-        return VCDScope(*scope_str.split("::"))
+        scopes = scope_str.split("::")
+        inclusive = len(scopes[-1]) < 1
+        return (VCDScope(*scopes), inclusive)
 
 
 class VCDVariable(VCDObject):
