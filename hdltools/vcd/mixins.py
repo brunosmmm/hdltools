@@ -3,7 +3,11 @@
 from collections import deque
 from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
 from hdltools.vcd import VCDVariable, VCDScope
-from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError, VCDTriggerEvent
+from hdltools.vcd.trigger import (
+    VCDTriggerDescriptor,
+    VCDTriggerError,
+    VCDTriggerEvent,
+)
 
 
 class ScopeMap:
@@ -31,18 +35,18 @@ class ScopeMap:
             raise ValueError("scope already exists.")
         outer[hier_name] = {}
 
-    def dump(self):
+    def dump(self, print_levels=False):
         """Print out."""
-        ScopeMap._dump(self._map)
+        ScopeMap._dump(self._map, print_levels)
 
     @staticmethod
-    def _dump(hier, indent=0):
+    def _dump(hier, print_levels=False, indent=0):
         """Print out."""
-
+        level = str(indent) + " " if print_levels else ""
         current_indent = "  " * indent
         for name, _hier in hier.items():
-            print(current_indent + name)
-            ScopeMap._dump(_hier, indent + 1)
+            print(level + current_indent + name)
+            ScopeMap._dump(_hier, print_levels, indent + 1)
 
 
 class VCDParserMixin:
@@ -243,20 +247,22 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
         ):
             # is a match
             if self._debug:
-              print(
-                  "DEBUG: reached trigger level {} ({})".format(
-                      self._current_level + 1, self._levels[self._current_level]
-                  )
-              )
-            self._trigger_history.append(VCDTriggerEvent("condition",
-                                                         self.current_time,
-                                                         trig))
+                print(
+                    "DEBUG: reached trigger level {} ({})".format(
+                        self._current_level + 1,
+                        self._levels[self._current_level],
+                    )
+                )
+            self._trigger_history.append(
+                VCDTriggerEvent("condition", self.current_time, trig)
+            )
             self._current_level += 1
 
         if self._current_level == self.trigger_levels:
             self.disarm_trigger()
             self._triggered = True
-            self._trigger_history.append(VCDTriggerEvent("trigger",
-                                                         self.current_time))
+            self._trigger_history.append(
+                VCDTriggerEvent("trigger", self.current_time)
+            )
             if self._trigger_cb is not None:
                 self._trigger_cb()

@@ -83,7 +83,12 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("vcd", help="path to vcd file")
     cmds = parser.add_subparsers(dest="command")
-    cmds.add_parser("dumphier", help="dump hierarchy")
+    dump_parser = cmds.add_parser("dumphier", help="dump hierarchy")
+
+    dump_parser.add_argument(
+        "--print-level", help="print hierarchical levels", action="store_true"
+    )
+
     sig_parser = cmds.add_parser("signals", help="filter and search signals")
     sig_parser.add_argument(
         "--filter-scope", help="add scope filter", nargs="+"
@@ -111,7 +116,7 @@ if __name__ == "__main__":
     vcdh.parse(vcddata)
 
     if args.command == "dumphier":
-        vcdh.scope_hier.dump()
+        vcdh.scope_hier.dump(args.print_level)
     elif args.command == "signals":
         print("INFO: found {} signals".format(len(vcdh.selected_vars)))
         for var in vcdh.selected_vars.values():
