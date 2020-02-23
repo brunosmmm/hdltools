@@ -20,5 +20,7 @@ setup(
         "tools/axi_slave_builder",
         "tools/inputgen",
         "tools/vgc",
+        "tools/vcdhier",
+        "tools/vcdtracker",
     ],
 )
