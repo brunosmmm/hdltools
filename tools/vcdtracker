@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """VCD tracker debug."""
 
 from argparse import ArgumentParser
@@ -103,11 +104,15 @@ if __name__ == "__main__":
             exit(1)
 
     restrict_src, inclusive_src = (
-        VCDScope.from_str(restrict_src) if restrict_src is not None else (None, False)
+        VCDScope.from_str(restrict_src)
+        if restrict_src is not None
+        else (None, False)
     )
 
     restrict_dest, inclusive_dest = (
-        VCDScope.from_str(restrict_dest) if restrict_dest is not None else (None, False)
+        VCDScope.from_str(restrict_dest)
+        if restrict_dest is not None
+        else (None, False)
     )
 
     if args.restrict_time is not None:
