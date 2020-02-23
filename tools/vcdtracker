@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """VCD tracker debug."""
 
+import os
 from argparse import ArgumentParser
 from hdltools.vcd import VCDScope
 from hdltools.vcd.tracker import VCDValueTracker
 from hdltools.patterns import Pattern
 from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
 
+DEBUG = os.environ.get("DEBUG")
 
 if __name__ == "__main__":
 
@@ -131,6 +133,8 @@ if __name__ == "__main__":
     else:
         restrict_time = None
 
+    enable_debug = False if DEBUG is None else bool(DEBUG)
+
     tracker = VCDValueTracker(
         Pattern(args.pattern),
         restrict_src=restrict_src,
@@ -143,6 +147,7 @@ if __name__ == "__main__":
         preconditions=preconditions,
         postconditions=postconditions,
         time_range=restrict_time,
+        debug=enable_debug,
     )
     tracker.parse(vcddata)
 
