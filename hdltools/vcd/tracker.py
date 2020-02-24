@@ -121,7 +121,11 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     def _precondition_callback(self):
         """Precondition callback."""
         if self._debug:
-            print("DEBUG: reached preconditions")
+            print(
+                "DEBUG: {} trigger reached_preconditions".format(
+                    self.current_time
+                )
+            )
         self._wait_precondition = False
         # setup postconditions
         if self._postconditions:
@@ -136,7 +140,11 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
     def _postcondition_callback(self):
         """Postcondition callback."""
         if self._debug:
-            print("DEBUG: reached postconditions; stopping")
+            print(
+                "DEBUG: {} trigger reached_postconditions".format(
+                    self.current_time
+                )
+            )
         self._wait_postcondition = False
         self._abort_parser()
 
@@ -210,10 +218,9 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
                         # ignore
                         return
             if self._debug:
-                print("DEBUG: current time = {}".format(self.current_time))
                 print(
-                    "DEBUG: found value match, variable is {}".format(
-                        self.variables[fields["var"]]
+                    "DEBUG: {} match {}".format(
+                        self.current_time, self.variables[fields["var"]]
                     )
                 )
             if fields["var"] not in self.variables:
