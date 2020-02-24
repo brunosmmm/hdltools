@@ -1,0 +1,31 @@
+    // gnu objdump parsing grammar
+
+Dump:
+    info*=InfoSection sections*=DisassemblySection;
+
+DisassemblySection:
+    "Disassembly" "of" "section" name=/[\.\w]+/ ":" functions*=Function;
+
+InfoSection:
+    info=/[\.\-\w]+/ ":" text=/.*$/;
+
+Function:
+    header=FunctionDescription instructions*=MaybeInstruction;
+
+FunctionDescription:
+    addr=HexString symbol=SymbolName ":";
+
+SymbolName:
+    "<" name=/[\.\w]+/ ">";
+
+MaybeInstruction:
+    Ellipsis | Instruction;
+
+Instruction:
+    addr=HexString ":" opcode=HexString assemblyTxt=/.+$/;
+
+HexString:
+    /[0-9a-fA-F]+/;
+
+Ellipsis:
+    "...";
