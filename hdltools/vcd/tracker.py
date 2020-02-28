@@ -32,7 +32,8 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         postconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         time_range: Optional[Tuple[int, int]] = None,
         track_all: bool = False,
-        **kwargs
+        src_oneshot: bool = False,
+        **kwargs,
     ):
         """Initialize."""
         super().__init__(**kwargs)
@@ -52,6 +53,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         self._restrict_dest = restrict_dest
         self._inclusive_src = inclusive_src
         self._inclusive_dest = inclusive_dest
+        self._oneshot_src = src_oneshot
         if ignore_signals is not None:
             self._ignore_sig = [re.compile(ign) for ign in ignore_signals]
         else:
@@ -242,10 +244,17 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
                         is not None
                     ):
                         # new probable source
-                        self._maybe_src = idx
+                        # FIXME: bad logic
+                        if self._oneshot_src is False:
+                            self._maybe_src = idx
+                        elif self._maybe_src is None:
+                            self._maybe_src = idx
                 elif self._maybe_dest is None:
                     # anything that appears is probable source
-                    self._maybe_src = idx
+                    if self._oneshot_src is False:
+                        self._maybe_src = idx
+                    elif self._maybe_src is None:
+                        self._maybe_src = idx
 
             if in_dest_scope:
                 if self._maybe_dest is None and self._maybe_src is not None:
