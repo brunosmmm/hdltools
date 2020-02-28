@@ -10,7 +10,6 @@ class VCDTriggerError(Exception):
     """Trigger error."""
 
 
-
 class VCDTriggerDescriptor(VCDObject):
     """VCD Trigger descriptor."""
 
@@ -73,8 +72,12 @@ class VCDTriggerEvent(VCDObject):
 
     EVENT_TYPES = ("condition", "trigger")
 
-    def __init__(self, evt_type: str, time: int,
-                 evt: Optional[VCDTriggerDescriptor] = None):
+    def __init__(
+        self,
+        evt_type: str,
+        time: int,
+        evt: Optional[VCDTriggerDescriptor] = None,
+    ):
         """Initialize."""
         if not isinstance(time, int):
             raise TypeError("time must be an integer")
