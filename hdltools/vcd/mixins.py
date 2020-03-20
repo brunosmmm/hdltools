@@ -48,6 +48,10 @@ class ScopeMap:
             print(level + current_indent + name)
             ScopeMap._dump(_hier, print_levels, indent + 1)
 
+    def serialize(self):
+        """Serialize."""
+        return self._map.deepcopy()
+
 
 class VCDParserMixin:
     """VCD Parser mixin abstract class."""
