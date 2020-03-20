@@ -4,7 +4,7 @@ import re
 from typing import Tuple, Optional, Union
 from hdltools.vcd import VCDScope
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
-from hdltools.vcd.mixins import VCDTriggerMixin
+from hdltools.vcd.conditions import VCDConditionMixin
 from hdltools.patterns import Pattern
 from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
@@ -12,7 +12,7 @@ from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
 
 # TODO: multi value tracker
 # FIXME: avoid expensive duplications of data
-class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
+class VCDValueTracker(BaseVCDParser, VCDConditionMixin):
     """VCD Value tracker.
 
     Track a tagged value through system hierarchy.
@@ -36,7 +36,11 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         **kwargs,
     ):
         """Initialize."""
-        super().__init__(**kwargs)
+        super().__init__(
+            preconditions=preconditions,
+            postconditions=postconditions,
+            **kwargs,
+        )
         if not isinstance(track, Pattern):
             raise TypeError("track must be a Pattern object")
         self._track_value = track
@@ -75,9 +79,6 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
         )
         self._maybe_src = None
         self._maybe_dest = None
-        self._wait_precondition = False
-        self._wait_postcondition = False
-        self._postconditions = []
 
         if time_range is not None:
             if not isinstance(time_range, (tuple, list)):
@@ -93,62 +94,7 @@ class VCDValueTracker(BaseVCDParser, VCDTriggerMixin):
             self._hist_start = None
             self._hist_end = None
 
-        if postconditions is not None:
-            if isinstance(postconditions, VCDTriggerDescriptor):
-                self._postconditions.append(postconditions)
-            else:
-                for postcondition in postconditions:
-                    if not isinstance(postcondition, VCDTriggerDescriptor):
-                        raise TypeError(
-                            "precondition must be a VCDTriggerDescriptor object"
-                        )
-                    self._postconditions.append(postcondition)
-        if preconditions is not None:
-            self._wait_precondition = True
-            if isinstance(preconditions, VCDTriggerDescriptor):
-                self.add_trigger_level(preconditions)
-            else:
-                for precondition in preconditions:
-                    if not isinstance(precondition, VCDTriggerDescriptor):
-                        raise TypeError(
-                            "precondition must be a VCDTriggerDescriptor object"
-                        )
-                    self.add_trigger_level(precondition)
-
-            # arm trigger
-            self.trigger_callback = self._precondition_callback
-            self.arm_trigger()
-
     # FIXME: this is a placeholder
-    def _precondition_callback(self):
-        """Precondition callback."""
-        if self._debug:
-            print(
-                "DEBUG: {} trigger reached_preconditions".format(
-                    self.current_time
-                )
-            )
-        self._wait_precondition = False
-        # setup postconditions
-        if self._postconditions:
-            self._wait_postcondition = True
-            self.trigger_reset()
-            for postcondition in self._postconditions:
-                self.add_trigger_level(postcondition)
-
-            self.trigger_callback = self._postcondition_callback
-            self.arm_trigger()
-
-    def _postcondition_callback(self):
-        """Postcondition callback."""
-        if self._debug:
-            print(
-                "DEBUG: {} trigger reached_postconditions".format(
-                    self.current_time
-                )
-            )
-        self._wait_postcondition = False
-        self._abort_parser()
 
     def _parse_progress(self):
         """Track parsing progress."""
