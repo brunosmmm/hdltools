@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""VCD Event tracker."""
+
+from argparse import ArgumentParser
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    args = parser.parse_args()
