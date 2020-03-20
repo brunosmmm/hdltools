@@ -2,11 +2,6 @@
 
 from hdltools.vcd.mixins.hierarchy import VCDHierarchyAnalysisMixin
 from hdltools.vcd.trigger.fsm import SimpleTrigger
-from hdltools.vcd.trigger import (
-    VCDTriggerDescriptor,
-    VCDTriggerError,
-    VCDTriggerEvent,
-)
 
 
 class VCDTriggerMixin(VCDHierarchyAnalysisMixin, SimpleTrigger):
