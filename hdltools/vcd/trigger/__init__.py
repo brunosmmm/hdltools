@@ -66,6 +66,14 @@ class VCDTriggerDescriptor(VCDObject):
         """Get representation."""
         return "{{{}::{}=={}}}".format(str(self.scope), self.name, self.value)
 
+    def match(self, scope, name, value):
+        """Match against variable state."""
+        if scope != self.scope:
+            return False
+        if name != self.name:
+            return False
+        return self.value.match(value)
+
 
 class VCDTriggerEvent(VCDObject):
     """VCD trigger event."""
