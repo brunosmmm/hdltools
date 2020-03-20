@@ -17,7 +17,7 @@ class BranchingTrigger:
 class SimpleTrigger:
     """Legacy trigger state machine."""
 
-    def __init__(self):
+    def __init__(self, debug=False):
         """Initialize."""
         self._levels = []
         self._current_level = 0
@@ -25,6 +25,7 @@ class SimpleTrigger:
         self._armed = False
         self._triggered = False
         self._trigger_history = []
+        self._debug = debug
 
     def add_trigger_level(self, *conds):
         """Add a trigger level."""
