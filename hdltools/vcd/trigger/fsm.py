@@ -119,7 +119,7 @@ class SimpleTrigger:
             raise VCDTriggerError("not armed")
         self._armed = False
 
-    def match_and_advance(self, state, var, value):
+    def match_and_advance(self, var, value):
         """Value change hook."""
         if self._armed is False:
             return
