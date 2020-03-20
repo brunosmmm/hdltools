@@ -23,15 +23,16 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
 
         self.add_state_hook("dump", self._dump_hook)
 
-    def add_trigger_level(self, trig):
+    def add_trigger_level(self, *conds):
         """Add a trigger level."""
         if self._armed:
             raise VCDTriggerError("cannot modify trigger levels while armed")
-        if not isinstance(trig, VCDTriggerDescriptor):
-            raise TypeError(
-                "trigger level must be VCDTriggerDescriptor object"
-            )
-        self._levels.append(trig)
+        for cond in conds:
+            if not isinstance(cond, VCDTriggerDescriptor):
+                raise TypeError(
+                    "trigger level must be VCDTriggerDescriptor object"
+                )
+        self._levels.append(conds)
 
     def remove_trigger_level(self, trig_level):
         """Remove a trigger level."""
@@ -122,26 +123,28 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin):
         if "var" not in fields:
             return
 
-        trig = self.current_trigger
+        conds = self.current_trigger
         var = self._vars[fields["var"]]
-        if (
-            var.scope == trig.scope
-            and var.name == trig.name
-            and trig.value.match(fields["value"])
-        ):
-            # is a match
-            if self._debug:
-                print(
-                    "DEBUG: {} trigger reach_level {} {}".format(
-                        self.current_time,
-                        self._current_level + 1,
-                        self._levels[self._current_level],
+        for cond in conds:
+            if (
+                var.scope == cond.scope
+                and var.name == cond.name
+                and cond.value.match(fields["value"])
+            ):
+                # is a match
+                if self._debug:
+                    print(
+                        "DEBUG: {} trigger reach_level {} {}".format(
+                            self.current_time,
+                            self._current_level + 1,
+                            self._levels[self._current_level],
+                        )
                     )
+                self._trigger_history.append(
+                    VCDTriggerEvent("condition", self.current_time, cond)
                 )
-            self._trigger_history.append(
-                VCDTriggerEvent("condition", self.current_time, trig)
-            )
-            self._current_level += 1
+                self._current_level += 1
+                break
 
         if self._current_level == self.trigger_levels:
             self.disarm_trigger()
