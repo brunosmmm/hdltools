@@ -27,8 +27,13 @@ class SimpleTrigger:
         self._trigger_history = []
         self._debug = debug
 
-    def add_trigger_level(self, *conds):
-        """Add a trigger level."""
+    def add_trigger_level(self, *conds: VCDTriggerDescriptor):
+        """Add a trigger level.
+
+        Arguments
+        ==========
+          conds: Possible conditions, any (all or'ed together)
+        """
         if self._armed:
             raise VCDTriggerError("cannot modify trigger levels while armed")
         for cond in conds:
