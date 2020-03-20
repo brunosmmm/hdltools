@@ -10,6 +10,7 @@ class VCDTimeRestrictionMixin(VCDParserMixin):
         """Initialize."""
         time_range = kwargs.pop("time_range")
         super().__init__(**kwargs)
+        self.add_state_hook("dump", self._time_dump_hook)
         if time_range is not None:
             if not isinstance(time_range, (tuple, list)):
                 raise TypeError("time_range must be a list")
@@ -33,3 +34,19 @@ class VCDTimeRestrictionMixin(VCDParserMixin):
     def end_time(self):
         """Get end time."""
         return self._hist_end
+
+    @property
+    def time_valid(self):
+        """Get if we are in valid time constraints."""
+        if self.start_time is not None and self.current_time < self.start_time:
+            return False
+        if self.end_time is not None and self.current_time > self.end_time:
+            return False
+
+        return True
+
+    def _time_dump_hook(self, state, stmt, fields):
+        """Value change hook."""
+        if self.end_time is not None and self.current_time > self.end_time:
+            # terminate simulation
+            self._abort_parser()

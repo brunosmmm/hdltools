@@ -110,12 +110,10 @@ class VCDValueTracker(
         if self._track_value.match(fields["value"]):
             # add to complete tracking history
             self._add_to_value_history(var.scope, var.name, self.current_time)
-        if self.start_time is not None and self.current_time < self.start_time:
+        if self.time_valid is False:
+            # hasn't reached start time
             return
-        if self.end_time is not None and self.current_time > self.end_time:
-            # done
-            self._abort_parser()
-        if self._wait_precondition and self._triggered is False:
+        if self._wait_precondition and self.triggered is False:
             return
         var_scope = var.scope
         in_src_scope = self._restrict_src is not None and (
