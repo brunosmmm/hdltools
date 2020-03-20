@@ -4,7 +4,7 @@ import re
 from typing import Tuple, Optional, Union
 from hdltools.vcd import VCDScope
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
-from hdltools.vcd.conditions import VCDConditionMixin
+from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.patterns import Pattern
 from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry

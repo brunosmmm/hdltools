@@ -1,6 +1,6 @@
 """Pre and post-condition mixins."""
 
-from hdltools.vcd.mixins import VCDTriggerMixin
+from hdltools.vcd.mixins.trigger import VCDTriggerMixin
 from hdltools.vcd.trigger import VCDTriggerDescriptor
 
 
