@@ -7,7 +7,9 @@ setup(
     version="0.1",
     packages=find_packages(),
     package_dir={"": "."},
-    package_data={"hdltools": ["vecgen/*.tx", "binutils/*.tx"]},
+    package_data={
+        "hdltools": ["vecgen/*.tx", "binutils/*.tx", "vcd/trigger/*.tx"]
+    },
     author="Bruno Morais",
     author_email="brunosmmm@gmail.com",
     description="HDL Tools",

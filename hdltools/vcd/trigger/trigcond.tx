@@ -1,0 +1,26 @@
+TriggerExpression:
+    LogicStatement;
+
+LogicStatement:
+    cond=Condition others*=ConditionRight;
+
+ConditionRight:
+    op=BinaryOp cond=Condition;
+
+Condition:
+    TriggerCondition | ('(' TriggerExpression ')');
+
+TriggerCondition:
+    sig=SignalDescriptor op=ComparisonOp value=Pattern;
+
+BinaryOp:
+    "||" | "&&";
+
+ComparisonOp:
+    "==" | "!=";
+
+SignalDescriptor:
+    /[a-zA-Z_0-9:]+/;
+
+Pattern:
+    /[Xx0-9A-Fa-f]+h?/;
