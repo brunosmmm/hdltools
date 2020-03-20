@@ -21,4 +21,6 @@ class VCDTriggerMixin(VCDHierarchyAnalysisMixin, SimpleTrigger):
         # FIXME: match against proper statement
         if "var" not in fields:
             return
-        self.match_and_advance(state, fields["var"], fields["value"])
+        self.match_and_advance(
+            state, self._vars[fields["var"]], fields["value"]
+        )
