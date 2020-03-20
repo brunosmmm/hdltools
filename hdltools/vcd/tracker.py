@@ -5,14 +5,16 @@ from typing import Tuple, Optional, Union
 from hdltools.vcd import VCDScope
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
 from hdltools.vcd.mixins.conditions import VCDConditionMixin
+from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
 from hdltools.patterns import Pattern
-from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
 
 
 # TODO: multi value tracker
 # FIXME: avoid expensive duplications of data
-class VCDValueTracker(BaseVCDParser, VCDConditionMixin):
+class VCDValueTracker(
+    BaseVCDParser, VCDConditionMixin, VCDTimeRestrictionMixin
+):
     """VCD Value tracker.
 
     Track a tagged value through system hierarchy.
@@ -28,19 +30,12 @@ class VCDValueTracker(BaseVCDParser, VCDConditionMixin):
         ignore_signals: Optional[Tuple[str]] = None,
         ignore_scopes: Optional[Tuple[str]] = None,
         anchors: Optional[Tuple[str, str]] = None,
-        preconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
-        postconditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
-        time_range: Optional[Tuple[int, int]] = None,
         track_all: bool = False,
         src_oneshot: bool = False,
         **kwargs,
     ):
         """Initialize."""
-        super().__init__(
-            preconditions=preconditions,
-            postconditions=postconditions,
-            **kwargs,
-        )
+        super().__init__(**kwargs)
         if not isinstance(track, Pattern):
             raise TypeError("track must be a Pattern object")
         self._track_value = track
@@ -80,20 +75,6 @@ class VCDValueTracker(BaseVCDParser, VCDConditionMixin):
         self._maybe_src = None
         self._maybe_dest = None
 
-        if time_range is not None:
-            if not isinstance(time_range, (tuple, list)):
-                raise TypeError("time_range must be a list")
-            if len(time_range) != 2:
-                raise ValueError("time_range must have 2 elements exactly")
-            start, end = time_range
-            if not isinstance(start, int) or not isinstance(end, int):
-                raise TypeError("start and end in time_range must be integers")
-            self._hist_start = start
-            self._hist_end = end
-        else:
-            self._hist_start = None
-            self._hist_end = None
-
     # FIXME: this is a placeholder
 
     def _parse_progress(self):
@@ -129,12 +110,9 @@ class VCDValueTracker(BaseVCDParser, VCDConditionMixin):
         if self._track_value.match(fields["value"]):
             # add to complete tracking history
             self._add_to_value_history(var.scope, var.name, self.current_time)
-        if (
-            self._hist_start is not None
-            and self.current_time < self._hist_start
-        ):
+        if self.start_time is not None and self.current_time < self.start_time:
             return
-        if self._hist_end is not None and self.current_time > self._hist_end:
+        if self.end_time is not None and self.current_time > self.end_time:
             # done
             self._abort_parser()
         if self._wait_precondition and self._triggered is False:
