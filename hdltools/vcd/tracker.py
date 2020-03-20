@@ -113,7 +113,7 @@ class VCDValueTracker(
         if self.time_valid is False:
             # hasn't reached start time
             return
-        if self._wait_precondition and self.triggered is False:
+        if self.waiting_precondition:
             return
         var_scope = var.scope
         in_src_scope = self._restrict_src is not None and (

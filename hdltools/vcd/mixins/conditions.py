@@ -43,6 +43,8 @@ class VCDConditionMixin(VCDTriggerMixin):
             self.trigger_callback = self._precondition_callback
             self.arm_trigger()
 
+        self.add_state_hook("dump", self._condition_dump_hook)
+
     def _precondition_callback(self):
         """Precondition callback."""
         if self._debug:
@@ -72,3 +74,11 @@ class VCDConditionMixin(VCDTriggerMixin):
             )
         self._wait_postcondition = False
         self._abort_parser()
+
+    @property
+    def waiting_precondition(self):
+        """Get wheter waiting precondition."""
+        return self._wait_precondition is True and self.triggered is False
+
+    def _condition_dump_hook(self, state, stmt, fields):
+        """Value change hook."""
