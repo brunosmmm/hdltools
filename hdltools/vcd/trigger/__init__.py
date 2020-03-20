@@ -74,6 +74,24 @@ class VCDTriggerDescriptor(VCDObject):
             return False
         return self.value.match(value)
 
+    def __eq__(self, other):
+        """Check if is equivalent."""
+        if not isinstance(other, VCDTriggerDescriptor):
+            return False
+
+        if self.value != other.value:
+            return False
+        if self.name != other.name:
+            return False
+        if self.scope != other.scope:
+            return False
+
+        return True
+
+    def __hash__(self):
+        """Get hash."""
+        return hash(tuple(self.scope, self.name, self.value))
+
 
 class VCDTriggerEvent(VCDObject):
     """VCD trigger event."""
