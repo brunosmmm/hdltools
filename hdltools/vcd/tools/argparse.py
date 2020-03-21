@@ -20,6 +20,11 @@ class ArgumentParserPattern:
         return self._name
 
     @property
+    def member_name(self):
+        """Get member name from argument name."""
+        return "_".join(self._name.lstrip("-").split("-"))
+
+    @property
     def kwargs(self):
         """Get kwargs."""
         return self._kwargs
@@ -46,8 +51,8 @@ class RestrictTimePattern(ArgumentParserPattern):
 
     def parse_args(self, args):
         """Parse."""
-        if getattr(args, self.arg_name) is not None:
-            restrict_time = getattr(args, self.arg_name).split(",")
+        if hasattr(args, self.member_name):
+            restrict_time = getattr(args, self.member_name).split(",")
             if len(restrict_time) != 2:
                 print("ERROR: invalid time range specification")
                 exit(1)
@@ -74,10 +79,10 @@ class PreconditionPattern(ArgumentParserPattern):
 
     def parse_args(self, args):
         """Parse."""
-        if args.precondition is not None:
+        if hasattr(args, self.member_name):
             return [
                 VCDTriggerDescriptor.from_str(precondition)
-                for precondition in args.precondition
+                for precondition in getattr(args, self.member_name)
             ]
 
 
@@ -94,10 +99,10 @@ class PostconditionPattern(ArgumentParserPattern):
 
     def parse_args(self, args):
         """Parse."""
-        if args.postcondition is not None:
+        if hasattr(args, self.member_name):
             return [
                 VCDTriggerDescriptor.from_str(postcondition)
-                for postcondition in args.postcondition
+                for postcondition in getattr(args, self.member_name)
             ]
 
 
