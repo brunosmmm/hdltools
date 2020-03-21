@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from hdltools.vcd import VCDScope
 from hdltools.vcd.tracker import VCDValueTracker
 from hdltools.patterns import Pattern
-from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
+from hdltools.vcd.trigger import VCDTriggerError
 from hdltools.vcd.tools.argparse import (
     ARG_RESTRICT_TIME,
     ARG_PRECONDITION,
