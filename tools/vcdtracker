@@ -7,6 +7,7 @@ from hdltools.vcd import VCDScope
 from hdltools.vcd.tracker import VCDValueTracker
 from hdltools.patterns import Pattern
 from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
+from hdltools.vcd.tools.argparse import ARG_RESTRICT_TIME
 
 DEBUG = os.environ.get("DEBUG")
 
@@ -59,9 +60,7 @@ if __name__ == "__main__":
         help="stop tracking after pre-conditions are met, under postconditions",
         nargs="+",
     )
-    parser.add_argument(
-        "--restrict-time", help="restrict tracking to simulation time range"
-    )
+    ARG_RESTRICT_TIME.add_to_argparser(parser)
 
     args = parser.parse_args()
 
@@ -117,21 +116,7 @@ if __name__ == "__main__":
         else (None, False)
     )
 
-    if args.restrict_time is not None:
-        restrict_time = args.restrict_time.split(",")
-        if len(restrict_time) != 2:
-            print("ERROR: invalid time range specification")
-            exit(1)
-        start, end = restrict_time
-        try:
-            start = int(start)
-            end = int(end)
-        except ValueError:
-            print("ERROR: invalid values in time range specification")
-            exit(1)
-        restrict_time = (start, end)
-    else:
-        restrict_time = None
+    restrict_time = ARG_RESTRICT_TIME.parse_args(args)
 
     enable_debug = False if DEBUG is None else bool(DEBUG)
 
