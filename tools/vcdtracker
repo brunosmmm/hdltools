@@ -7,7 +7,11 @@ from hdltools.vcd import VCDScope
 from hdltools.vcd.tracker import VCDValueTracker
 from hdltools.patterns import Pattern
 from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
-from hdltools.vcd.tools.argparse import ARG_RESTRICT_TIME
+from hdltools.vcd.tools.argparse import (
+    ARG_RESTRICT_TIME,
+    ARG_PRECONDITION,
+    ARG_POSTCONDITION,
+)
 
 DEBUG = os.environ.get("DEBUG")
 
@@ -50,16 +54,8 @@ if __name__ == "__main__":
         "--dest-anchor",
         help="anchor destination to signal name by regex match",
     )
-    parser.add_argument(
-        "--precondition",
-        help="wait for a series of pre-conditions before tracking starts",
-        nargs="+",
-    )
-    parser.add_argument(
-        "--postcondition",
-        help="stop tracking after pre-conditions are met, under postconditions",
-        nargs="+",
-    )
+    ARG_PRECONDITION.add_to_argparser(parser)
+    ARG_POSTCONDITION.add_to_argparser(parser)
     ARG_RESTRICT_TIME.add_to_argparser(parser)
 
     args = parser.parse_args()
@@ -78,31 +74,22 @@ if __name__ == "__main__":
             )
             exit(1)
 
-    preconditions = None
-    if args.precondition is not None:
-        try:
-            preconditions = [
-                VCDTriggerDescriptor.from_str(precondition)
-                for precondition in args.precondition
-            ]
-        except VCDTriggerError:
-            print("ERROR: precondition is malformed")
-            exit(1)
+    try:
+        preconditions = ARG_PRECONDITION.parse_args(args)
+    except VCDTriggerError:
+        print("ERROR: precondition is malformed")
+        exit(1)
 
-    postconditions = None
-    if args.postcondition is not None:
+    try:
+        postconditions = ARG_POSTCONDITION.parse_args(args)
+    except VCDTriggerError:
+        print("ERROR: postcondition is malformed")
+        exit(1)
+    if postconditions is not None:
         if args.precondition is None:
             print(
                 "WARNING: specifying postconditions without preconditions has no effect"
             )
-        try:
-            postconditions = [
-                VCDTriggerDescriptor.from_str(postcondition)
-                for postcondition in args.postcondition
-            ]
-        except VCDTriggerError:
-            print("ERROR: postcondition is malformed")
-            exit(1)
 
     restrict_src, inclusive_src = (
         VCDScope.from_str(restrict_src)
