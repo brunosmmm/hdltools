@@ -17,7 +17,7 @@ class ArgumentParserPattern:
     @property
     def arg_name(self):
         """Get argument name."""
-        return self._arg_name
+        return self._name
 
     @property
     def kwargs(self):
