@@ -1,9 +1,10 @@
 """VCD Event tracker."""
 
+
 from typing import Tuple
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
 from hdltools.vcd.trigger import VCDTriggerDescriptor
-from hdltools.vcd.mixins.condition import VCDConditionMixin
+from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
 from hdltools.vcd.trigger.fsm import SimpleTrigger
 
