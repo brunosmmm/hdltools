@@ -50,7 +50,7 @@ class VCDValueHistoryEntry(VCDObject):
 
     def __hash__(self):
         """Get hash."""
-        return hash(tuple(self.scope, self.signal, self.time))
+        return hash(tuple([self.scope, self.signal, self.time]))
 
 
 class VCDValueHistory(VCDObject):
