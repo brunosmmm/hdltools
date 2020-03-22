@@ -43,7 +43,7 @@ class VCDConditionMixin(VCDTriggerMixin):
             self.trigger_callback = self._precondition_callback
             self.arm_trigger()
 
-    def _precondition_callback(self):
+    def _precondition_callback(self, *args):
         """Precondition callback."""
         if self._debug:
             print(
@@ -62,7 +62,7 @@ class VCDConditionMixin(VCDTriggerMixin):
             self.trigger_callback = self._postcondition_callback
             self.arm_trigger()
 
-    def _postcondition_callback(self):
+    def _postcondition_callback(self, *args):
         """Postcondition callback."""
         if self._debug:
             print(

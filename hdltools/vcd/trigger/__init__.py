@@ -154,7 +154,7 @@ class VCDTriggerFSM:
         self.disarm_trigger()
         self._triggered = True
         if self._trigger_cb is not None:
-            self._trigger_cb()
+            self._trigger_cb(self)
 
     def match_and_advance(self, var, value):
         """Update function."""
