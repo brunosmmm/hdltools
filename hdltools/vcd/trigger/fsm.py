@@ -1,10 +1,7 @@
 """Trigger state machines."""
 
-from hdltools.vcd.trigger import (
-    VCDTriggerDescriptor,
-    VCDTriggerError,
-    VCDTriggerEvent,
-)
+from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
+from hdltools.vcd.trigger.event import VCDTriggerEvent
 
 
 class BranchingTrigger:
