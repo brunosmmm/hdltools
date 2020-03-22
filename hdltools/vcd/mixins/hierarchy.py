@@ -11,7 +11,7 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
 
     def __init__(self, debug=False, **kwargs):
         """Initialize."""
-        super().__init__()
+        super().__init__(**kwargs)
         self._scope_stack = deque()
         self._scope_map = ScopeMap()
         self._vars = {}

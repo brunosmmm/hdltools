@@ -18,9 +18,9 @@ class BranchingTrigger(VCDTriggerFSM):
 class SimpleTrigger(VCDTriggerFSM):
     """Legacy trigger state machine."""
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, **kwargs):
         """Initialize."""
-        super().__init__()
+        super().__init__(**kwargs)
         self._levels = []
         self._current_level = 0
         self._trigger_history = []
