@@ -1,8 +1,58 @@
 #!/usr/bin/env python3
 """VCD Event tracker."""
 
+import json
 from argparse import ArgumentParser
+
+from dictator.config import validate_config
+from dictator.validators.replace import AutoFragmentReplace
+from dictator.validators.lists import SubListValidator
+
+from hdltools.vcd.event import VCDEventTracker
+from hdltools.vcd.trigger.trigcond import build_descriptors_from_str
+from hdltools.vcd.tools.argparse import (
+    ARG_RESTRICT_TIME,
+    ARG_PRECONDITION,
+    ARG_POSTCONDITION,
+)
+
+EVT_REQ = {"name": str, "conds": AutoFragmentReplace()}
+EVT_CFG_REQ = {"events": SubListValidator(EVT_REQ)}
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+
+    parser.add_argument("evt_def", help="Path to event definition file")
+    ARG_RESTRICT_TIME.add_to_argparser(parser)
+    ARG_PRECONDITION.add_to_argparser(parser)
+    ARG_POSTCONDITION.add_to_argparser(parser)
+
     args = parser.parse_args()
+    restrict_time = ARG_RESTRICT_TIME.parse_args(args)
+    preconditions = ARG_PRECONDITION.parse_args(args)
+    postconditions = ARG_POSTCONDITION.parse_args(args)
+
+    try:
+        with open(args.evt_def, "r") as evt_cfg_contents:
+            evt_cfg = json.load(evt_cfg_contents)
+
+    except json.JSONDecodeError:
+        print("ERROR: malformed json in configuration file")
+        exit(1)
+    except OSError as ex:
+        print(f"ERROR: could not open file: {ex}")
+        exit(1)
+
+    # parse configuration file
+    parsed_cfg = validate_config(evt_cfg, EVT_CFG_REQ, gobble_unknown=False)
+    events = {
+        evt["name"]: build_descriptors_from_str(evt["conds"])
+        for evt in parsed_cfg["events"]
+    }
+
+    evt_tracker = VCDEventTracker(
+        events,
+        postconditions=postconditions,
+        preconditions=preconditions,
+        time_range=restrict_time,
+    )
