@@ -149,6 +149,13 @@ class VCDTriggerFSM:
             raise VCDTriggerError("not armed")
         self._armed = False
 
+    def _fire_trigger(self):
+        """Fire trigger."""
+        self.disarm_trigger()
+        self._triggered = True
+        if self._trigger_cb is not None:
+            self._trigger_cb()
+
     def match_and_advance(self, var, value):
         """Update function."""
         raise NotImplementedError

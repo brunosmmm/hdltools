@@ -107,10 +107,7 @@ class SimpleTrigger(VCDTriggerFSM):
                 break
 
         if self._current_level == self.trigger_levels:
-            self.disarm_trigger()
-            self._triggered = True
             self._trigger_history.append(
                 VCDTriggerEvent("trigger", self.current_time)
             )
-            if self._trigger_cb is not None:
-                self._trigger_cb()
+            self._fire_trigger()
