@@ -1,12 +1,12 @@
 """VCD Event tracker."""
 
 
-from typing import Tuple
+from typing import Tuple, Dict
 from hdltools.vcd.parser import BaseVCDParser, VCDParserError
 from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
-from hdltools.vcd.trigger.fsm import SimpleTrigger
+from hdltools.vcd.trigger.condtable import ConditionTableTrigger
 
 # an event is a VCDTriggerDescriptor
 
@@ -16,31 +16,32 @@ class VCDEventTracker(
 ):
     """Event tracker."""
 
-    def __init__(self, events: Tuple[VCDTriggerDescriptor], **kwargs):
+    def __init__(
+        self, events: Dict[str, Tuple[VCDTriggerDescriptor]], **kwargs
+    ):
         """Initialize."""
         super().__init__(**kwargs)
-        for event in events:
-            if not isinstance(event, VCDTriggerDescriptor):
-                raise TypeError("events must be VCDTriggerDescriptor objects")
-
         self._events = events
-        self._evt_trigger = SimpleTrigger()
-        # add events, only one level
-        self._evt_trigger.add_trigger_level(events)
+        self._evt_triggers = {
+            evt_name: ConditionTableTrigger(conditions=conds)
+            for evt_name, conds in events.items()
+        }
         # arm immediately
-        self._evt_trigger.trigger_callback = self._evt_trigger_callback
-        self._evt_trigger.arm_trigger()
+        for trigger in self._evt_triggers.values():
+            trigger.trigger_callback = self._evt_trigger_callback
+            trigger.arm_trigger()
 
-    def _evt_trigger_callback(self):
+    def _evt_trigger_callback(self, trigger_fsm):
         """Event trigger callback."""
         # rearm immediately
-        self._evt_trigger.arm_trigger()
+        trigger_fsm.arm_trigger()
 
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
         if self.time_valid is False or self.waiting_precondition:
             return
 
-        # feed event trigger
+        # feed event triggers
         var = self.variables[fields["var"]]
-        self._evt_trigger.match_and_advance(var, fields["value"])
+        for trigger in self._evt_triggers.values():
+            trigger.match_and_advance(var, fields["value"])
