@@ -1,6 +1,8 @@
 """Condition table-based trigger fsm."""
 
-from hdltools.vcd.trigger import VCDTriggerFSM
+
+from typing import Optional, Tuple
+from hdltools.vcd.trigger import VCDTriggerFSM, VCDTriggerDescriptor
 
 
 class ConditionTableTrigger(VCDTriggerFSM):
@@ -9,10 +11,18 @@ class ConditionTableTrigger(VCDTriggerFSM):
     Unordered event-based trigger
     """
 
-    def __init__(self, debug=False):
+    def __init__(
+        self,
+        conditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
+        debug=False,
+    ):
         """Initialize."""
         super().__init__()
         self._condtable = {}
+
+        if conditions is not None:
+            for condition in conditions:
+                self.add_condition(condition)
 
     @property
     def conditions_met(self):
@@ -34,15 +44,17 @@ class ConditionTableTrigger(VCDTriggerFSM):
         super().trigger_reset()
         self._condtable = []
 
-    def add_condition(self, cond):
+    def add_condition(self, cond: VCDTriggerDescriptor):
         """Add condition."""
         if self.trigger_armed:
             raise RuntimeError("cannot add condition while trigger is armed")
         if cond in self._condtable:
             raise ValueError("condition is already in condition table")
+        if not isinstance(cond, VCDTriggerDescriptor):
+            raise TypeError("cond must be a VCDTriggerDescriptor object")
         self._condtable[cond] = False
 
-    def remove_condition(self, cond):
+    def remove_condition(self, cond: VCDTriggerDescriptor):
         """Remove condition."""
         if self.trigger_armed:
             raise RuntimeError(
