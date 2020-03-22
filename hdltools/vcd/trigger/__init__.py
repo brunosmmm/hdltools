@@ -91,3 +91,7 @@ class VCDTriggerDescriptor(VCDObject):
     def __hash__(self):
         """Get hash."""
         return hash(tuple(self.scope, self.name, self.value))
+
+
+class VCDTriggerFSM:
+    """Trigger FSM abstract class."""

@@ -1,17 +1,21 @@
 """Trigger state machines."""
 
-from hdltools.vcd.trigger import VCDTriggerDescriptor, VCDTriggerError
+from hdltools.vcd.trigger import (
+    VCDTriggerDescriptor,
+    VCDTriggerError,
+    VCDTriggerFSM,
+)
 from hdltools.vcd.trigger.event import VCDTriggerEvent
 
 
-class BranchingTrigger:
+class BranchingTrigger(VCDTriggerFSM):
     """Branching trigger state machine."""
 
     def __init__(self, **kwargs):
         """Initialize."""
 
 
-class SimpleTrigger:
+class SimpleTrigger(VCDTriggerFSM):
     """Legacy trigger state machine."""
 
     def __init__(self, debug=False):
