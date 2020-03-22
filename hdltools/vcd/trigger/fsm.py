@@ -20,11 +20,9 @@ class SimpleTrigger(VCDTriggerFSM):
 
     def __init__(self, debug=False):
         """Initialize."""
+        super().__init__()
         self._levels = []
         self._current_level = 0
-        self._trigger_cb = None
-        self._armed = False
-        self._triggered = False
         self._trigger_history = []
         self._debug = debug
 
@@ -52,29 +50,9 @@ class SimpleTrigger(VCDTriggerFSM):
 
     def trigger_reset(self):
         """Reset trigger configurations."""
-        if self._armed:
-            raise VCDTriggerError(
-                "cannot modify trigger configuration while armed"
-            )
+        super().trigger_reset()
         self._levels = []
         self._current_level = 0
-        self._trigger_cb = None
-        self._armed = False
-        self._triggered = False
-
-    @property
-    def trigger_callback(self):
-        """Get trigger callback."""
-        return self._trigger_cb
-
-    @trigger_callback.setter
-    def trigger_callback(self, cb):
-        """Set trigger callback."""
-        if self._armed:
-            raise VCDTriggerError("cannot change callback while armed")
-        if not callable(cb):
-            raise TypeError("trigger callback must be a callable")
-        self._trigger_cb = cb
 
     @property
     def current_trigger_level(self):
@@ -92,33 +70,14 @@ class SimpleTrigger(VCDTriggerFSM):
         return len(self._levels)
 
     @property
-    def trigger_armed(self):
-        """Get whether trigger is armed."""
-        return self._armed
-
-    @property
-    def triggered(self):
-        """Get whether triggered."""
-        return self._triggered
-
-    @property
     def trigger_history(self):
         """Get trigger event history."""
         return self._trigger_history
 
     def arm_trigger(self):
         """Arm trigger."""
-        if self._armed:
-            raise VCDTriggerError("already armed")
-        self._triggered = False
+        super().arm_trigger()
         self._current_level = 0
-        self._armed = True
-
-    def disarm_trigger(self):
-        """Disarm trigger."""
-        if self._armed is False:
-            raise VCDTriggerError("not armed")
-        self._armed = False
 
     def match_and_advance(self, var, value):
         """Value change hook."""

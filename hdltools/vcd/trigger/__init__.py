@@ -95,3 +95,60 @@ class VCDTriggerDescriptor(VCDObject):
 
 class VCDTriggerFSM:
     """Trigger FSM abstract class."""
+
+    def __init__(self):
+        """Initialize."""
+        self._trigger_cb = None
+        self._armed = False
+        self._triggered = False
+
+    def trigger_reset(self):
+        """Reset configuration."""
+        if self._armed:
+            raise VCDTriggerError(
+                "cannot modify trigger configuration while armed"
+            )
+        self._trigger_cb = None
+        self._armed = False
+        self._triggered = False
+
+    @property
+    def trigger_callback(self):
+        """Get trigger callback."""
+        return self._trigger_cb
+
+    @trigger_callback.setter
+    def trigger_callback(self, cb):
+        """Set trigger callback."""
+        if self._armed:
+            raise VCDTriggerError("cannot change callback while armed")
+        if not callable(cb):
+            raise TypeError("trigger callback must be a callable")
+        self._trigger_cb = cb
+
+    @property
+    def trigger_armed(self):
+        """Get whether trigger is armed."""
+        return self._armed
+
+    @property
+    def triggered(self):
+        """Get whether triggered."""
+        return self._triggered
+
+    def arm_trigger(self):
+        """Arm trigger."""
+        if self._armed:
+            raise VCDTriggerError("already armed")
+        self._triggered = False
+        self._armed = True
+
+    def disarm_trigger(self):
+        """Disarm trigger."""
+        if self._armed is False:
+            raise VCDTriggerError("not armed")
+        self._armed = False
+
+    def match_and_advance(self, var, value):
+        """Update function."""
+        raise NotImplementedError
