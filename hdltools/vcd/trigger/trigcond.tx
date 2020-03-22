@@ -14,7 +14,7 @@ TriggerCondition:
     sig=SignalDescriptor op=ComparisonOp value=Pattern;
 
 BinaryOp:
-    "||" | "&&";
+    "||" | "&&" | '=>';
 
 ComparisonOp:
     "==" | "!=";
