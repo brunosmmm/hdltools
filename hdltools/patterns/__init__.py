@@ -22,7 +22,7 @@ class Pattern:
         # tolerate some variations
         if isinstance(pattern, str):
             if pattern.endswith("h"):
-                pattern = bin(int(pattern[:-1], 16))
+                pattern = self.hex_to_bin(pattern)
             if pattern.startswith("0b"):
                 pattern = pattern[2:]
 
@@ -72,3 +72,17 @@ class Pattern:
                 return False
 
         return True
+
+    @staticmethod
+    def hex_to_bin(hexstr):
+        """Convert hex to binary including don't cares."""
+        if hexstr.endswith("h"):
+            hexstr = hexstr[:-1]
+
+        hexstr = hexstr.replace("x", "X")
+        split = hexstr.split("X")
+        ret = ""
+        for fragment in split:
+            ret += bin(int(fragment, 16)) if fragment else "xxxx"
+
+        return ret
