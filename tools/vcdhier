@@ -120,4 +120,7 @@ if __name__ == "__main__":
     elif args.command == "signals":
         print("INFO: found {} signals".format(len(vcdh.selected_vars)))
         for var in vcdh.selected_vars.values():
+            aliases = var.aliases
             print(var)
+            if aliases:
+                print(var.dump_aliases())

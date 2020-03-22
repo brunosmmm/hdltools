@@ -92,6 +92,7 @@ class VCDVariable(VCDObject):
         self._identifiers = identifiers
         self._name = name
         self._scope = scope
+        self._aliases = []
 
     @property
     def var_type(self):
@@ -118,6 +119,11 @@ class VCDVariable(VCDObject):
         return self._name
 
     @property
+    def aliases(self):
+        """Get aliases."""
+        return self._aliases
+
+    @property
     def scope(self):
         """Get scope."""
         return self._scope
@@ -127,6 +133,10 @@ class VCDVariable(VCDObject):
     def identifiers(self):
         """Get identifiers."""
         return self._identifiers
+
+    def add_alias(self, scope, name):
+        """Add an alias."""
+        self._aliases.append((scope, name))
 
     def get_first_identifier(self):
         """Get identifier."""
@@ -147,6 +157,17 @@ class VCDVariable(VCDObject):
         """Get representation."""
         scope_str = str(self._scope) + "::" if self._scope else ""
         return "{}{} ({})".format(scope_str, self._name, self._identifiers[0])
+
+    def dump_aliases(self):
+        """Get representation for aliases."""
+        ret = []
+        for scope, name in self._aliases:
+            scope_str = str(scope) + "::" if scope else ""
+            ret.append(
+                "{}{} ({})".format(scope_str, name, self._identifiers[0])
+            )
+
+        return "\n".join(ret)
 
 
 class VCDDump(VCDObject):
