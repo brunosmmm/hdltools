@@ -16,12 +16,15 @@ class ConditionTableTrigger(VCDTriggerFSM):
         conditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         evt_name: Optional[str] = None,
         debug=False,
+        oneshot=True,
         **kwargs,
     ):
         """Initialize."""
         super().__init__(**kwargs)
         self._condtable = {}
         self._evt_name = evt_name
+        self._oneshot = oneshot
+        self._event_end_cb = None
 
         if conditions is not None:
             for condition in conditions:
@@ -51,6 +54,35 @@ class ConditionTableTrigger(VCDTriggerFSM):
     def conditions(self):
         """Get conditions."""
         return self._condtable.keys()
+
+    @property
+    def oneshot(self):
+        """Get oneshot."""
+        return self._oneshot
+
+    @oneshot.setter
+    def oneshot(self, value):
+        """Set oneshotness."""
+        if not isinstance(value, bool):
+            raise TypeError("value must be bool")
+        if self.trigger_armed:
+            raise RuntimeError("cannot change oneshot property while armed")
+
+        self._oneshot = value
+
+    @property
+    def event_end_cb(self):
+        """Get end callback."""
+        return self._event_end_cb
+
+    @event_end_cb.setter
+    def event_end_cb(self, value):
+        """Set event end callback."""
+        if not callable(value):
+            raise TypeError("value must be a callable")
+        if self.trigger_armed:
+            raise RuntimeError("cannot change event callback while armed")
+        self._event_end_cb = value
 
     def arm_trigger(self):
         """Arm trigger."""
@@ -91,6 +123,12 @@ class ConditionTableTrigger(VCDTriggerFSM):
         """Get condition state."""
         return self._condtable[key]
 
+    def _event_ends(self):
+        """Event ends."""
+        self.disarm_trigger()
+        if self._event_end_cb:
+            self._event_end_cb(self)
+
     def advance(self, cond, value):
         """Advance value directly without variable name matching."""
         if self.trigger_armed is False:
@@ -104,9 +142,17 @@ class ConditionTableTrigger(VCDTriggerFSM):
 
     def check_and_fire(self):
         """Check current state and fire."""
-        if self.unmet_conditions == 0:
-            # done
-            self._fire_trigger()
+        if self.unmet_conditions == 0 and self.triggered is False:
+            # done (event start)
+            self._fire_trigger(self.oneshot)
+
+        if (
+            not self.oneshot
+            and self.unmet_conditions != 0
+            and self.triggered is True
+        ):
+            # event ends
+            self._event_ends()
 
     def match_and_advance(self, var, value):
         """Update condition states."""
