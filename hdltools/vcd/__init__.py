@@ -93,6 +93,8 @@ class VCDVariable(VCDObject):
         self._name = name
         self._scope = scope
         self._aliases = []
+        self._value = None
+        self._last_change = 0
 
     @property
     def var_type(self):
@@ -133,6 +135,26 @@ class VCDVariable(VCDObject):
     def identifiers(self):
         """Get identifiers."""
         return self._identifiers
+
+    @property
+    def value(self):
+        """Get last known value."""
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        """Set value."""
+        self._value = value
+
+    @property
+    def last_changed(self):
+        """Get cycle when last changed."""
+        return self._last_changed
+
+    @last_changed.setter
+    def last_changed(self, time):
+        """Record change."""
+        self._last_changed = time
 
     def add_alias(self, scope, name):
         """Add an alias."""
