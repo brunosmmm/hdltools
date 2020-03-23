@@ -19,6 +19,7 @@ class TriggerConditionVisitor(ASTVisitor):
         """Initialize."""
         super().__init__()
         self._conditions = []
+        self._mode = None
 
     @staticmethod
     def get_slice_size(node):
@@ -121,12 +122,31 @@ class TriggerConditionVisitor(ASTVisitor):
 
     def visit_ConditionRight(self, node):
         """Visit rhs of statement."""
-        if node.op != "&&":
-            raise VisitError("only && operator supported")
+        if self._mode is None:
+            if node.op == "&&":
+                self._mode = "&&"
+            elif node.op == "=>":
+                self._mode = "=>"
+            else:
+                raise RuntimeError("only && or => operators supported for now")
+        else:
+            if node.op != self._mode:
+                raise RuntimeError("all operators must be homonegeous")
 
     def get_conditions(self):
         """Get conditions."""
         return self._conditions
+
+    def get_mode(self):
+        """Get operation mode."""
+        return self._mode
+
+    def visit(self, node):
+        """Visit."""
+        super().visit(node)
+        # default mode
+        if self._mode is None:
+            self._mode = "&&"
 
 
 def parse_trigcond(text):
@@ -140,4 +160,4 @@ def build_descriptors_from_str(cond):
     ast = parse_trigcond(cond)
     visitor = TriggerConditionVisitor()
     visitor.visit(ast)
-    return visitor.get_conditions()
+    return (visitor.get_conditions(), visitor.get_mode())
