@@ -203,9 +203,10 @@ class VCDTriggerFSM:
             raise VCDTriggerError("not armed")
         self._armed = False
 
-    def _fire_trigger(self):
+    def _fire_trigger(self, disarm=True):
         """Fire trigger."""
-        self.disarm_trigger()
+        if disarm:
+            self.disarm_trigger()
         self._triggered = True
         if self._trigger_cb is not None:
             self._trigger_cb(self)
