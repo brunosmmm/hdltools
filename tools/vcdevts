@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     if args.output is not None:
         with open(args.output, "w") as outfile:
-            json.dump(outfile, output)
+            json.dump(output, outfile, indent=2)
 
     if args.dump_counts:
         print("EVENT\tCOUNT")
