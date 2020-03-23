@@ -142,9 +142,12 @@ class VCDTriggerFSM:
 
     def __init__(self, **kwargs):
         """Initialize."""
+        self._event_start_cb = None
+        self._event_end_cb = None
         self._trigger_cb = None
         self._armed = False
         self._triggered = False
+        self._evt_start_fired = False
         trigger_id = kwargs.get("trigger_id")
         if trigger_id is not None:
             self._trigger_id = trigger_id
@@ -153,6 +156,34 @@ class VCDTriggerFSM:
 
         evt_name = kwargs.get("evt_name")
         self._evt_name = evt_name
+
+    @property
+    def event_end_cb(self):
+        """Get end callback."""
+        return self._event_end_cb
+
+    @event_end_cb.setter
+    def event_end_cb(self, value):
+        """Set event end callback."""
+        if not callable(value):
+            raise TypeError("value must be a callable")
+        if self.trigger_armed:
+            raise RuntimeError("cannot change event callback while armed")
+        self._event_end_cb = value
+
+    @property
+    def event_start_cb(self):
+        """Get start callback."""
+        return self._event_start_cb
+
+    @event_start_cb.setter
+    def event_start_cb(self, value):
+        """Set event start callback."""
+        if not callable(value):
+            raise TypeError("value must be a callable")
+        if self.trigger_armed:
+            raise RuntimeError("cannot change event callback while armed")
+        self._event_start_cb = value
 
     @property
     def evt_name(self):
@@ -212,6 +243,7 @@ class VCDTriggerFSM:
         """Arm trigger."""
         if self._armed:
             raise VCDTriggerError("already armed")
+        self._evt_start_fired = False
         self._triggered = False
         self._armed = True
 
@@ -228,6 +260,26 @@ class VCDTriggerFSM:
         self._triggered = True
         if self._trigger_cb is not None:
             self._trigger_cb(self)
+
+    def _event_starts(self):
+        """Event starts."""
+        if self._event_start_cb and self._evt_start_fired:
+            self._evt_start_fired = True
+            self._event_start_cb(self)
+
+    def _event_ends(self):
+        """Event ends."""
+        self.disarm_trigger()
+        if self._event_ends_cb:
+            self._event_ends_cb(self)
+
+    def check_and_fire(self):
+        """Check current state and fire."""
+        raise NotImplementedError
+
+    def advance(self, var, value):
+        """Advance without variable check."""
+        raise NotImplementedError
 
     def match_and_advance(self, var, value):
         """Update function."""

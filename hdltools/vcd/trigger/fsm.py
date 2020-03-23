@@ -103,9 +103,26 @@ class SimpleTrigger(VCDTriggerFSM):
         super().arm_trigger()
         self._current_level = 0
 
+    def advance(self, cond, value):
+        """Advance state."""
+        if self.trigger_armed is False:
+            return (False, None, False)
+        if cond.match_value(value):
+            self._current_level += 1
+            return (True, True, True)
+        else:
+            return (False, False, False)
+
+    def check_and_fire(self):
+        """Check current state and fire."""
+        if self._current_level > 0:
+            self._event_starts()
+        if self._current_level == self.trigger_levels:
+            self._fire_trigger()
+
     def match_and_advance(self, var, value):
         """Value change hook."""
-        if self._armed is False:
+        if self.trigger_armed is False:
             return
 
         conds = self.current_trigger

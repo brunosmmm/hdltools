@@ -22,7 +22,6 @@ class ConditionTableTrigger(VCDTriggerFSM):
         super().__init__(**kwargs)
         self._condtable = {}
         self._oneshot = oneshot
-        self._event_end_cb = None
 
         if conditions is not None:
             for condition in conditions:
@@ -73,20 +72,6 @@ class ConditionTableTrigger(VCDTriggerFSM):
 
         self._oneshot = value
 
-    @property
-    def event_end_cb(self):
-        """Get end callback."""
-        return self._event_end_cb
-
-    @event_end_cb.setter
-    def event_end_cb(self, value):
-        """Set event end callback."""
-        if not callable(value):
-            raise TypeError("value must be a callable")
-        if self.trigger_armed:
-            raise RuntimeError("cannot change event callback while armed")
-        self._event_end_cb = value
-
     def arm_trigger(self):
         """Arm trigger."""
         super().arm_trigger()
@@ -126,22 +111,16 @@ class ConditionTableTrigger(VCDTriggerFSM):
         """Get condition state."""
         return self._condtable[key]
 
-    def _event_ends(self):
-        """Event ends."""
-        self.disarm_trigger()
-        if self._event_end_cb:
-            self._event_end_cb(self)
-
     def advance(self, cond, value):
         """Advance value directly without variable name matching."""
         if self.trigger_armed is False:
-            return (False, None)
+            return (False, None, False)
         if cond.match_value(value):
             self._condtable[cond] = True
-            return (True, True)
+            return (True, True, False)
         else:
             self._condtable[cond] = False
-            return (True, False)
+            return (True, False, False)
 
     def check_and_fire(self):
         """Check current state and fire."""

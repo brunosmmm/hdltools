@@ -10,6 +10,7 @@ from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
 from hdltools.vcd.trigger.condtable import ConditionTableTrigger
+from hdltools.vcd.trigger.fsm import SimpleTrigger
 
 init(autoreset=True)
 
@@ -79,20 +80,15 @@ class VCDEventTracker(
     """Event tracker."""
 
     def __init__(
-        self, events: Dict[str, Tuple[VCDTriggerDescriptor]], **kwargs
+        self,
+        events: Dict[str, Tuple[Tuple[VCDTriggerDescriptor], str]],
+        **kwargs,
     ):
         """Initialize."""
         super().__init__(**kwargs)
         self._events = events
-        self._evt_triggers = {
-            evt_name: [
-                ConditionTableTrigger(
-                    conditions=conds, evt_name=evt_name, oneshot=False
-                ),
-                None,
-            ]
-            for evt_name, conds in events.items()
-        }
+        self._evt_triggers = {}
+        self._compile_triggers(events)
         # arm immediately
         for trigger, _ in self._evt_triggers.values():
             trigger.event_end_cb = self._evt_end_callback
@@ -102,6 +98,24 @@ class VCDEventTracker(
         # crude statistics
         self._event_counts = {}
         self._event_history = []
+
+    def _compile_triggers(self, events):
+        """Build trigger array."""
+        for evt_name, (cond, mode) in events.items():
+            if mode == "&&":
+                self._evt_triggers[evt_name] = [
+                    ConditionTableTrigger(
+                        conditions=cond, evt_name=evt_name, oneshot=False
+                    ),
+                    None,
+                ]
+            elif mode == "=>":
+                self._evt_triggers[evt_name] = [
+                    SimpleTrigger(levels=cond, evt_name=evt_name),
+                    None,
+                ]
+            else:
+                raise RuntimeError("invalid mode in trigger description")
 
     @property
     def event_counts(self):
@@ -176,7 +190,7 @@ class VCDEventTracker(
         if old_state == "header":
             # add VCD variable identifiers to condition table elements
             for _, (condtable, _) in self._evt_triggers.items():
-                for cond in condtable.conditions:
+                for cond in condtable.global_sensitivity_list:
                     # post-process now
                     candidates = self.variable_search(
                         cond.name, cond.scope, True
@@ -198,13 +212,15 @@ class VCDEventTracker(
         for condtable, _ in self._evt_triggers.values():
             # update consolidated values
             changed = []
-            for cond in condtable.conditions:
+            for cond in condtable.sensitivity_list:
                 # pick variables directly for speed
                 var = self.variables[cond.vcd_var]
                 if var.last_changed == self.last_cycle_time:
-                    _changed, state = condtable.advance(cond, var.value)
+                    _changed, state, stop = condtable.advance(cond, var.value)
                     if _changed:
                         changed.append((cond, state))
+                    if stop:
+                        break
 
             if changed:
                 print(
