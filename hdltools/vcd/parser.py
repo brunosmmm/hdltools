@@ -109,11 +109,17 @@ class BaseVCDParser(DataParser):
         else:
             self._debug = False
         self._ticks = 0
+        self._old_ticks = 0
 
     @property
     def current_time(self):
         """Get current time."""
         return self._ticks
+
+    @property
+    def last_cycle_time(self):
+        """Get last simulation cycle time."""
+        return self._old_ticks
 
     def header_statement_handler(self, stmt, fields):
         """Handle header statement."""
@@ -130,6 +136,7 @@ class BaseVCDParser(DataParser):
     def _advance_clock(self, ticks):
         """Advance wall clock."""
         self.clock_change_handler(ticks)
+        self._old_ticks = self._ticks
         self._ticks = ticks
 
     def _state_header(self, position):

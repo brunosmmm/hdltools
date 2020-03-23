@@ -100,8 +100,10 @@ class ConditionTableTrigger(VCDTriggerFSM):
                 # condition in table
                 if cond.match_value(value):
                     updated_values[cond] = True
+                    print(f"DEBUG: cond {cond} -> TRUE")
                 else:
                     updated_values[cond] = False
+                    print(f"DEBUG: cond {cond} -> FALSE")
 
         # save updated values
         self._condtable.update(updated_values)
