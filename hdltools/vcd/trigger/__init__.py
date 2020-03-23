@@ -144,6 +144,7 @@ class VCDTriggerFSM:
         """Initialize."""
         self._event_start_cb = None
         self._event_end_cb = None
+        self._event_timeout_cb = None
         self._trigger_cb = None
         self._armed = False
         self._triggered = False
@@ -171,14 +172,14 @@ class VCDTriggerFSM:
         return self._last_evt_uuid
 
     @property
-    def event_end_cb(self):
-        """Get end callback."""
-        return self._event_end_cb
-
-    @property
     def event_ending(self):
         """Get whether event ends now."""
         return self._event_ends_now
+
+    @property
+    def event_end_cb(self):
+        """Get end callback."""
+        return self._event_end_cb
 
     @event_end_cb.setter
     def event_end_cb(self, value):
@@ -202,6 +203,20 @@ class VCDTriggerFSM:
         if self.trigger_armed:
             raise RuntimeError("cannot change event callback while armed")
         self._event_start_cb = value
+
+    @property
+    def event_timeout_cb(self):
+        """Get timeout callback."""
+        return self._event_timeout_cb
+
+    @event_timeout_cb.setter
+    def event_timeout_cb(self, value):
+        """Set event end callback."""
+        if not callable(value):
+            raise TypeError("value must be a callable")
+        if self.trigger_armed:
+            raise RuntimeError("cannot change event callback while armed")
+        self._event_timeout_cb = value
 
     @property
     def evt_name(self):
@@ -307,15 +322,17 @@ class VCDTriggerFSM:
 
     def _event_timeout(self):
         """Event timeout."""
+        if self._event_timeout_cb:
+            self._event_timeout_cb(self)
 
     def check_and_fire(self):
         """Check current state and fire."""
         raise NotImplementedError
 
-    def advance(self, var, value):
+    def advance(self, var, value, time=None):
         """Advance without variable check."""
         raise NotImplementedError
 
-    def match_and_advance(self, var, value):
+    def match_and_advance(self, var, value, time=None):
         """Update function."""
         raise NotImplementedError

@@ -111,7 +111,7 @@ class ConditionTableTrigger(VCDTriggerFSM):
         """Get condition state."""
         return self._condtable[key]
 
-    def advance(self, cond, value):
+    def advance(self, cond, value, time):
         """Advance value directly without variable name matching."""
         if self.trigger_armed is False:
             return (False, None, False)
@@ -136,7 +136,7 @@ class ConditionTableTrigger(VCDTriggerFSM):
             # event ends
             self._event_ends()
 
-    def match_and_advance(self, var, value):
+    def match_and_advance(self, var, value, time=None):
         """Update condition states."""
         if self.trigger_armed is False:
             return

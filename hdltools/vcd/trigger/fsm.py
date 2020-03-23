@@ -31,6 +31,7 @@ class SimpleTrigger(VCDTriggerFSM):
         self._current_level = 0
         self._trigger_history = []
         self._debug = debug
+        self._last_change = 0
 
         if levels is not None:
             for level in levels:
@@ -103,17 +104,23 @@ class SimpleTrigger(VCDTriggerFSM):
         """Ignore end callback setter."""
         self._event_end_cb = None
 
+    @property
+    def last_change(self):
+        """Time of last change."""
+        return self._last_change
+
     def arm_trigger(self):
         """Arm trigger."""
         super().arm_trigger()
         self._current_level = 0
 
-    def advance(self, cond, value):
+    def advance(self, cond, value, time):
         """Advance state."""
         if self.trigger_armed is False:
             return (False, None, False)
         if cond.match_value(value):
             self._current_level += 1
+            self._last_change = time
             return (True, True, True)
         else:
             return (False, False, False)
@@ -125,7 +132,7 @@ class SimpleTrigger(VCDTriggerFSM):
         if self._current_level == self.trigger_levels:
             self._fire_trigger()
 
-    def match_and_advance(self, var, value):
+    def match_and_advance(self, var, value, time=None):
         """Value change hook."""
         if self.trigger_armed is False:
             return
