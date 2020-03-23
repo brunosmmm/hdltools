@@ -306,8 +306,8 @@ class VCDTriggerFSM:
 
     def _event_starts(self):
         """Event starts."""
-        self._current_evt_uuid = uuid4()
         if self._event_start_cb and not self._evt_start_fired:
+            self._current_evt_uuid = uuid4()
             self._evt_start_fired = True
             self._event_start_cb(self)
 

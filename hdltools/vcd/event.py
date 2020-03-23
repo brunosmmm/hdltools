@@ -168,6 +168,19 @@ class VCDEventTracker(
 
         return found_event
 
+    def _remove_evt_history(self, uuid: str):
+        """Remove event from history."""
+        found = False
+        for idx, evt in enumerate(self._event_history[::-1]):
+            if uuid == evt.uuid:
+                found = True
+                break
+
+        if found is False:
+            raise RuntimeError(f"event not found: {uuid}")
+        del self._event_history[len(self._event_history) - idx - 1]
+        return evt
+
     def _evt_started_or_fired(self, trigger_fsm):
         """Handle similar events."""
         # update last triggered time
@@ -220,13 +233,12 @@ class VCDEventTracker(
 
     def _evt_timeout_callback(self, trigger_fsm):
         """Event timeout callback."""
-        evt_done = self._log_evt_end(
-            trigger_fsm.evt_name, self.last_cycle_time, trigger_fsm.current_evt
-        )
+        # rollback started event
+        evt = self._remove_evt_history(trigger_fsm.current_evt)
         print(
             Back.RED
             + Fore.BLACK
-            + f"DEBUG: @{self.last_cycle_time}: evt timeout: {trigger_fsm.evt_name} -> ({evt_done.uuid})"
+            + f"DEBUG: @{self.last_cycle_time}: evt timeout: {trigger_fsm.evt_name} -> ({evt.uuid})"
         )
 
     def _state_change_handler(self, old_state, new_state):
