@@ -156,11 +156,29 @@ class VCDTriggerFSM:
 
         evt_name = kwargs.get("evt_name")
         self._evt_name = evt_name
+        self._current_evt_uuid = None
+        self._last_evt_uuid = None
+        self._event_ends_now = False
+
+    @property
+    def current_evt(self):
+        """Get currently occurring event id."""
+        return self._current_evt_uuid
+
+    @property
+    def last_evt(self):
+        """Get last event id."""
+        return self._last_evt_uuid
 
     @property
     def event_end_cb(self):
         """Get end callback."""
         return self._event_end_cb
+
+    @property
+    def event_ending(self):
+        """Get whether event ends now."""
+        return self._event_ends_now
 
     @event_end_cb.setter
     def event_end_cb(self, value):
@@ -244,6 +262,7 @@ class VCDTriggerFSM:
         if self._armed:
             raise VCDTriggerError("already armed")
         self._evt_start_fired = False
+        self._event_ends_now = False
         self._triggered = False
         self._armed = True
 
@@ -258,20 +277,36 @@ class VCDTriggerFSM:
         if disarm:
             self.disarm_trigger()
         self._triggered = True
+        if self._current_evt_uuid is None:
+            # had no start event call
+            self._current_evt_uuid = uuid4()
+        if self._event_end_cb is None:
+            self._event_ends_now = True
         if self._trigger_cb is not None:
             self._trigger_cb(self)
+        if self._event_end_cb is None:
+            # ends here
+            self._last_evt_uuid = self._current_evt_uuid
+            self._current_evt_uuid = None
 
     def _event_starts(self):
         """Event starts."""
-        if self._event_start_cb and self._evt_start_fired:
+        self._current_evt_uuid = uuid4()
+        if self._event_start_cb and not self._evt_start_fired:
             self._evt_start_fired = True
             self._event_start_cb(self)
 
     def _event_ends(self):
         """Event ends."""
         self.disarm_trigger()
-        if self._event_ends_cb:
-            self._event_ends_cb(self)
+        self._event_ends_now = True
+        if self._event_end_cb:
+            self._event_end_cb(self)
+        self._last_evt_uuid = self._current_evt_uuid
+        self._current_evt_uuid = None
+
+    def _event_timeout(self):
+        """Event timeout."""
 
     def check_and_fire(self):
         """Check current state and fire."""
