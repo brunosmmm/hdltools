@@ -24,6 +24,9 @@ if __name__ == "__main__":
 
     parser.add_argument("evt_def", help="Path to event definition file")
     parser.add_argument("vcd", help="Path to VCD file")
+    parser.add_argument(
+        "--dump-counts", help="Print event counts", action="store_true"
+    )
     ARG_RESTRICT_TIME.add_to_argparser(parser)
     ARG_PRECONDITION.add_to_argparser(parser)
     ARG_POSTCONDITION.add_to_argparser(parser)
@@ -61,3 +64,8 @@ if __name__ == "__main__":
         time_range=restrict_time,
     )
     evt_tracker.parse(vcddata)
+
+    if args.dump_counts:
+        print("EVENT\tCOUNT")
+        for evt_name, count in evt_tracker.event_counts.items():
+            print(f"{evt_name}\t{count}")
