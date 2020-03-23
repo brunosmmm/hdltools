@@ -1,6 +1,7 @@
 """Hierarchical mixins."""
 
 from collections import deque
+from typing import Optional, Set
 from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
 from hdltools.vcd.mixins import VCDParserMixin, ScopeMap
 from hdltools.vcd import VCDVariable, VCDScope
@@ -73,3 +74,25 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
     def variables(self):
         """Get variables."""
         return self._vars
+
+    def variable_search(
+        self, var_name, scope: Optional[VCDScope] = None, aliases: bool = False
+    ) -> Set[VCDVariable]:
+        """Search for variable."""
+        candidates = set()
+        for var in self._vars.values():
+            if aliases:
+                for alias_scope, alias_name in var.aliases:
+                    if scope is not None:
+                        if alias_scope != scope:
+                            continue
+                    if alias_name == var_name:
+                        candidates |= {var}
+                        break
+            if scope is not None:
+                if var.scope != scope:
+                    continue
+            if var.name == var_name:
+                candidates |= {var}
+
+        return candidates
