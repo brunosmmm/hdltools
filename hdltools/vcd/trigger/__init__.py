@@ -85,10 +85,10 @@ class VCDTriggerDescriptor(VCDObject):
         """Get representation."""
         return "{{{}::{}=={}}}".format(str(self.scope), self.name, self.value)
 
-    def match(
-        self, scope: VCDScope, name: str, value: str, vcd_var: Optional[str]
+    def match_var(
+        self, scope: VCDScope, name: str, vcd_var: Optional[str] = None
     ) -> bool:
-        """Match against variable state."""
+        """Match variable description."""
         if vcd_var is not None and self.vcd_var is not None:
             # prefer comparison using vcd variable name
             if vcd_var != self.vcd_var:
@@ -98,7 +98,24 @@ class VCDTriggerDescriptor(VCDObject):
                 return False
             if name != self.name:
                 return False
+
+        return True
+
+    def match_value(self, value: str) -> bool:
+        """Match value."""
         return self.value.match(value)
+
+    def match(
+        self,
+        scope: VCDScope,
+        name: str,
+        value: str,
+        vcd_var: Optional[str] = None,
+    ) -> bool:
+        """Match against variable state."""
+        if self.match_var(scope, name, vcd_var) is False:
+            return False
+        return self.match_value(value)
 
     def __eq__(self, other):
         """Check if is equivalent."""
