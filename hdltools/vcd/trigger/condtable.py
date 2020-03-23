@@ -94,13 +94,13 @@ class ConditionTableTrigger(VCDTriggerFSM):
     def advance(self, cond, value):
         """Advance value directly without variable name matching."""
         if self.trigger_armed is False:
-            return
+            return (False, None)
         if cond.match_value(value):
             self._condtable[cond] = True
-            print(f"DEBUG: cond {cond} -> TRUE")
+            return (True, True)
         else:
             self._condtable[cond] = False
-            print(f"DEBUG: cond {cond} -> FALSE")
+            return (True, False)
 
     def check_and_fire(self):
         """Check current state and fire."""
