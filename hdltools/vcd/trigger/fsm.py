@@ -34,7 +34,7 @@ class SimpleTrigger(VCDTriggerFSM):
 
         if levels is not None:
             for level in levels:
-                self.add_trigger_level(*level)
+                self.add_trigger_level(level)
 
     def add_trigger_level(self, *conds: VCDTriggerDescriptor):
         """Add a trigger level.
@@ -83,6 +83,20 @@ class SimpleTrigger(VCDTriggerFSM):
     def trigger_history(self):
         """Get trigger event history."""
         return self._trigger_history
+
+    @VCDTriggerFSM.sensitivity_list.getter
+    def sensitivity_list(self):
+        """Get current sensitivity list."""
+        return self._levels[self._current_level]
+
+    @VCDTriggerFSM.global_sensitivity_list.getter
+    def global_sensitivity_list(self):
+        """Get global sensitivity list."""
+        conds = set()
+        for level in self._levels:
+            for cond in level:
+                conds |= {cond}
+        return list(conds)
 
     def arm_trigger(self):
         """Arm trigger."""

@@ -151,10 +151,28 @@ class VCDTriggerFSM:
         else:
             self._trigger_id = uuid4()
 
+        evt_name = kwargs.get("evt_name")
+        self._evt_name = evt_name
+
+    @property
+    def evt_name(self):
+        """Get event name."""
+        return self._evt_name
+
     @property
     def triggerid(self):
         """Get trigger id."""
         return self._trigger_id
+
+    @property
+    def sensitivity_list(self):
+        """Get current sensitivity list."""
+        raise NotImplementedError
+
+    @property
+    def global_sensitivity_list(self):
+        """Get global sensitivity list."""
+        raise NotImplementedError
 
     def trigger_reset(self):
         """Reset configuration."""

@@ -14,7 +14,6 @@ class ConditionTableTrigger(VCDTriggerFSM):
     def __init__(
         self,
         conditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
-        evt_name: Optional[str] = None,
         debug=False,
         oneshot=True,
         **kwargs,
@@ -22,7 +21,6 @@ class ConditionTableTrigger(VCDTriggerFSM):
         """Initialize."""
         super().__init__(**kwargs)
         self._condtable = {}
-        self._evt_name = evt_name
         self._oneshot = oneshot
         self._event_end_cb = None
 
@@ -46,14 +44,19 @@ class ConditionTableTrigger(VCDTriggerFSM):
         return len(self._condtable) - self.conditions_met
 
     @property
-    def evt_name(self):
-        """Get event name."""
-        return self._evt_name
-
-    @property
     def conditions(self):
         """Get conditions."""
         return self._condtable.keys()
+
+    @VCDTriggerFSM.sensitivity_list.getter
+    def sensitivity_list(self):
+        """Get current sensitivity list."""
+        return self.conditions
+
+    @VCDTriggerFSM.global_sensitivity_list.getter
+    def global_sensitivity_list(self):
+        """Get global sensitivity list."""
+        return self.conditions
 
     @property
     def oneshot(self):
