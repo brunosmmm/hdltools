@@ -1,7 +1,7 @@
 """VCD value trigger."""
 
 import re
-from typing import Optional
+from typing import Optional, Union
 from hdltools.vcd import VCDObject, VCDScope
 from hdltools.patterns import Pattern
 
@@ -17,7 +17,13 @@ class VCDTriggerDescriptor(VCDObject):
         r"([a-zA-Z_0-9:]+)\s*==\s*([Xx0-9A-Fa-f]+h?)"
     )
 
-    def __init__(self, scope, name, value):
+    def __init__(
+        self,
+        scope: Union[VCDScope, str],
+        name: str,
+        value: Union[Pattern, str],
+        vcd_var: Optional[str] = None,
+    ):
         """Initialize."""
         super().__init__()
         if isinstance(scope, VCDScope):
@@ -33,6 +39,7 @@ class VCDTriggerDescriptor(VCDObject):
             self._value = Pattern(value)
         else:
             raise TypeError("value must be Pattern object or str or bytes")
+        self._vcd_var = vcd_var
 
     @property
     def scope(self):
@@ -62,16 +69,35 @@ class VCDTriggerDescriptor(VCDObject):
         scope = "::".join(fragments[:-1])
         return VCDTriggerDescriptor(scope, name, m.group(2))
 
+    @property
+    def vcd_var(self):
+        """VCD Variable name."""
+        return self._vcd_var
+
+    @vcd_var.setter
+    def vcd_var(self, value):
+        """Set vcd variable name."""
+        if not isinstance(value, str):
+            raise TypeError("value must be a string")
+        self._vcd_var = value
+
     def __repr__(self):
         """Get representation."""
         return "{{{}::{}=={}}}".format(str(self.scope), self.name, self.value)
 
-    def match(self, scope, name, value):
+    def match(
+        self, scope: VCDScope, name: str, value: str, vcd_var: Optional[str]
+    ) -> bool:
         """Match against variable state."""
-        if scope != self.scope:
-            return False
-        if name != self.name:
-            return False
+        if vcd_var is not None and self.vcd_var is not None:
+            # prefer comparison using vcd variable name
+            if vcd_var != self.vcd_var:
+                return False
+        else:
+            if scope != self.scope:
+                return False
+            if name != self.name:
+                return False
         return self.value.match(value)
 
     def __eq__(self, other):
