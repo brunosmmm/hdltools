@@ -21,8 +21,10 @@ class TriggerConditionVisitor(ASTVisitor):
 
     def visit_TriggerCondition(self, node):
         """Visit trigger condition."""
-        name = node.sig.split("::")[-1]
-        scope = "::".join(node.sig.split("::")[:-1])
+        name = node.sig.name.split("::")[-1]
+        scope = "::".join(node.sig.name.split("::")[:-1])
+        if hasattr(node.sig, "slice") and node.sig.slice is not None:
+            raise NotImplementedError("signal slice not implemented")
         cond = VCDTriggerDescriptor(scope, name, node.value)
         self._conditions.append(cond)
 
