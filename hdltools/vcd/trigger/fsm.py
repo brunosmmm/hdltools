@@ -98,6 +98,11 @@ class SimpleTrigger(VCDTriggerFSM):
                 conds |= {cond}
         return list(conds)
 
+    @VCDTriggerFSM.event_end_cb.setter
+    def event_end_cb(self, value):
+        """Ignore end callback setter."""
+        self._event_end_cb = None
+
     def arm_trigger(self):
         """Arm trigger."""
         super().arm_trigger()
