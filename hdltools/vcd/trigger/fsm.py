@@ -1,5 +1,6 @@
 """Trigger state machines."""
 
+from typing import Optional, Tuple
 from hdltools.vcd.trigger import (
     VCDTriggerDescriptor,
     VCDTriggerError,
@@ -18,13 +19,22 @@ class BranchingTrigger(VCDTriggerFSM):
 class SimpleTrigger(VCDTriggerFSM):
     """Legacy trigger state machine."""
 
-    def __init__(self, debug=False, **kwargs):
+    def __init__(
+        self,
+        levels: Optional[Tuple[Tuple[VCDTriggerDescriptor]]] = None,
+        debug=False,
+        **kwargs
+    ):
         """Initialize."""
         super().__init__(**kwargs)
         self._levels = []
         self._current_level = 0
         self._trigger_history = []
         self._debug = debug
+
+        if levels is not None:
+            for level in levels:
+                self.add_trigger_level(*level)
 
     def add_trigger_level(self, *conds: VCDTriggerDescriptor):
         """Add a trigger level.
