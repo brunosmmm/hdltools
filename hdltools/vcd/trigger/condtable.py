@@ -96,12 +96,9 @@ class ConditionTableTrigger(VCDTriggerFSM):
             return
         updated_values = {}
         for cond, state in self._condtable.items():
-            if (cond.scope == var.scope and cond.name == var.name) or (
-                cond.scope,
-                cond.name,
-            ) in var.aliases:
+            if cond.match_var(var.scope, var.name, var.identifiers[0]):
                 # condition in table
-                if cond.value.match(value):
+                if cond.match_value(value):
                     updated_values[cond] = True
                 else:
                     updated_values[cond] = False

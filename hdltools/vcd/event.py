@@ -40,6 +40,24 @@ class VCDEventTracker(
         self._evt_triggers[trigger_fsm.evt_name][1] = self.current_time
         print(f"DEBUG: {self.current_time}: evt fired: {trigger_fsm.evt_name}")
 
+    def _state_change_handler(self, old_state, new_state):
+        """Detect state transition."""
+        super()._state_change_handler(old_state, new_state)
+        # when header state finishes, we have list of variables
+        if old_state == "header":
+            # add VCD variable identifiers to condition table elements
+            for _, (condtable, _) in self._evt_triggers.items():
+                for cond in condtable.conditions:
+                    # post-process now
+                    candidates = self.variable_search(
+                        cond.name, cond.scope, True
+                    )
+                    if not candidates:
+                        raise RuntimeError("cannot locate VCD variable")
+                    # associate with first candidate
+                    cond.vcd_var = list(candidates)[0].identifiers[0]
+            print("DEBUG: header parsing completed")
+
     def clock_change_handler(self, time):
         """Handle time."""
         for condtable, _ in self._evt_triggers.values():
