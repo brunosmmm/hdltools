@@ -1,6 +1,7 @@
 """VCD value trigger."""
 
 import re
+from uuid import uuid4
 from typing import Optional, Union
 from hdltools.vcd import VCDObject, VCDScope
 from hdltools.patterns import Pattern
@@ -144,6 +145,16 @@ class VCDTriggerFSM:
         self._trigger_cb = None
         self._armed = False
         self._triggered = False
+        trigger_id = kwargs.get("trigger_id")
+        if trigger_id is not None:
+            self._trigger_id = trigger_id
+        else:
+            self._trigger_id = uuid4()
+
+    @property
+    def triggerid(self):
+        """Get trigger id."""
+        return self._trigger_id
 
     def trigger_reset(self):
         """Reset configuration."""

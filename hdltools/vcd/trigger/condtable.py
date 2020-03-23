@@ -2,7 +2,6 @@
 
 
 from typing import Optional, Tuple
-from uuid import uuid4
 from hdltools.vcd.trigger import VCDTriggerFSM, VCDTriggerDescriptor
 
 
@@ -16,26 +15,17 @@ class ConditionTableTrigger(VCDTriggerFSM):
         self,
         conditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
         evt_name: Optional[str] = None,
-        trigger_id: Optional[str] = None,
         debug=False,
+        **kwargs,
     ):
         """Initialize."""
-        super().__init__()
+        super().__init__(**kwargs)
         self._condtable = {}
         self._evt_name = evt_name
-        if trigger_id is not None:
-            self._trigger_id = trigger_id
-        else:
-            self._trigger_id = uuid4()
 
         if conditions is not None:
             for condition in conditions:
                 self.add_condition(condition)
-
-    @property
-    def triggerid(self):
-        """Get trigger id."""
-        return self._trigger_id
 
     @property
     def conditions_met(self):
