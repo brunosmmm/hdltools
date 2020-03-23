@@ -46,6 +46,11 @@ class ConditionTableTrigger(VCDTriggerFSM):
         """Get event name."""
         return self._evt_name
 
+    @property
+    def conditions(self):
+        """Get conditions."""
+        return self._condtable.keys()
+
     def arm_trigger(self):
         """Arm trigger."""
         super().arm_trigger()
@@ -76,6 +81,14 @@ class ConditionTableTrigger(VCDTriggerFSM):
                 "cannot remove condition while trigger is armed"
             )
         del self._condtable[cond]
+
+    def __len__(self):
+        """Get table length."""
+        return len(self._condtable)
+
+    def __getitem__(self, key: VCDTriggerDescriptor) -> bool:
+        """Get condition state."""
+        return self._condtable[key]
 
     def match_and_advance(self, var, value):
         """Update condition states."""
