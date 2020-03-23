@@ -32,6 +32,7 @@ class SimpleTrigger(VCDTriggerFSM):
         self._trigger_history = []
         self._debug = debug
         self._last_change = 0
+        self._state_timeout = None
 
         if levels is not None:
             for level in levels:
@@ -109,15 +110,46 @@ class SimpleTrigger(VCDTriggerFSM):
         """Time of last change."""
         return self._last_change
 
+    @property
+    def state_timeout(self):
+        """Timeout."""
+        return self._state_timeout
+
+    @state_timeout.setter
+    def state_timeout(self, value):
+        """Set timeout."""
+        if not isinstance(value, int) and value is not None:
+            raise TypeError("value must be int or None")
+        if self.trigger_armed:
+            raise RuntimeError("cannot change timeout while armed")
+        self._state_timeout = value
+
     def arm_trigger(self):
         """Arm trigger."""
         super().arm_trigger()
         self._current_level = 0
 
+    def _check_timeout(self, time):
+        """Check if timeout occurred."""
+        if (
+            self.state_timeout is not None
+            and time - self.last_change > self.state_timeout
+            and self._current_level > 0
+        ):
+            # timeout! reset state
+            self._last_change = time
+            self._current_level = 0
+            self._evt_start_fired = False
+            self._event_timeout()
+            return True
+        return False
+
     def advance(self, cond, value, time):
         """Advance state."""
         if self.trigger_armed is False:
             return (False, None, False)
+        if self._check_timeout(time):
+            return (True, False, True)
         if cond.match_value(value):
             self._current_level += 1
             self._last_change = time
@@ -125,8 +157,10 @@ class SimpleTrigger(VCDTriggerFSM):
         else:
             return (False, False, False)
 
-    def check_and_fire(self):
+    def check_and_fire(self, time):
         """Check current state and fire."""
+        if self._check_timeout(time):
+            return
         if self._current_level > 0:
             self._event_starts()
         if self._current_level == self.trigger_levels:

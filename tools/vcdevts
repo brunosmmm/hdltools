@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from dictator.config import validate_config
 from dictator.validators.replace import AutoFragmentReplace
 from dictator.validators.lists import SubListValidator
+from dictator.validators.integer import validate_positive_integer
 
 from hdltools.vcd.event import VCDEventTracker
 from hdltools.vcd.trigger.trigcond import build_descriptors_from_str
@@ -17,7 +18,8 @@ from hdltools.vcd.tools.argparse import (
 )
 
 EVT_REQ = {"name": str, "conds": AutoFragmentReplace()}
-EVT_CFG_REQ = {"events": SubListValidator(EVT_REQ)}
+EVT_OPT = {"timeout": validate_positive_integer}
+EVT_CFG_REQ = {"events": SubListValidator(EVT_REQ, EVT_OPT)}
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -52,10 +54,11 @@ if __name__ == "__main__":
 
     # parse configuration file
     parsed_cfg = validate_config(evt_cfg, EVT_CFG_REQ, gobble_unknown=False)
-    events = {
-        evt["name"]: build_descriptors_from_str(evt["conds"])
-        for evt in parsed_cfg["events"]
-    }
+    events = {}
+    for event in parsed_cfg["events"]:
+        name = event.pop("name")
+        cond = build_descriptors_from_str(event.pop("conds"))
+        events[name] = (cond, event)
 
     evt_tracker = VCDEventTracker(
         events,

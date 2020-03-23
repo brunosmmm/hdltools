@@ -122,7 +122,7 @@ class ConditionTableTrigger(VCDTriggerFSM):
             self._condtable[cond] = False
             return (True, False, False)
 
-    def check_and_fire(self):
+    def check_and_fire(self, time=None):
         """Check current state and fire."""
         if self.unmet_conditions == 0 and self.triggered is False:
             # done (event start)

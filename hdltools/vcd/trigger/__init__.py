@@ -325,7 +325,7 @@ class VCDTriggerFSM:
         if self._event_timeout_cb:
             self._event_timeout_cb(self)
 
-    def check_and_fire(self):
+    def check_and_fire(self, time=None):
         """Check current state and fire."""
         raise NotImplementedError
 

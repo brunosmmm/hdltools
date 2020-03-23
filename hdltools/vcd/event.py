@@ -94,6 +94,7 @@ class VCDEventTracker(
             trigger.event_start_cb = self._evt_start_callback
             trigger.event_end_cb = self._evt_end_callback
             trigger.trigger_callback = self._evt_trigger_callback
+            trigger.event_timeout_cb = self._evt_timeout_callback
             trigger.arm_trigger()
 
         # crude statistics
@@ -102,7 +103,7 @@ class VCDEventTracker(
 
     def _compile_triggers(self, events):
         """Build trigger array."""
-        for evt_name, (cond, mode) in events.items():
+        for evt_name, ((cond, mode), opts) in events.items():
             if mode == "&&":
                 self._evt_triggers[evt_name] = [
                     ConditionTableTrigger(
@@ -111,10 +112,9 @@ class VCDEventTracker(
                     None,
                 ]
             elif mode == "=>":
-                self._evt_triggers[evt_name] = [
-                    SimpleTrigger(levels=cond, evt_name=evt_name),
-                    None,
-                ]
+                trigger = SimpleTrigger(levels=cond, evt_name=evt_name)
+                trigger.state_timeout = opts.get("timeout")
+                self._evt_triggers[evt_name] = [trigger, None]
             else:
                 raise RuntimeError("invalid mode in trigger description")
 
@@ -218,6 +218,17 @@ class VCDEventTracker(
             + f"DEBUG: @{self.last_cycle_time}: evt deactivates after {evt_done.duration} cycles: {trigger_fsm.evt_name} -> ({evt_done.uuid})"
         )
 
+    def _evt_timeout_callback(self, trigger_fsm):
+        """Event timeout callback."""
+        evt_done = self._log_evt_end(
+            trigger_fsm.evt_name, self.last_cycle_time, trigger_fsm.current_evt
+        )
+        print(
+            Back.RED
+            + Fore.BLACK
+            + f"DEBUG: @{self.last_cycle_time}: evt timeout: {trigger_fsm.evt_name} -> ({evt_done.uuid})"
+        )
+
     def _state_change_handler(self, old_state, new_state):
         """Detect state transition."""
         super()._state_change_handler(old_state, new_state)
@@ -251,7 +262,9 @@ class VCDEventTracker(
                 # pick variables directly for speed
                 var = self.variables[cond.vcd_var]
                 if var.last_changed == self.last_cycle_time:
-                    _changed, state, stop = condtable.advance(cond, var.value)
+                    _changed, state, stop = condtable.advance(
+                        cond, var.value, self.last_cycle_time
+                    )
                     if _changed:
                         changed.append((cond, state))
                     if stop:
@@ -266,12 +279,8 @@ class VCDEventTracker(
                     msg_color = Fore.RED if state is False else Fore.GREEN
                     print(msg_color + f"DEBUG: cond {cond} -> {state}")
 
-                # check and fire trigger
-                condtable.check_and_fire()
-            # for var in self.variables.values():
-            #     # print(var.value)
-            #     if var.last_changed == self.last_cycle_time:
-            #         condtable.match_and_advance(var, var.value)
+            # check and fire trigger. NOTE: potentially much slower in here
+            condtable.check_and_fire(self.last_cycle_time)
 
     def initial_value_handler(self, stmt, fields):
         """Handle initial value assignment."""
@@ -286,5 +295,3 @@ class VCDEventTracker(
         var = self.variables[fields["var"]]
         var.value = fields["value"]
         var.last_changed = self.current_time
-        # for trigger, _ in self._evt_triggers.values():
-        #     trigger.match_and_advance(var, fields["value"])
