@@ -65,6 +65,11 @@ if __name__ == "__main__":
     )
     evt_tracker.parse(vcddata)
 
+    evt_counts = {"counts": evt_tracker.event_counts}
+    evt_history = {
+        "history": [evt.serialized for evt in evt_tracker.event_history]
+    }
+
     if args.dump_counts:
         print("EVENT\tCOUNT")
         for evt_name, count in evt_tracker.event_counts.items():

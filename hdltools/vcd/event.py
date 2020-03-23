@@ -62,6 +62,16 @@ class VCDEvent(VCDObject):
             raise TypeError("value must be integer")
         self._duration = value
 
+    @property
+    def serialized(self):
+        """Get serializeable version."""
+        return {
+            "uuid": self.uuid,
+            "evt_type": self.evt_type,
+            "time": self.time,
+            "duration": self.duration,
+        }
+
 
 class VCDEventTracker(
     BaseVCDParser, VCDConditionMixin, VCDTimeRestrictionMixin
@@ -97,6 +107,11 @@ class VCDEventTracker(
     def event_counts(self):
         """Get event counts."""
         return self._event_counts.copy()
+
+    @property
+    def event_history(self):
+        """Get event history."""
+        return self._event_history
 
     def _incr_evt_count(self, evt_name):
         """Increment event count."""
