@@ -20,10 +20,16 @@ ComparisonOp:
     "==" | "!=";
 
 SignalDescriptor:
-    name=/[a-zA-Z_0-9:]+/ slice=SignalSlice?;
+    name=/[a-zA-Z_0-9:]+/ size=SignalSize? slice=SignalSlice?;
+
+SignalSize:
+    '(' left=INT right=SliceRight? ')';
 
 SignalSlice:
-    '[' start=INT ('..' stop=INT)? ']';
+    '[' left=INT right=SliceRight? ']';
+
+SliceRight:
+    ':' val=INT;
 
 Pattern:
     /[Xx0-9A-Fa-f]+h?/;
