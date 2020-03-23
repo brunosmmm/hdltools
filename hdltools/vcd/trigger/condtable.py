@@ -1,7 +1,7 @@
 """Condition table-based trigger fsm."""
 
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from hdltools.vcd.trigger import VCDTriggerFSM, VCDTriggerDescriptor
 
 
@@ -89,6 +89,19 @@ class ConditionTableTrigger(VCDTriggerFSM):
     def __getitem__(self, key: VCDTriggerDescriptor) -> bool:
         """Get condition state."""
         return self._condtable[key]
+
+    def advance(self, cond, value):
+        """Advance value directly without variable name matching."""
+        if cond.match_value(value):
+            self._condtable[cond] = True
+            print(f"DEBUG: cond {cond} -> TRUE")
+        else:
+            self._condtable[cond] = False
+            print(f"DEBUG: cond {cond} -> FALSE")
+        # check current state and fire
+        if self.unmet_conditions == 0:
+            # done
+            self._fire_trigger()
 
     def match_and_advance(self, var, value):
         """Update condition states."""
