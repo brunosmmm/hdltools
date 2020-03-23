@@ -91,6 +91,7 @@ class VCDEventTracker(
         self._compile_triggers(events)
         # arm immediately
         for trigger, _ in self._evt_triggers.values():
+            trigger.event_start_cb = self._evt_start_callback
             trigger.event_end_cb = self._evt_end_callback
             trigger.trigger_callback = self._evt_trigger_callback
             trigger.arm_trigger()
@@ -134,21 +135,30 @@ class VCDEventTracker(
         else:
             self._event_counts[evt_name] += 1
 
-    def _log_evt_start(self, evt_type, time: Optional[int] = None):
+    def _log_evt_start(
+        self, evt_type, time: Optional[int] = None, uuid: Optional[str] = None
+    ):
         """Log event start."""
         if time is None:
             time = self.current_time
-        new_evt = VCDEvent(evt_type, time)
+        new_evt = VCDEvent(evt_type, time, uuid=uuid)
         self._event_history.append(new_evt)
         return new_evt
 
-    def _log_evt_end(self, evt_type, time: Optional[int] = None):
+    def _log_evt_end(
+        self, evt_type, time: Optional[int] = None, uuid: Optional[str] = None
+    ):
         """Log event end."""
         if time is None:
             time = self.current_time
         found_event = None
         for evt in self._event_history[::-1]:
-            if evt.evt_type == evt_type:
+            # prefer uuid
+            if (
+                (uuid is not None and evt.uuid == uuid)
+                or evt.evt_type
+                and evt.evt_type == evt_type
+            ):
                 # found most recent, apply duration and move on
                 found_event = evt
                 evt.duration = time - evt.time
@@ -158,28 +168,53 @@ class VCDEventTracker(
 
         return found_event
 
-    def _evt_trigger_callback(self, trigger_fsm):
-        """Event trigger callback."""
+    def _evt_started_or_fired(self, trigger_fsm):
+        """Handle similar events."""
         # update last triggered time
         self._evt_triggers[trigger_fsm.evt_name][1] = self.current_time
+        # push into history
+        if trigger_fsm.event_ending:
+            return self._log_evt_end(
+                trigger_fsm.evt_name,
+                self.last_cycle_time,
+                trigger_fsm.current_evt,
+            )
+        return self._log_evt_start(
+            trigger_fsm.evt_name, self.last_cycle_time, trigger_fsm.current_evt
+        )
+
+    def _evt_start_callback(self, trigger_fsm):
+        """Event start trigger callback."""
+        new_evt = self._evt_started_or_fired(trigger_fsm)
+        print(
+            Back.YELLOW
+            + Fore.BLACK
+            + f"DEBUG: @{self.last_cycle_time}: evt starts: {trigger_fsm.evt_name} -> ({new_evt.uuid})"
+        )
+
+    def _evt_trigger_callback(self, trigger_fsm):
+        """Event trigger callback."""
         # increment count
         self._incr_evt_count(trigger_fsm.evt_name)
-        # push into history
-        new_evt = self._log_evt_start(
-            trigger_fsm.evt_name, self.last_cycle_time
-        )
+        evt = self._evt_started_or_fired(trigger_fsm)
+        if trigger_fsm.event_ending:
+            end_msg = f" after {evt.duration} cycles"
+        else:
+            end_msg = ""
         print(
-            Back.RED
-            + f"DEBUG: @{self.last_cycle_time}: evt fired: {trigger_fsm.evt_name} -> ({new_evt.uuid})"
+            Back.YELLOW
+            + Fore.BLACK
+            + f"DEBUG: @{self.last_cycle_time}: evt fired{end_msg}: {trigger_fsm.evt_name} -> ({evt.uuid})"
         )
 
     def _evt_end_callback(self, trigger_fsm):
         """Event end callback."""
         evt_done = self._log_evt_end(
-            trigger_fsm.evt_name, self.last_cycle_time
+            trigger_fsm.evt_name, self.last_cycle_time, trigger_fsm.current_evt
         )
         print(
-            Back.RED
+            Back.YELLOW
+            + Fore.BLACK
             + f"DEBUG: @{self.last_cycle_time}: evt deactivates after {evt_done.duration} cycles: {trigger_fsm.evt_name} -> ({evt_done.uuid})"
         )
 
@@ -231,8 +266,8 @@ class VCDEventTracker(
                     msg_color = Fore.RED if state is False else Fore.GREEN
                     print(msg_color + f"DEBUG: cond {cond} -> {state}")
 
-            # check and fire trigger
-            condtable.check_and_fire()
+                # check and fire trigger
+                condtable.check_and_fire()
             # for var in self.variables.values():
             #     # print(var.value)
             #     if var.last_changed == self.last_cycle_time:
