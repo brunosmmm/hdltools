@@ -23,6 +23,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
 
     parser.add_argument("evt_def", help="Path to event definition file")
+    parser.add_argument("vcd", help="Path to VCD file")
     ARG_RESTRICT_TIME.add_to_argparser(parser)
     ARG_PRECONDITION.add_to_argparser(parser)
     ARG_POSTCONDITION.add_to_argparser(parser)
@@ -43,6 +44,9 @@ if __name__ == "__main__":
         print(f"ERROR: could not open file: {ex}")
         exit(1)
 
+    with open(args.vcd, "r") as data:
+        vcddata = data.read()
+
     # parse configuration file
     parsed_cfg = validate_config(evt_cfg, EVT_CFG_REQ, gobble_unknown=False)
     events = {
@@ -56,3 +60,4 @@ if __name__ == "__main__":
         preconditions=preconditions,
         time_range=restrict_time,
     )
+    evt_tracker.parse(vcddata)

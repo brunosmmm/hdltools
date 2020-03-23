@@ -14,11 +14,13 @@ class ConditionTableTrigger(VCDTriggerFSM):
     def __init__(
         self,
         conditions: Optional[Tuple[VCDTriggerDescriptor]] = None,
+        evt_name: Optional[str] = None,
         debug=False,
     ):
         """Initialize."""
         super().__init__()
         self._condtable = {}
+        self._evt_name = evt_name
 
         if conditions is not None:
             for condition in conditions:
@@ -39,10 +41,23 @@ class ConditionTableTrigger(VCDTriggerFSM):
         """Get number of unmet conditions."""
         return len(self._condtable) - self.conditions_met
 
+    @property
+    def evt_name(self):
+        """Get event name."""
+        return self._evt_name
+
+    def arm_trigger(self):
+        """Arm trigger."""
+        super().arm_trigger()
+        # reset states
+        if not self._condtable:
+            raise RuntimeError("table empty; cannot arm")
+        self._condtable = {evt: False for evt in self._condtable}
+
     def trigger_reset(self):
         """Reset trigger configuration."""
         super().trigger_reset()
-        self._condtable = []
+        self._condtable = {}
 
     def add_condition(self, cond: VCDTriggerDescriptor):
         """Add condition."""
@@ -64,9 +79,14 @@ class ConditionTableTrigger(VCDTriggerFSM):
 
     def match_and_advance(self, var, value):
         """Update condition states."""
+        if self.trigger_armed is False:
+            return
         updated_values = {}
         for cond, state in self._condtable.items():
-            if cond.scope == var.scope and cond.name == var.name:
+            if (cond.scope == var.scope and cond.name == var.name) or (
+                cond.scope,
+                cond.name,
+            ) in var.aliases:
                 # condition in table
                 if cond.value.match(value):
                     updated_values[cond] = True
@@ -74,7 +94,7 @@ class ConditionTableTrigger(VCDTriggerFSM):
                     updated_values[cond] = False
 
         # save updated values
-        self._condtable = updated_values
+        self._condtable.update(updated_values)
 
         # check current state and fire
         if self.unmet_conditions == 0:
