@@ -4,18 +4,7 @@
 from argparse import ArgumentParser
 from hdltools.binutils.passes import AsmDumpPass
 from hdltools.binutils import parse_objdump
-
-
-def get_boundaries(fn):
-    """Get function boundaries."""
-    start = fn.address
-    candidates = []
-    for instruction in fn.instructions:
-        # HACK: no time to implement properly
-        if "ret" in instruction.assembly:
-            candidates.append(instruction.address)
-
-    return (start, max(candidates))
+from hdltools.binutils.tools.boundary import get_boundaries
 
 
 if __name__ == "__main__":
