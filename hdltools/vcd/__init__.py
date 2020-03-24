@@ -94,7 +94,7 @@ class VCDVariable(VCDObject):
         self._scope = scope
         self._aliases = []
         self._value = None
-        self._last_change = 0
+        self._last_changed = 0
 
     @property
     def var_type(self):
