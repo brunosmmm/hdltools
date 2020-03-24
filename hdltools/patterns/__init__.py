@@ -27,6 +27,9 @@ class Pattern:
                 pattern = pattern[2:]
 
             m = self.PATTERN_REGEX.match(pattern)
+        elif isinstance(pattern, int):
+            self._pattern = bin(pattern)
+            return
         else:
             m = self.PATTERN_REGEX_BYTES.match(pattern)
         if m is None:
@@ -50,7 +53,9 @@ class Pattern:
     def match(self, value: Union[str, bytes]) -> bool:
         """Match against value."""
         if not isinstance(value, (str, bytes)):
-            raise TypeError("value must be string or bytes")
+            raise TypeError(
+                f"value must be string or bytes, got {type(value)}"
+            )
 
         if type(value) != type(self._pattern):
             raise TypeError("incompatible types for value and pattern")
