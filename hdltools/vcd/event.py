@@ -67,7 +67,7 @@ class VCDEvent(VCDObject):
     def serialized(self):
         """Get serializeable version."""
         return {
-            "uuid": self.uuid,
+            "uuid": str(self.uuid),
             "evt_type": self.evt_type,
             "time": self.time,
             "duration": self.duration,
