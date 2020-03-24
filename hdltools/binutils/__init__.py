@@ -21,3 +21,7 @@ def parse_objdump_file(path):
         contents = vecf.read()
 
     return parse_objdump(contents)
+
+
+class AsmObject:
+    """Assembly representation object."""
