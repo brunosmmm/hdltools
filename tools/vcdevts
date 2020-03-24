@@ -2,24 +2,84 @@
 """VCD Event tracker."""
 
 import json
+import re
+import os
 from argparse import ArgumentParser
 
 from dictator.config import validate_config
 from dictator.validators.replace import AutoFragmentReplace
 from dictator.validators.lists import SubListValidator
 from dictator.validators.integer import validate_positive_integer
+from dictator.validators.maps import SubDictValidator
 
 from hdltools.vcd.event import VCDEventTracker
 from hdltools.vcd.trigger.trigcond import build_descriptors_from_str
+from hdltools.binutils.tools.boundary import fn_boundary
+from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.tools.argparse import (
     ARG_RESTRICT_TIME,
     ARG_PRECONDITION,
     ARG_POSTCONDITION,
 )
 
+
+# validator hacks
+class CallFragmentReplacer(AutoFragmentReplace):
+    """Replace and call."""
+
+    CALL_PATTERN = re.compile(r"#([\w]+)\(([^#\(\)]+)\)")
+    SUBROUTINES = {"fnBoundaryStart": "_fn_boundary_start"}
+
+    def _try_call(self, routine_name, *args):
+        """Try to call subroutine."""
+        if routine_name not in self.SUBROUTINES:
+            raise RuntimeError(f"unknown subroutine {routine_name}")
+        function = getattr(self, self.SUBROUTINES[routine_name])
+        return function(*args)
+
+    def _fn_boundary_start(self, binary, fn_name):
+        """Function boundary."""
+        if binary == "":
+            print(
+                "ERROR: this configuration requires the use of the --simulated-binary argument"
+            )
+            exit(1)
+        with open(binary, "r") as asmdump:
+            dump = asmdump.read()
+        start, _ = fn_boundary(dump, fn_name)
+        return bin(start)
+
+    def validate(self, _value, **kwargs):
+        """Validate."""
+        ret = super().validate(_value, **kwargs)
+        m = self.CALL_PATTERN.match(ret)
+        if m is not None:
+            return self._try_call(
+                m.group(1), *[s.strip() for s in m.group(2).split(",")]
+            )
+        return ret
+
+
+def validate_values(value, **kwargs):
+    """Validate values."""
+    validator = CallFragmentReplacer()
+    updated_values = {
+        key: validator.validate(val, **kwargs) for key, val in value.items()
+    }
+    return updated_values
+
+
+SIM_OPT = {
+    "precondition": AutoFragmentReplace(),
+    "postcondition": AutoFragmentReplace(),
+}
 EVT_REQ = {"name": str, "conds": AutoFragmentReplace()}
 EVT_OPT = {"timeout": validate_positive_integer}
 EVT_CFG_REQ = {"events": SubListValidator(EVT_REQ, EVT_OPT)}
+EVT_CFG_OPT = {
+    "simulation": SubDictValidator(optional_keys=SIM_OPT),
+    "values": validate_values,
+}
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -30,6 +90,11 @@ if __name__ == "__main__":
         "--dump-counts", help="Print event counts", action="store_true"
     )
     parser.add_argument("--output", help="Output file")
+    parser.add_argument(
+        "--simulated-binary",
+        help="Simulated binary for static co-analysis",
+        default="",
+    )
     ARG_RESTRICT_TIME.add_to_argparser(parser)
     ARG_PRECONDITION.add_to_argparser(parser)
     ARG_POSTCONDITION.add_to_argparser(parser)
@@ -50,11 +115,46 @@ if __name__ == "__main__":
         print(f"ERROR: could not open file: {ex}")
         exit(1)
 
+    if args.simulated_binary != "":
+        if not os.path.exists(args.simulated_binary):
+            print(
+                f"ERROR: simulated binary not found: {args.simulated_binary}"
+            )
+            exit(1)
+
     with open(args.vcd, "r") as data:
         vcddata = data.read()
 
     # parse configuration file
-    parsed_cfg = validate_config(evt_cfg, EVT_CFG_REQ, gobble_unknown=False)
+    parsed_cfg = validate_config(
+        evt_cfg,
+        EVT_CFG_REQ,
+        EVT_CFG_OPT,
+        gobble_unknown=False,
+        binary=args.simulated_binary,
+    )
+
+    # add postconditions and preconditions in configuration file
+    if "simulation" in parsed_cfg:
+        if "postcondition" in parsed_cfg["simulation"]:
+            cfg_postcondition = VCDTriggerDescriptor.from_str(
+                parsed_cfg["simulation"]["postcondition"]
+            )
+            if postconditions is None:
+                postconditions = [cfg_postcondition]
+            else:
+                postconditions.append(cfg_postcondition)
+
+    if "simulation" in parsed_cfg:
+        if "precondition" in parsed_cfg["simulation"]:
+            cfg_precondition = VCDTriggerDescriptor.from_str(
+                parsed_cfg["simulation"]["precondition"]
+            )
+            if preconditions is None:
+                preconditions = [cfg_precondition]
+            else:
+                preconditions.append(cfg_precondition)
+
     events = {}
     for event in parsed_cfg["events"]:
         name = event.pop("name")
