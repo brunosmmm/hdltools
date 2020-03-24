@@ -1,11 +1,69 @@
 """Assembly instruction."""
 
 from typing import Optional, Any
+from enum import Enum, auto
 from hdltools.binutils import AsmObject
 
 
-class AsmInstruction(AsmObject):
+class InstructionType(Enum):
+    """Abstract instruction type."""
+
+    UNKNOWN = auto()
+
+
+class MemoryInstructionType(Enum):
+    """Abstract memory instruction types."""
+
+    LOAD = auto()
+    STORE = auto()
+
+
+class JumpInstructionType(Enum):
+    """Abstract jump instruction types."""
+
+    RELATIVE = auto()
+    ABSOLUTE = auto()
+    SUBROUTINE = auto()
+    RETURN = auto()
+
+
+class InstructionClass(Enum):
+    """Abstract instruction classes."""
+
+    MEMORY = auto()
+    CONTROL = auto()
+    ARITHMETIC = auto()
+    LOGIC = auto()
+    JUMP = auto()
+    REGISTER = auto()
+    UNKNOWN = auto()
+
+    INSTRUCTION_TYPES = {
+        MEMORY: MemoryInstructionType,
+        JUMP: JumpInstructionType,
+        UNKNOWN: InstructionType,
+    }
+
+
+class MetaAsmInstruction(type):
+    """Metaclass for assembly instructions"""
+
+    @property
+    def instruction_class(cls):
+        """Get instruction class."""
+        return cls._CLASS
+
+    @property
+    def instruction_type(cls):
+        """Get instruction type."""
+        return cls._TYPE
+
+
+class AsmInstruction(AsmObject, metaclass=MetaAsmInstruction):
     """Asm instruction."""
+
+    _CLASS = InstructionClass.UNKNOWN
+    _TYPE = InstructionType.UNKNOWN
 
     def __init__(
         self,
@@ -41,6 +99,16 @@ class AsmInstruction(AsmObject):
     def parent(self):
         """Get parent."""
         return self._parent
+
+    @property
+    def instruction_class(self):
+        """Get instruction class."""
+        return type(self)._CLASS
+
+    @property
+    def instruction_type(self):
+        """Get instruction type."""
+        return type(self)._TYPE
 
     def __repr__(self):
         """Get representation."""
