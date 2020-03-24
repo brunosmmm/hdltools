@@ -15,17 +15,23 @@ Function:
 FunctionDescription:
     addr=HexString symbol=SymbolName ":";
 
+SymbolNameOrRef:
+    SymbolName | SymbolReference;
+
 SymbolName:
-    "<" name=/[\.\w]+/ ">";
+    "<" name=/[\.\w\$]+/ ">";
+
+SymbolReference:
+    "<" name=/[\.\w]+/ "+" off=HexString ">";
 
 MaybeInstruction:
     Ellipsis | Instruction;
 
 Instruction:
-    addr=HexString ":" opcode=HexString assemblyTxt=/.+$/;
+    addr=HexString ":" opcode=HexString asm_txt=/.+$/;
 
 HexString:
-    /[0-9a-fA-F]+/;
+    /(0x)?[0-9a-fA-F]+/;
 
 Ellipsis:
     "...";
