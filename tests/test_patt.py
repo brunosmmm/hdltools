@@ -3,7 +3,7 @@
 from hdltools.patterns import Pattern
 from hdltools.patterns.matcher import PatternMatcher
 from hdltools.vcd.parser import BaseVCDParser, VAR_PARSER
-from hdltools.vcd import VCDVariable
+from hdltools.vcd.variable import VCDVariable
 
 
 class VCDPatternMatcher(BaseVCDParser):

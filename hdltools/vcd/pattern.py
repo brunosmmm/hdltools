@@ -3,7 +3,7 @@
 from typing import Dict
 from hdltools.patterns.matcher import PatternMatcher
 from hdltools.vcd.parser import BaseVCDParser, VAR_PARSER
-from hdltools.vcd import VCDVariable
+from hdltools.vcd.variable import VCDVariable
 
 
 # TODO: extract pattern matching logic and abstract to generic data source

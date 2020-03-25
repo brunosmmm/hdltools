@@ -4,7 +4,8 @@ from collections import deque
 from typing import Optional, Set
 from hdltools.vcd.parser import SCOPE_PARSER, UPSCOPE_PARSER, VAR_PARSER
 from hdltools.vcd.mixins import VCDParserMixin, ScopeMap
-from hdltools.vcd import VCDVariable, VCDScope
+from hdltools.vcd import VCDScope
+from hdltools.vcd.variable import VCDVariable
 
 
 class VCDHierarchyAnalysisMixin(VCDParserMixin):

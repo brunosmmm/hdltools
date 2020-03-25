@@ -2,7 +2,7 @@
 
 from hdltools.sim import HDLSimulationObject
 from hdltools.sim.simulation import HDLSimulation
-from hdltools.vcd import VCDDump
+from hdltools.vcd.dump import VCDDump
 from hdltools.vcd.generator import VCDGenerator
 from collections import deque
 import sys
