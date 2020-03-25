@@ -219,6 +219,11 @@ class VCDTriggerFSM:
         self._event_timeout_cb = value
 
     @property
+    def has_timeout(self):
+        """Get if this trigger has a timeout."""
+        return self._event_timeout_cb is not None
+
+    @property
     def evt_name(self):
         """Get event name."""
         return self._evt_name
