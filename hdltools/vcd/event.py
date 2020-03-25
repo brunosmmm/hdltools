@@ -301,7 +301,11 @@ class VCDEventTracker(
 
     def value_change_handler(self, stmt, fields):
         """Handle value change."""
-        if self.time_valid is False or self.waiting_precondition:
+        if (
+            self.time_valid is False
+            or self.waiting_precondition
+            and self.current_time > 0
+        ):
             return
         # update local variable value
         var = self.variables[fields["var"]]
