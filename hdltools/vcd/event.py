@@ -199,47 +199,51 @@ class VCDEventTracker(
     def _evt_start_callback(self, trigger_fsm):
         """Event start trigger callback."""
         new_evt = self._evt_started_or_fired(trigger_fsm)
-        print(
-            Back.YELLOW
-            + Fore.BLACK
-            + f"DEBUG: @{self.last_cycle_time}: evt starts: {trigger_fsm.evt_name} -> ({new_evt.uuid})"
-        )
+        if self._debug:
+            print(
+                Back.YELLOW
+                + Fore.BLACK
+                + f"DEBUG: @{self.last_cycle_time}: evt starts: {trigger_fsm.evt_name} -> ({new_evt.uuid})"
+            )
 
     def _evt_trigger_callback(self, trigger_fsm):
         """Event trigger callback."""
         # increment count
         self._incr_evt_count(trigger_fsm.evt_name)
         evt = self._evt_started_or_fired(trigger_fsm)
-        if trigger_fsm.event_ending:
-            end_msg = f" after {evt.duration} cycles"
-        else:
-            end_msg = ""
-        print(
-            Back.YELLOW
-            + Fore.BLACK
-            + f"DEBUG: @{self.last_cycle_time}: evt fired{end_msg}: {trigger_fsm.evt_name} -> ({evt.uuid})"
-        )
+        if self._debug:
+            if trigger_fsm.event_ending:
+                end_msg = f" after {evt.duration} cycles"
+            else:
+                end_msg = ""
+            print(
+                Back.YELLOW
+                + Fore.BLACK
+                + f"DEBUG: @{self.last_cycle_time}: evt fired{end_msg}: {trigger_fsm.evt_name} -> ({evt.uuid})"
+            )
 
     def _evt_end_callback(self, trigger_fsm):
         """Event end callback."""
         evt_done = self._log_evt_end(
             trigger_fsm.evt_name, self.last_cycle_time, trigger_fsm.current_evt
         )
-        print(
-            Back.YELLOW
-            + Fore.BLACK
-            + f"DEBUG: @{self.last_cycle_time}: evt deactivates after {evt_done.duration} cycles: {trigger_fsm.evt_name} -> ({evt_done.uuid})"
-        )
+        if self._debug:
+            print(
+                Back.YELLOW
+                + Fore.BLACK
+                + f"DEBUG: @{self.last_cycle_time}: evt deactivates after {evt_done.duration} cycles: {trigger_fsm.evt_name} -> ({evt_done.uuid})"
+            )
 
     def _evt_timeout_callback(self, trigger_fsm):
         """Event timeout callback."""
         # rollback started event
         evt = self._remove_evt_history(trigger_fsm.current_evt)
-        print(
-            Back.RED
-            + Fore.BLACK
-            + f"DEBUG: @{self.last_cycle_time}: evt timeout: {trigger_fsm.evt_name} -> ({evt.uuid})"
-        )
+        if self._debug:
+            print(
+                Back.RED
+                + Fore.BLACK
+                + f"DEBUG: @{self.last_cycle_time}: evt timeout: {trigger_fsm.evt_name} -> ({evt.uuid})"
+            )
 
     def _state_change_handler(self, old_state, new_state):
         """Detect state transition."""
@@ -257,7 +261,8 @@ class VCDEventTracker(
                         raise RuntimeError("cannot locate VCD variable")
                     # associate with first candidate
                     cond.vcd_var = list(candidates)[0].identifiers[0]
-            print("DEBUG: header parsing completed")
+            if self._debug:
+                print("DEBUG: header parsing completed")
 
     def clock_change_handler(self, time):
         """Handle time."""
@@ -283,13 +288,14 @@ class VCDEventTracker(
                         break
 
             if changed:
-                print(
-                    Fore.CYAN
-                    + f"DEBUG: @{time}: table {condtable.triggerid} changes:"
-                )
-                for cond, state in changed:
-                    msg_color = Fore.RED if state is False else Fore.GREEN
-                    print(msg_color + f"DEBUG: cond {cond} -> {state}")
+                if self._debug:
+                    print(
+                        Fore.CYAN
+                        + f"DEBUG: @{time}: table {condtable.triggerid} changes:"
+                    )
+                    for cond, state in changed:
+                        msg_color = Fore.RED if state is False else Fore.GREEN
+                        print(msg_color + f"DEBUG: cond {cond} -> {state}")
 
             # check and fire trigger. NOTE: potentially much slower in here
             condtable.check_and_fire(self.last_cycle_time)

@@ -23,6 +23,9 @@ from hdltools.vcd.tools.argparse import (
 )
 
 
+DEBUG = bool(os.environ.get("DEBUG"))
+
+
 # validator hacks
 class CallFragmentReplacer(AutoFragmentReplace):
     """Replace and call."""
@@ -166,6 +169,7 @@ if __name__ == "__main__":
         postconditions=postconditions,
         preconditions=preconditions,
         time_range=restrict_time,
+        debug=DEBUG,
     )
     evt_tracker.parse(vcddata)
 
