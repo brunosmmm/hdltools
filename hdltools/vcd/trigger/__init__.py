@@ -24,6 +24,7 @@ class VCDTriggerDescriptor(VCDObject):
         name: str,
         value: Union[Pattern, str],
         vcd_var: Optional[str] = None,
+        negate: bool = False,
     ):
         """Initialize."""
         super().__init__()
@@ -41,6 +42,12 @@ class VCDTriggerDescriptor(VCDObject):
         else:
             raise TypeError("value must be Pattern object or str or bytes")
         self._vcd_var = vcd_var
+        self._negate = negate
+
+    @property
+    def inverted(self):
+        """Get if logic is inverted."""
+        return self._negate
 
     @property
     def scope(self):
@@ -84,7 +91,10 @@ class VCDTriggerDescriptor(VCDObject):
 
     def __repr__(self):
         """Get representation."""
-        return "{{{}::{}=={}}}".format(str(self.scope), self.name, self.value)
+        op = "==" if not self._negate else "!="
+        return "{{{}::{}{}{}}}".format(
+            str(self.scope), self.name, op, self.value
+        )
 
     def match_var(
         self, scope: VCDScope, name: str, vcd_var: Optional[str] = None
@@ -104,6 +114,9 @@ class VCDTriggerDescriptor(VCDObject):
 
     def match_value(self, value: str) -> bool:
         """Match value."""
+        if self._negate:
+            return not self.value.match(value)
+
         return self.value.match(value)
 
     def match(
