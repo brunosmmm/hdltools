@@ -91,7 +91,9 @@ class TriggerConditionVisitor(ASTVisitor):
         else:
             pattern = node.value
 
-        cond = VCDTriggerDescriptor(scope, name, pattern)
+        cond = VCDTriggerDescriptor(
+            scope, name, pattern, negate=node.op == "!="
+        )
         self._conditions.append(cond)
 
     def visit_SignalDescriptor(self, node):
