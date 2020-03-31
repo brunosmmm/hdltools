@@ -1,5 +1,6 @@
 """VCD parser."""
 
+import pickle
 from scoff.parsers.token import SimpleTokenField
 from scoff.parsers.generic import DataParser, ParserError
 from scoff.parsers.linematch import LineMatcher
@@ -19,6 +20,7 @@ from hdltools.vcd.tokens import (
     BINARY_NUMBER,
     EXTENTS,
 )
+from hdltools.vcd.variable import VCDVariable
 
 
 class VCDParserError(Exception):
@@ -101,7 +103,7 @@ VCD_VAR_LINES = [
 class BaseVCDParser(DataParser):
     """Simple VCD parser."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize."""
         super().__init__("header", consume_spaces=True, **kwargs)
         if "debug" in kwargs:
@@ -176,3 +178,108 @@ class BaseVCDParser(DataParser):
         elif stmt != DUMPVARS_PARSER:
             self.value_change_handler(stmt, fields)
         return (size, stmt, fields)
+
+
+class CompiledVCDParser:
+    """Compiled vcd parser."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize."""
+        # FIXME: placeholder
+        self._state_hooks = {}
+        super().__init__(*args, **kwargs)
+        if "debug" in kwargs:
+            self._debug = kwargs["debug"]
+        else:
+            self._debug = False
+        self._ticks = 0
+        self._old_ticks = 0
+        self._vars = {}
+
+    @property
+    def current_time(self):
+        """Get current time."""
+        return self._ticks
+
+    @property
+    def last_cycle_time(self):
+        """Get last simulation cycle time."""
+        return self._old_ticks
+
+    @property
+    def variables(self):
+        """Get variables."""
+        return self._vars
+
+    @property
+    def states(self):
+        """Get states."""
+        return ["header", "initial", "dump"]
+
+    def header_statement_handler(self, stmt, fields):
+        """Handle header statement."""
+
+    def initial_value_handler(self, stmt, fields):
+        """Handle initial value assignment."""
+
+    def value_change_handler(self, stmt, fields):
+        """Handle value change."""
+
+    def clock_change_handler(self, time):
+        """Handle clock change."""
+        print(f"DEBUG: @{time}")
+
+    # FIXME: hooks do NOT work yet
+    def add_state_hook(self, state, hook):
+        """Add state hook."""
+        if not callable(hook):
+            raise TypeError("hook must be callable")
+        if state not in self.states:
+            raise ParserError(f"unknown state '{state}'")
+        if state not in self._state_hooks:
+            self._state_hooks[state] = {hook}
+        else:
+            self._state_hooks[state] |= {hook}
+
+    def _dump_state(self, fields):
+        """Emulate dump state."""
+        for hook in self._state_hooks["dump"]:
+            hook("dump", None, fields)
+
+        self.value_change_handler({}, fields)
+
+    def _state_change_handler(self, old_state, new_state):
+        """State change handler."""
+
+    def _advance_clock(self, ticks):
+        """Advance wall clock."""
+        self.clock_change_handler(ticks)
+        self._old_ticks = self._ticks
+        self._ticks = ticks
+
+    def parse(self, data):
+        """Parse."""
+        header = pickle.load(data)
+        if header != "DUMP_START":
+            raise RuntimeError("invalid dump")
+        vars_done = False
+        while True:
+            val = pickle.load(data)
+            if isinstance(val, dict) and vars_done is False:
+                var = VCDVariable.unpack(val)
+                self._vars[var.identifiers[0]] = var
+            elif isinstance(val, dict):
+                time = val["time"]
+                states = val["states"]
+                for varid, state in states.items():
+                    fields = {"var": varid, "value": bin(state)}
+                    self._dump_state(fields)
+                self._advance_clock(time)
+            elif isinstance(val, str):
+                if val == "VARS_END":
+                    vars_done = True
+                    self._state_change_handler("header", "dump")
+                elif val == "DUMP_END":
+                    break
+                else:
+                    raise RuntimeError("unknown value in dump")

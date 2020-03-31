@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """VCD Event tracker."""
 
+import pickle
 import json
 import re
 import os
@@ -12,7 +13,7 @@ from dictator.validators.lists import SubListValidator
 from dictator.validators.integer import validate_positive_integer
 from dictator.validators.maps import SubDictValidator
 
-from hdltools.vcd.event import VCDEventTracker
+from hdltools.vcd.event import VCDEventTrackerLegacy, VCDEventTrackerCompiled
 from hdltools.vcd.trigger.trigcond import build_descriptors_from_str
 from hdltools.binutils.tools.boundary import fn_boundary
 from hdltools.vcd.trigger import VCDTriggerDescriptor
@@ -125,8 +126,22 @@ if __name__ == "__main__":
             )
             exit(1)
 
-    with open(args.vcd, "r") as data:
-        vcddata = data.read()
+    maybe_vcd = False
+    with open(args.vcd, "rb") as data:
+        try:
+            tracker_class = VCDEventTrackerCompiled
+            header = pickle.load(data)
+            if header != "DUMP_START":
+                print("ERROR: invalid dump")
+                exit(1)
+        except pickle.UnpicklingError:
+            # maybe is vcd file
+            maybe_vcd = True
+
+    if maybe_vcd:
+        tracker_class = VCDEventTrackerLegacy
+        with open(args.vcd, "r") as data:
+            vcddata = data.read()
 
     # parse configuration file
     parsed_cfg = validate_config(
@@ -164,17 +179,22 @@ if __name__ == "__main__":
         cond = build_descriptors_from_str(event.pop("conds"))
         events[name] = (cond, event)
 
-    evt_tracker = VCDEventTracker(
-        events,
+    evt_tracker = tracker_class(
+        events=events,
         postconditions=postconditions,
         preconditions=preconditions,
         time_range=restrict_time,
         debug=DEBUG,
     )
-    evt_tracker.parse(vcddata)
+    if maybe_vcd:
+        evt_tracker.parse(vcddata)
+    else:
+        with open(args.vcd, "rb") as data:
+            evt_tracker.parse(data)
 
     output = {
         "counts": evt_tracker.event_counts,
+        "cycles": evt_tracker.event_cycles,
         "history": [evt.serialized for evt in evt_tracker.event_history],
     }
 
@@ -183,6 +203,8 @@ if __name__ == "__main__":
             json.dump(output, outfile, indent=2)
 
     if args.dump_counts:
-        print("EVENT\tCOUNT")
-        for evt_name, count in evt_tracker.event_counts.items():
-            print(f"{evt_name}\t{count}")
+        print("{:<20}{:>10}{:>10}".format("EVENT", "COUNT", "CYCLES"))
+        for evt_name in evt_tracker.event_counts:
+            count = output["counts"][evt_name]
+            cycles = output["cycles"][evt_name]
+            print("{:<20}{:>10}{:>10}".format(evt_name, count, cycles))

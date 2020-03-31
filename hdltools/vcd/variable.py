@@ -1,6 +1,6 @@
 """VCD Variable."""
 
-from hdltools.vcd import VCDObject
+from hdltools.vcd import VCDObject, VCDScope
 
 
 class VCDVariable(VCDObject):
@@ -115,3 +115,31 @@ class VCDVariable(VCDObject):
             )
 
         return "\n".join(ret)
+
+    def pack(self):
+        """Pack into binary representation."""
+        dump = {
+            "vartype": self._vartype,
+            "size": self._size,
+            "identifiers": self._identifiers,
+            "name": self._name,
+            "scope": self._scope.pack(),
+            "aliases": self._aliases,
+        }
+        return dump
+
+    @staticmethod
+    def unpack(src):
+        """Unpack."""
+        identifiers = src["identifiers"]
+        scope, _ = VCDScope.from_str(src["scope"])
+        var = VCDVariable(
+            *identifiers,
+            var_type=src["vartype"],
+            size=src["size"],
+            name=src["name"],
+            scope=scope
+        )
+        for alias in src["aliases"]:
+            var.add_alias(*alias)
+        return var

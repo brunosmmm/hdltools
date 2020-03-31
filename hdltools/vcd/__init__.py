@@ -40,7 +40,9 @@ class VCDScope(VCDObject):
     def __eq__(self, other):
         """Scope equality."""
         if not isinstance(other, VCDScope):
-            raise TypeError("other must be a VCDScope object")
+            raise TypeError(
+                f"other must be a VCDScope object, got {type(other)}"
+            )
         return self._scopes == other._scopes
 
     def __hash__(self):
@@ -75,3 +77,7 @@ class VCDScope(VCDObject):
         scopes = scope_str.split("::")
         inclusive = len(scopes[-1]) < 1
         return (VCDScope(*scopes), inclusive)
+
+    def pack(self):
+        """Pack."""
+        return str(self)
