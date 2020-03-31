@@ -116,11 +116,19 @@ class ConditionTableTrigger(VCDTriggerFSM):
         if self.trigger_armed is False:
             return (False, None, False)
         if cond.match_value(value):
-            self._condtable[cond] = True
-            return (True, True, False)
+            if self._condtable[cond] is False:
+                changed = True
+                self._condtable[cond] = True
+            else:
+                changed = False
+            return (changed, True, False)
         else:
-            self._condtable[cond] = False
-            return (True, False, False)
+            if self._condtable[cond]:
+                changed = True
+                self._condtable[cond] = False
+            else:
+                changed = False
+            return (changed, False, False)
 
     def check_and_fire(self, time=None):
         """Check current state and fire."""
