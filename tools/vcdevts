@@ -104,6 +104,11 @@ if __name__ == "__main__":
         action="append",
         help="Set key,value pair in event definition file",
     )
+    parser.add_argument(
+        "--append-config-value",
+        action="append",
+        help="Append value to a configuration key",
+    )
     ARG_RESTRICT_TIME.add_to_argparser(parser)
     ARG_PRECONDITION.add_to_argparser(parser)
     ARG_POSTCONDITION.add_to_argparser(parser)
@@ -147,6 +152,22 @@ if __name__ == "__main__":
         tracker_class = VCDEventTrackerLegacy
         with open(args.vcd, "r") as data:
             vcddata = data.read()
+
+    if args.append_config_value:
+        for configval in args.append_config_value:
+            try:
+                key, value = configval.split(",")
+            except ValueError:
+                print("ERROR: in --append-config-value: malformed argument")
+                exit(1)
+
+            if key.strip() not in evt_cfg:
+                print(
+                    "ERROR: in --append-config-value: key not in configuration"
+                )
+                exit(1)
+
+            evt_cfg[key.strip()] += value.strip()
 
     extra_config = {}
     if args.set_config_value:
