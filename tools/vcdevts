@@ -99,6 +99,11 @@ if __name__ == "__main__":
         help="Simulated binary for static co-analysis",
         default="",
     )
+    parser.add_argument(
+        "--set-config-value",
+        action="append",
+        help="Set key,value pair in event definition file",
+    )
     ARG_RESTRICT_TIME.add_to_argparser(parser)
     ARG_PRECONDITION.add_to_argparser(parser)
     ARG_POSTCONDITION.add_to_argparser(parser)
@@ -143,6 +148,17 @@ if __name__ == "__main__":
         with open(args.vcd, "r") as data:
             vcddata = data.read()
 
+    extra_config = {}
+    if args.set_config_value:
+        for configval in args.set_config_value:
+            try:
+                key, value = configval.split(",")
+            except ValueError:
+                print("ERROR: in --set-config-value: malformed argument")
+                exit(1)
+
+            extra_config[key.strip()] = value.strip()
+
     # parse configuration file
     parsed_cfg = validate_config(
         evt_cfg,
@@ -150,6 +166,7 @@ if __name__ == "__main__":
         EVT_CFG_OPT,
         gobble_unknown=False,
         binary=args.simulated_binary,
+        **extra_config,
     )
 
     # add postconditions and preconditions in configuration file
