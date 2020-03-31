@@ -24,5 +24,6 @@ setup(
         "tools/vgc",
         "tools/vcdhier",
         "tools/vcdtracker",
+        "tools/vcdevts",
     ],
 )
