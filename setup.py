@@ -14,6 +14,9 @@ setup(
     author_email="brunosmmm@gmail.com",
     description="HDL Tools",
     install_requires=[
+        "colorama",
+        "textX",
+        "astunparse",
         "scoff @ git+https://github.com/brunosmmm/scoff@f8a4a0c#egg=scoff",
         "dictator @ git+https://github.com/brunosmmm/dictator@04f9a0e8#egg=dictator",
     ],
