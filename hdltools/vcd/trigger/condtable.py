@@ -72,13 +72,14 @@ class ConditionTableTrigger(VCDTriggerFSM):
 
         self._oneshot = value
 
-    def arm_trigger(self):
+    def arm_trigger(self, reset_conds=False):
         """Arm trigger."""
         super().arm_trigger()
         # reset states
         if not self._condtable:
             raise RuntimeError("table empty; cannot arm")
-        self._condtable = {evt: False for evt in self._condtable}
+        if reset_conds:
+            self._condtable = {evt: False for evt in self._condtable}
 
     def trigger_reset(self):
         """Reset trigger configuration."""
