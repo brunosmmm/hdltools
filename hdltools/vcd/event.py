@@ -312,7 +312,7 @@ def get_tracker_class(parser_class):
                     if self._debug:
                         print(
                             Fore.CYAN
-                            + f"DEBUG: @{time}: table {condtable.triggerid} changes:"
+                            + f"DEBUG: @{self.last_cycle}: table {condtable.triggerid} changes:"
                         )
                         for cond, state in changed:
                             msg_color = (
