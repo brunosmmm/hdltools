@@ -1,7 +1,7 @@
 """Input generation."""
 
 from dictator.config import validate_config
-from dictator.validators.default import validate_string
+from dictator.validators.base import validate_string
 from dictator.validators.lists import ValidateChoice, SubListValidator
 from dictator.validators.maps import SubDictValidator
 from dictator.validators.default import DEFAULT_VALIDATORS
