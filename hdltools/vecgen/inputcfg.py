@@ -4,7 +4,7 @@ from dictator.config import validate_config
 from dictator.validators.base import validate_string
 from dictator.validators.lists import ValidateChoice, SubListValidator
 from dictator.validators.maps import SubDictValidator
-from dictator.validators.default import DEFAULT_VALIDATORS
+from dictator.validators.integer import positive_integer
 from dictator.validators.dependency import KeyDependencyMap
 
 EVENT_TYPES = ("initial", "set", "clear", "toggle")
@@ -33,10 +33,7 @@ def _validate_time_mode(mode, **kwargs):
 
 @SubDictValidator(
     {"mode": _validate_time_mode},
-    {
-        "delta": DEFAULT_VALIDATORS.positive_integer,
-        "time": DEFAULT_VALIDATORS.positive_integer,
-    },
+    {"delta": positive_integer, "time": positive_integer},
 )
 def _validate_time(time, **kwargs):
     """Validate time."""
@@ -44,11 +41,7 @@ def _validate_time(time, **kwargs):
 
 
 EVENT_REQ = {"event": _validate_evt_type}
-EVENT_OPT = {
-    "mask": int,
-    "time": _validate_time,
-    "value": DEFAULT_VALIDATORS.positive_integer,
-}
+EVENT_OPT = {"mask": int, "time": _validate_time, "value": positive_integer}
 
 
 @SubListValidator(EVENT_REQ, EVENT_OPT)
@@ -58,7 +51,7 @@ def _validate_sequence(seq_data, **kwargs):
 
 
 INPUT_REQ = {"sequence": _validate_sequence}
-INPUT_OPT = {"vector_size": DEFAULT_VALIDATORS.positive_integer}
+INPUT_OPT = {"vector_size": positive_integer}
 
 
 def validate_input_config(input_config):
