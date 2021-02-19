@@ -3,6 +3,7 @@
 
 from argparse import ArgumentParser
 import json
+import sys
 
 from dictator.errors import ConfigurationError
 from hdltools.vecgen.inputcfg import validate_input_config
@@ -25,9 +26,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        with open(args.config, "r") as cfg:
-            config = json.load(cfg)
-            config = validate_input_config(config)
+        if args.config == "-":
+            config = json.loads(sys.stdin.read())
+        else:
+            with open(args.config, "r") as cfg:
+                config = json.load(cfg)
+        config = validate_input_config(config)
     except OSError:
         print("ERROR: cannot open configuration file")
         exit(1)
@@ -65,7 +69,9 @@ if __name__ == "__main__":
             else:
                 tdelta = time["time"] - current_time
                 if tdelta < 0:
-                    fatal_error(f"in event {idx}: absolute time is in the past")
+                    fatal_error(
+                        f"in event {idx}: absolute time is in the past"
+                    )
 
                 for _ in range(tdelta):
                     generated_vectors.append(current_state)
