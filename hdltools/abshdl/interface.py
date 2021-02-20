@@ -33,6 +33,7 @@ class HDLModuleInterface(HDLObject):
     def parameterize(cls, **kwargs):
         ports = []
         for port_name, port_desc in cls._PORTS.items():
+            port_optional = port_desc.get("optional", False)
             if "dir" not in port_desc or "size" not in port_desc:
                 raise HDLModuleInterfaceError("malformed port description")
             size = port_desc["size"]
@@ -48,10 +49,13 @@ class HDLModuleInterface(HDLObject):
                     # is expression
                     names = re.findall(r"[_a-zA-Z]\w+", size)
                     for name in names:
-                        if name not in kwargs:
+                        if name not in kwargs and port_optional is False:
                             raise HDLModuleInterfaceError(
                                 f"in expression '{size}': unknown name '{name}'"
                             )
+                        elif port_optional:
+                            # ignore port
+                            continue
                         size = size.replace(name, str(kwargs[name]))
                     # force integer division
                     size = size.replace("/", "//")
@@ -63,14 +67,22 @@ class HDLModuleInterface(HDLObject):
                         )
                 else:
                     # is name
-                    if size not in kwargs:
+                    if size not in kwargs and port_optional is False:
                         raise HDLModuleInterfaceError(f"unknown name: {size}")
+                    elif port_optional:
+                        # not specified, so ignore
+                        continue
                     if not isinstance(kwargs[size], int):
                         raise HDLModuleInterfaceError(
                             "port sizes must be integer values"
                         )
                     else:
                         size = kwargs[size]
+            else:
+                enable_port = kwargs.get(f"enable{port_name}", False)
+                if port_optional and bool(enable_port) is False:
+                    # ignore optional port
+                    continue
             if size == 0:
                 # ignore port
                 continue
