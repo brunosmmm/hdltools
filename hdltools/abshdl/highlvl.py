@@ -9,6 +9,7 @@ from collections import deque
 from hdltools.abshdl import HDLObject
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
+from hdltools.abshdl.port import HDLModulePort
 from hdltools.abshdl.assign import HDLAssignment, HDLLazyValue
 from hdltools.abshdl.ifelse import HDLIfElse, HDLIfExp
 from hdltools.hdllib.patterns import (
@@ -27,6 +28,14 @@ class PatternNotAllowedError(Exception):
     """Code pattern not allowed."""
 
     pass
+
+
+class HDLPlaceholderSignal(HDLSignal):
+    """Placeholder signal."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize."""
+        super().__init__("other", *args, **kwargs)
 
 
 class HDLBlock(HDLObject, ast.NodeVisitor):
@@ -65,14 +74,15 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         self.block = None
         self.consts = None
         self._current_block = deque()
-        self._verify_signal_name = False
+        self._current_block_kwargs = {}
+        self._verify_signal_name = True
 
     def __call__(self, fn):
         """Decorate."""
 
-        def wrapper_BlockBuilder(*args):
+        def wrapper_BlockBuilder(*args, **kwargs):
             self._init()
-            self._build(fn)
+            self._build(fn, fn_kwargs=kwargs)
             return self.get()
 
         return wrapper_BlockBuilder
@@ -84,8 +94,16 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def _signal_lookup(self, sig_name):
         """Signal lookup."""
+        if isinstance(sig_name, int):
+            return sig_name
         if self.signal_scope is not None:
             if sig_name in self.signal_scope:
+                if isinstance(
+                    self.signal_scope[sig_name], HDLPlaceholderSignal
+                ):
+                    # go find actual signal
+                    # FIXME: should return a flag indicating placeholder
+                    return self._current_block_kwargs[sig_name]
                 return self.signal_scope[sig_name]
             else:
                 return None
@@ -96,7 +114,16 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             else:
                 return None
 
-    def _build(self, target):
+    def _build(self, target, fn_kwargs):
+        for kwarg in fn_kwargs.values():
+            if not isinstance(
+                kwarg, (HDLSignal, HDLSignalSlice, HDLModulePort, int)
+            ):
+                raise RuntimeError(
+                    "block kwargs must be of HDLSignal, HDLSignalSlice, "
+                    "HDLModulePort or integer type"
+                )
+        self._current_block_kwargs = fn_kwargs
         src = inspect.getsource(target)
         self.tree = ast.parse(textwrap.dedent(src), mode="exec")
         self.visit(self.tree)
@@ -219,20 +246,33 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     self.consts.update({c.name: c for c in const})
 
-        # enforce legality of scope
+        # FIXME: this should probably come at the beginning
         if node.args.args is not None:
             for arg in node.args.args:
-                if arg.arg not in self.signal_scope:
-                    raise NameError(
-                        'in block declaration: "{}",'
-                        ' signal "{}" is not available'
-                        " in current module scope".format(node.name, arg.arg)
+                if arg.arg not in self._current_block_kwargs:
+                    raise RuntimeError(
+                        f"while building  block: missing argument '{arg.arg}'"
                     )
 
+        # enforce legality of scope
+        if node.args.args is not None:
+            scope_add = {
+                arg.arg: HDLPlaceholderSignal(arg.arg, size=1)
+                for arg in node.args.args
+            }
+            self._add_to_scope(**scope_add)
+            # for arg in node.args.args:
+            #     if arg.arg not in self.signal_scope:
+            #         raise NameError(
+            #             'in block declaration: "{}",'
+            #             ' signal "{}" is not available'
+            #             " in current module scope".format(node.name, arg.arg)
+            #         )
+
         # push function name to stack
-        self._current_block.append(node.name)
+        self._current_block.append((node.name, self._current_block_kwargs))
         self.generic_visit(node)
-        self._current_block.pop()
+        _, self._current_block_kwargs = self._current_block.pop()
         return node
 
     def visit_If(self, node):
@@ -294,10 +334,23 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def visit_Name(self, node):
         """Visit Name."""
+        signal = self._signal_lookup(node.id)
+        if signal is not None:
+            if isinstance(signal, HDLSignalSlice):
+                signal_name = signal.signal.name
+            elif isinstance(signal, (HDLSignal, HDLModulePort)):
+                signal_name = signal.name
+            elif isinstance(signal, int):
+                signal_name = signal
+            else:
+                raise RuntimeError("unknown error")
+        else:
+            signal_name = node.id
         if self._verify_signal_name:
-            if self._signal_lookup(node.id) is None:
+            if signal is None:
                 raise NameError("unknown name: {}".format(node.id))
-        return HDLExpression(node.id)
+        node.id = signal_name
+        return HDLExpression(signal_name)
 
     def visit_Assign(self, node):
         """Visit Assignments."""
@@ -427,7 +480,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 kwargs[kwarg.arg] = self._signal_lookup(kwarg.value.id)
             else:
                 kwargs[kwarg.arg] = kwarg.value
-        self._verify_signal_name = False
+        # self._verify_signal_name = False
 
         # call?
         # fn = self._symbols[node.func.id]
@@ -437,7 +490,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
     def visit_IfExp(self, node):
         """Visit If expression."""
         ifexp = HDLIfExp(
-            HDLExpression(ast.Expression(body=node.test)),
+            self.visit(node.test),
             if_value=self.visit(node.body),
             else_value=self.visit(node.orelse),
         )
@@ -464,10 +517,12 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
         """Visit Compare."""
         self.generic_visit(node)
         if isinstance(node.left, ast.Name):
-            if node.left.id not in self.signal_scope:
-                if "reg_" + node.left.id in self.signal_scope:
+            # NOTE: Don't know why this is necessary anymore
+            left_sig = self._signal_lookup(node.left.id)
+            if left_sig is None:
+                if self._signal_lookup(node.left.id) is not None:
                     # rename
-                    node.left.id = "reg_" + node.left.id
+                    node.left.id = "reg_" + str(node.left.id)
                 else:
                     raise NameError(
                         'in "{}": signal "{}" not available in'
@@ -479,10 +534,11 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
             raise RuntimeError("only single comparison is allowed")
         (comp,) = node.comparators
         if isinstance(comp, ast.Name):
-            if comp.id not in self.signal_scope:
-                if "reg_" + comp.id in self.signal_scope:
+            comp_sig = self._signal_lookup(comp.id)
+            if comp_sig is None:
+                if self._signal_lookup("reg_" + str(comp.id)) is not None:
                     # is state register, rename
-                    comp.id = "reg_" + comp.id
+                    comp.id = "reg_" + str(comp.id)
                 else:
                     raise NameError(
                         'in "{}": signal "{}" not available in'
@@ -490,6 +546,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                             self._get_current_block(), comp.id
                         )
                     )
+
         return HDLExpression(node)
 
     def visit_Expr(self, node):
@@ -503,11 +560,11 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def _get_current_block(self):
         try:
-            block = self._current_block.pop()
+            block, kwargs = self._current_block.pop()
         except:
             return None
 
-        self._current_block.append(block)
+        self._current_block.append((block, kwargs))
         return block
 
     def _add_to_scope(self, **kwargs):
