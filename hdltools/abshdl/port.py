@@ -16,8 +16,8 @@ class HDLAbsModulePort(HDLObject):
         if direction not in self._port_directions:
             raise ValueError('invalid port direction: "{}"'.format(direction))
 
-        self.direction = direction
-        self.name = name
+        self._direction = direction
+        self._name = name
 
     def __repr__(self, eval_scope=None):
         """Get readable representation."""
@@ -36,6 +36,20 @@ class HDLAbsModulePort(HDLObject):
     def __neg__(self):
         """Access internal signal."""
         return self.signal
+
+    @property
+    def direction(self):
+        """Get direction."""
+        return self._direction
+
+    @property
+    def name(self):
+        """Get name."""
+        return self._name
+
+    def rename(self, new_name):
+        """Rename port."""
+        self._name = new_name
 
 
 class HDLModuleTypedPort(HDLAbsModulePort):

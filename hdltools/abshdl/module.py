@@ -1,12 +1,13 @@
 """HDL Module."""
 
-from . import HDLObject
-from .builtin import HDLBuiltins
-from .scope import HDLScope
-from .signal import HDLSignal
-from .macro import HDLMacro
-from .port import HDLModulePort, HDLModuleTypedPort
-from .instance import HDLInstance
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.builtin import HDLBuiltins
+from hdltools.abshdl.scope import HDLScope
+from hdltools.abshdl.signal import HDLSignal
+from hdltools.abshdl.macro import HDLMacro
+from hdltools.abshdl.port import HDLModulePort, HDLModuleTypedPort
+from hdltools.abshdl.instance import HDLInstance
+from hdltools.abshdl.interface import HDLModuleInterface
 
 
 class HDLModuleParameter(HDLObject):
@@ -127,6 +128,10 @@ class HDLModule(HDLObject):
                     raise TypeError("cannot mix typed and untyped ports")
                 self.ports.append(port)
                 untyped_ports_added = True
+            elif isinstance(port, HDLModuleInterface):
+                # interface is intrinsically typed
+                typed_ports_added = True
+                self.ports.append(port)
             else:
                 raise TypeError(
                     "list may only contain HDLModulePort" " instances"
