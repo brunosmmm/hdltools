@@ -1,7 +1,7 @@
 """Common HDL patterns."""
 
 from ..abshdl.seq import HDLSequentialBlock
-from ..abshdl.ifelse import HDLIfElse
+from ..abshdl.ifelse import HDLIfElse, HDLIfExp
 from ..abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
 from ..abshdl.scope import HDLScope
 from ..abshdl.module import HDLModule
@@ -10,6 +10,8 @@ from ..abshdl.switch import HDLSwitch, HDLCase
 from ..abshdl.macro import HDLMacro, HDLMacroValue
 from ..abshdl.assign import HDLAssignment
 from ..abshdl.comment import HDLComment
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from functools import wraps
 
 
@@ -33,7 +35,13 @@ def get_clocked_block(clock_signal, edge, *stmts, **kwargs):
 
 
 def get_clock_rst_block(
-    clock_signal, rst_signal, clk_edge, rst_lvl, rst_stmts, stmts=None, **kwargs
+    clock_signal,
+    rst_signal,
+    clk_edge,
+    rst_lvl,
+    rst_stmts,
+    stmts=None,
+    **kwargs
 ):
     """Get a clocked block, with synchronous reset."""
     clk_sens = HDLSensitivityDescriptor(clk_edge, clock_signal)
@@ -192,3 +200,31 @@ class ParallelBlock:
     def get():
         """Get a parallel scope."""
         return HDLScope(scope_type="par")
+
+
+def get_multiplexer(target, select, *options):
+    """Generate multiplexer pattern."""
+    if len(options) < 2:
+        raise RuntimeError("must have 2 or more options")
+    for idx, opt in enumerate(options):
+        if not isinstance(opt, (HDLSignal, HDLSignalSlice, HDLModulePort)):
+            raise RuntimeError(
+                "options must be signals or ports, got: {}".format(type(opt))
+            )
+        if isinstance(opt, HDLModulePort):
+            opt = opt.signal.name
+        # None is placeholder for last expression
+        if idx < len(options) - 1:
+            _ifexp = HDLIfExp(HDLExpression(select == idx), opt, None)
+        if idx == 0:
+            ifexp = _ifexp
+            root_ifexp = _ifexp
+        else:
+            # update last expression
+            if idx == len(options) - 1:
+                ifexp.else_value = opt
+            else:
+                ifexp.else_value = _ifexp
+                ifexp = _ifexp
+
+    return HDLAssignment(target, root_ifexp)
