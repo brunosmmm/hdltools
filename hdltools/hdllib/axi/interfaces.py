@@ -7,8 +7,8 @@ class AXI4LiteSlaveIf(HDLModuleInterface):
     """AXI4 Lite slave interface."""
 
     _PORTS = {
-        "_aclk": {"dir": "input", "size": 1},
-        "_aresetn": {"dir": "input", "size": 1},
+        "_aclk": {"dir": "input", "size": 1, "flips": False},
+        "_aresetn": {"dir": "input", "size": 1, "flips": False},
         "_awvalid": {"dir": "input", "size": 1},
         "_awaddr": {"dir": "input", "size": "addr_width"},
         "_awready": {"dir": "output", "size": 1},
