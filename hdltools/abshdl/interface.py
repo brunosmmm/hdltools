@@ -95,6 +95,22 @@ class HDLModuleInterface(HDLObject):
         interface = cls.parameterize(**kwargs)
         return interface.instantiate(name)
 
+    @classmethod
+    def get_flipped(cls):
+        flipped_ports = {}
+        for name, config in cls._PORTS.items():
+            if config["dir"] == "output":
+                flipped_dir = "input"
+            elif config["dir"] == "input":
+                flipped_dir = "output"
+            else:
+                flipped_dir = config["dir"]
+            _config = config.copy()
+            _config["dir"] = flipped_dir
+            flipped_ports[name] = _config
+
+        return flipped_ports
+
 
 class HDLParameterizedInterface(HDLObject):
     """Parameterized interface."""
