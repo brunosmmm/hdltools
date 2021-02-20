@@ -2,7 +2,7 @@
 
 from hdltools.abshdl import HDLObject
 from hdltools.abshdl.expr import HDLExpression
-from hdltools.abshdl.signal import HDLSignal
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from hdltools.abshdl.vector import HDLVectorDescriptor
 
 
@@ -116,3 +116,7 @@ class HDLModulePort(HDLAbsModulePort):
         return "{} {}{}".format(
             self.direction.upper(), self.name, self.vector.dumps(eval_scope)
         )
+
+    def __getitem__(self, index):
+        """Emulate subscript."""
+        return HDLSignalSlice(self.signal, index)
