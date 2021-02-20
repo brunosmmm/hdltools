@@ -292,6 +292,14 @@ class HDLModule(HDLObject):
 
         return None
 
+    def get_signal_or_port(self, name):
+        """Get signal or port."""
+        sig = self.get_signal(name)
+        if sig is None:
+            return self.get_port(name)
+
+        return sig
+
 
 def input_port(name, size=1):
     """Make an input port."""
