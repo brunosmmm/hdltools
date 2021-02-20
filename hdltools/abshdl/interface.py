@@ -99,10 +99,14 @@ class HDLModuleInterface(HDLObject):
     def get_flipped(cls):
         flipped_ports = {}
         for name, config in cls._PORTS.items():
-            if config["dir"] == "output":
-                flipped_dir = "input"
-            elif config["dir"] == "input":
-                flipped_dir = "output"
+            port_flips = config.get("flips", True)
+            if port_flips is True:
+                if config["dir"] == "output":
+                    flipped_dir = "input"
+                elif config["dir"] == "input":
+                    flipped_dir = "output"
+                else:
+                    flipped_dir = config["dir"]
             else:
                 flipped_dir = config["dir"]
             _config = config.copy()
