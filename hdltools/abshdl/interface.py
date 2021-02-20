@@ -4,6 +4,7 @@ from hdltools.abshdl import HDLObject
 from hdltools.abshdl.port import HDLModulePort
 from typing import Dict, Union
 import re
+import copy
 
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
@@ -18,7 +19,7 @@ class HDLModuleInterface(HDLObject):
 
     _PORTS: Dict[str, Dict[str, Union[str, int]]] = {}
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         """Initialize."""
         super().__init__()
 
@@ -28,8 +29,10 @@ class HDLModuleInterface(HDLObject):
                 "interface must have at least 1 port"
             )
 
-        self._ports = []
-        for port_name, port_desc in self._PORTS.items():
+    @classmethod
+    def parameterize(cls, **kwargs):
+        ports = []
+        for port_name, port_desc in cls._PORTS.items():
             if "dir" not in port_desc or "size" not in port_desc:
                 raise HDLModuleInterfaceError("malformed port description")
             size = port_desc["size"]
@@ -83,9 +86,38 @@ class HDLModuleInterface(HDLObject):
                 raise HDLModuleInterfaceError(
                     "port direction must be input, output or inout"
                 )
-            self._ports.append(HDLModulePort(direction, port_name, size))
+            ports.append(HDLModulePort(direction, port_name, size))
+        return HDLParameterizedInterface(*ports)
+
+    @classmethod
+    def instantiate(cls, name, **kwargs):
+        """Instantiate."""
+        interface = cls.parameterize(**kwargs)
+        return interface.instantiate(name)
+
+
+class HDLParameterizedInterface(HDLObject):
+    """Parameterized interface."""
+
+    def __init__(self, *ports):
+        """Initialize."""
+        for port in ports:
+            if not isinstance(port, HDLModulePort):
+                raise HDLModuleInterfaceError(
+                    "ports must be of HDLModulePort type"
+                )
+
+        self._ports = ports
 
     @property
     def ports(self):
         """Get ports."""
         return self._ports
+
+    def instantiate(self, name):
+        """Instantiate."""
+        inst_ports = copy.copy(self._ports)
+        for port in inst_ports:
+            port.rename(name + port.name)
+
+        return inst_ports
