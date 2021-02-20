@@ -22,7 +22,7 @@ class HDLSignalPartSelect(HDLObject):
 class HDLSignal(HDLStatement):
     """HDL Signal."""
 
-    _types = ["comb", "reg", "const", "var"]
+    _types = ["comb", "reg", "const", "var", "other"]
 
     def __init__(self, sig_type, sig_name, size=1, default_val=None, **kwargs):
         """Initialize."""

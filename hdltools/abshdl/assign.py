@@ -85,6 +85,8 @@ class HDLAssignment(HDLStatement):
             stmt_type = "par"
         elif sig_type in ("reg", "var"):
             stmt_type = "seq"
+        elif sig_type == "other":
+            stmt_type = "null"
 
         if isinstance(
             value,
