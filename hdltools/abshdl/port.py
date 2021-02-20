@@ -1,9 +1,9 @@
 """HDL Ports."""
 
-from . import HDLObject
-from .expr import HDLExpression
-from .signal import HDLSignal
-from .vector import HDLVectorDescriptor
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.signal import HDLSignal
+from hdltools.abshdl.vector import HDLVectorDescriptor
 
 
 class HDLAbsModulePort(HDLObject):
