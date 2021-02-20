@@ -29,3 +29,9 @@ class AXI4LiteSlaveIf(HDLModuleInterface):
         "_awprot": {"dir": "input", "size": 3},
         "_arprot": {"dir": "input", "size": 3},
     }
+
+
+class AXI4LiteMasterIf(HDLModuleInterface):
+    """AXI4 Lite master interface."""
+
+    _PORTS = AXI4LiteSlaveIf.get_flipped()
