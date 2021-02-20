@@ -115,9 +115,16 @@ class HDLModule(HDLObject):
         # TODO: duplicate port verification
         typed_ports_added = False
         untyped_ports_added = False
+        _ports = []
         if not isinstance(ports, (tuple, list)):
-            ports = [ports]
-        for port in ports:
+            _ports.append(ports)
+        else:
+            for port in ports:
+                if isinstance(port, (tuple, list)):
+                    _ports.extend(port)
+                else:
+                    _ports.append(port)
+        for port in _ports:
             if isinstance(port, HDLModuleTypedPort):
                 if untyped_ports_added:
                     raise TypeError("cannot mix typed and untyped ports")
@@ -134,7 +141,8 @@ class HDLModule(HDLObject):
                 self.ports.append(port)
             else:
                 raise TypeError(
-                    "list may only contain HDLModulePort" " instances"
+                    "list may only contain HDLModulePort instances, "
+                    f"got : {type(port)}"
                 )
 
     def add_parameters(self, params):
