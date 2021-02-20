@@ -35,3 +35,23 @@ class AXI4LiteMasterIf(HDLModuleInterface):
     """AXI4 Lite master interface."""
 
     _PORTS = AXI4LiteSlaveIf.get_flipped()
+
+
+class AXIStreamSlaveIf(HDLModuleInterface):
+    """AXI Stream slave interface."""
+
+    _PORTS = {
+        "_aclk": {"dir": "input", "size": 1, "flips": False},
+        "_tdata": {"dir": "input", "size": "data_width"},
+        "_tvalid": {"dir": "input", "size": 1},
+        "_tlast": {"dir": "input", "size": 1, "optional": True},
+        "_tdest": {"dir": "input", "size": "tdest_width", "optional": True},
+        "_tuser": {"dir": "input", "size": "tuser_width", "optional": True},
+        "_tready": {"dir": "output", "size": 1},
+    }
+
+
+class AXIStreamMasterIf(HDLModuleInterface):
+    """AXI Stream master interface."""
+
+    _PORTS = AXIStreamSlaveIf.get_flipped()
