@@ -31,7 +31,10 @@ class HDLScope(HDLObject):
             )
 
         # check legality
-        if element.stmt_type != self.scope_type and element.stmt_type != "null":
+        if (
+            element.stmt_type != self.scope_type
+            and element.stmt_type != "null"
+        ):
             raise ValueError(
                 "cannot add sequential statements "
                 "in parallel scopes and vice versa,"
@@ -53,6 +56,11 @@ class HDLScope(HDLObject):
             self.statements.append(self._check_element(elements))
             if isinstance(elements, HDLObject):
                 elements.set_parent(self)
+
+    def remove(self, element):
+        if element not in self.statements:
+            raise ValueError("element not in statements")
+        self.statements.remove(element)
 
     def extend(self, scope):
         """Extend from another scope."""
