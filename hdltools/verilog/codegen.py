@@ -325,8 +325,40 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         ret_str += self.dump_element(element.scope)
 
+        ret_str += "\n"
+
+        # dump instances
+        for instance_name, instance in element.instances.items():
+            ret_str += self.dump_element(instance)
+            ret_str += "\n"
+
         ret_str += "\nendmodule\n"
 
+        return ret_str
+
+    def gen_HDLInstance(self, element, **kwargs):
+        """Generate instance."""
+        if element.params:
+            params = " #("
+            params += ",\n".join(
+                [
+                    f".{param_name} ({param_conn})"
+                    for param_name, param_conn in element.params.items()
+                ]
+            )
+            params += ")"
+        else:
+            params = ""
+        ret_str = f"{element.itype.name}{params} {element.name} (\n"
+
+        ret_str += ",\n".join(
+            [
+                f".{port_name} ({port_conn})"
+                for port_name, port_conn in element.ports.items()
+            ]
+        )
+
+        ret_str += ");\n"
         return ret_str
 
     def gen_HDLComment(self, element, **kwargs):
