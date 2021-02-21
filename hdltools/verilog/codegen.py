@@ -325,16 +325,13 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         ret_str += self.dump_element(element.scope)
 
-        ret_str += "\n"
-
-        # dump instances
-        for instance_name, instance in element.instances.items():
-            ret_str += self.dump_element(instance)
-            ret_str += "\n"
-
         ret_str += "\nendmodule\n"
 
         return ret_str
+
+    def gen_HDLInstanceStatement(self, element, **kwargs):
+        """Generate instance statement."""
+        return self.dump_element(element.instance)
 
     def gen_HDLInstance(self, element, **kwargs):
         """Generate instance."""
