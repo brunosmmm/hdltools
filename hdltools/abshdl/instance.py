@@ -1,7 +1,8 @@
 """Instances of other modules."""
 
-from . import HDLObject
+from hdltools.abshdl import HDLObject
 import hdltools.abshdl.module
+from hdltools.abshdl.stmt import HDLStatement
 from hdltools.abshdl.interface import HDLModuleInterface, HDLInterfaceDeferred
 
 
@@ -75,3 +76,24 @@ class HDLInstance(HDLObject):
     def ports(self):
         """Get ports."""
         return self._ports
+
+
+class HDLInstanceStatement(HDLStatement):
+    """Instance statement."""
+
+    def __init__(self, inst, **kwargs):
+        """Initialize."""
+        super().__init__("par", **kwargs)
+        if not isinstance(inst, HDLInstance):
+            raise TypeError("inst must be HDLInstance")
+
+        self._inst = inst
+
+    def is_legal(self):
+        """Determine legality."""
+        return True
+
+    @property
+    def instance(self):
+        """Get instance."""
+        return self._inst
