@@ -1,6 +1,7 @@
 """Logs and messages."""
 
 import sys
+import os
 import colorama
 
 
@@ -71,13 +72,14 @@ class DefaultLogger:
 
     def dev_debug(self, message):
         """Show development debug message."""
-        self.message(
-            level="debug",
-            message="DEBUG: {}".format(message),
-            style=colorama.Fore.WHITE
-            + colorama.Back.RED
-            + colorama.Style.BRIGHT,
-        )
+        if os.environ.get("DEBUG"):
+            self.message(
+                level="debug",
+                message="DEBUG: {}".format(message),
+                style=colorama.Fore.WHITE
+                + colorama.Back.RED
+                + colorama.Style.BRIGHT,
+            )
 
     def set_level(self, level):
         """Set logging level."""
