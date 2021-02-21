@@ -117,8 +117,8 @@ class HDLModule(HDLObject):
             List of ports to be added
         """
         # TODO: duplicate port verification
-        typed_ports_added = False
-        untyped_ports_added = False
+        # typed_ports_added = False
+        # untyped_ports_added = False
         _ports = []
         if not isinstance(ports, (tuple, list)):
             _ports.append(ports)
@@ -130,23 +130,24 @@ class HDLModule(HDLObject):
                     _ports.append(port)
         for port in _ports:
             if isinstance(port, HDLModuleTypedPort):
-                if untyped_ports_added:
-                    raise TypeError("cannot mix typed and untyped ports")
+                # FIXME: motivation for this check is now unknown
+                # if untyped_ports_added:
+                #     raise TypeError("cannot mix typed and untyped ports")
                 self.ports.append(port)
-                typed_ports_added = True
+                # typed_ports_added = True
             elif isinstance(port, HDLModulePort):
-                if typed_ports_added:
-                    raise TypeError("cannot mix typed and untyped ports")
+                # if typed_ports_added:
+                #     raise TypeError("cannot mix typed and untyped ports")
                 self.ports.append(port)
-                untyped_ports_added = True
+                # untyped_ports_added = True
             elif isinstance(port, HDLModuleInterface):
                 # interface is intrinsically typed
-                typed_ports_added = True
+                # typed_ports_added = True
                 self.ports.append(port)
             elif isinstance(port, HDLInterfaceDeferred):
                 # in this case, we will parameterize this later with module params
                 self.ports.append(port)
-                typed_ports_added = True
+                # typed_ports_added = True
             else:
                 raise TypeError(
                     "list may only contain HDLModulePort instances, "
@@ -334,16 +335,22 @@ class HDLModule(HDLObject):
         return sig
 
 
-def input_port(name, size=1):
+def input_port(name, size=1, _type=None):
     """Make an input port."""
+    if _type is not None:
+        return HDLModuleTypedPort("in", name, size, _type)
     return HDLModulePort("in", name, size)
 
 
-def output_port(name, size=1):
+def output_port(name, size=1, _type=None):
     """Make an output port."""
+    if _type is not None:
+        return HDLModuleTypedPort("out", name, size, _type)
     return HDLModulePort("out", name, size)
 
 
-def inout_port(name, size=1):
+def inout_port(name, size=1, _type=None):
     """Make an input port."""
+    if _type is not None:
+        return HDLModuleTypedPort("inout", name, size, _type)
     return HDLModulePort("inout", name, size)
