@@ -660,7 +660,6 @@ class HDLSimulationObjectScheduler(HDLObject):
                 else:
                     reg_list.append(name)
 
-            print(reg_list)
             tree = LogicSanitizer(insert_reg_list=reg_list)
             tree.apply_on_ast(topfn)
             final_ast = tree.get_sanitized(rebuild=False)
