@@ -336,14 +336,14 @@ class VerilogCodeGenerator(HDLCodeGenerator):
     def gen_HDLInstance(self, element, **kwargs):
         """Generate instance."""
         if element.params:
-            params = " #("
+            params = " #(\n"
             params += ",\n".join(
                 [
                     f".{param_name} ({param_conn})"
                     for param_name, param_conn in element.params.items()
                 ]
             )
-            params += ")"
+            params += ")\n"
         else:
             params = ""
         ret_str = f"{element.itype.name}{params} {element.name} (\n"
