@@ -55,8 +55,16 @@ class HDLInstance(HDLObject):
         if isinstance(inst_port, HDLModuleInterface):
             raise NotImplementedError
         elif isinstance(inst_port, HDLInterfaceDeferred):
-            raise NotImplementedError
-        self._ports[port_name] = signal_name
+            # in this case, port_name is the interface signal prefix name
+            interface = inst_port.instantiate(**self._params)
+            for port in interface:
+                if port.name.startswith(port_name):
+                    if_signal_name = port.name[len(port_name) :]
+                else:
+                    raise RuntimeError("cannot connect interface")
+                self._ports[port.name] = signal_name + if_signal_name
+        else:
+            self._ports[port_name] = signal_name
 
     @property
     def params(self):
