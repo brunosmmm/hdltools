@@ -26,3 +26,4 @@ textX==2.1.0
 wcwidth==0.1.8
 git+https://github.com/brunosmmm/scoff.git@master#egg=scoff
 git+https://github.com/brunosmmm/dictator.git@master#egg=dictator
+colorama==0.4.4
