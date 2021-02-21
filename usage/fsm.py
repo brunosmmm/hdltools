@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
         @HDLBlock(mod)
         @ParallelBlock()
-        def fsm_body(clk, rst, done_reg, done, state, state2, start, counter):
+        def fsm_body():
             done = done_reg
             # sequential block generation
 

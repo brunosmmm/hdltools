@@ -607,7 +607,7 @@ class FSMBuilder(HDLBlock):
     def _build(self, target):
         self._class = target
         self._states = self._collect_states(target)
-        super()._build(target)
+        super()._build(target, fn_kwargs={})
 
     def visit_FunctionDef(self, node):
         """Visit function (state definition)."""

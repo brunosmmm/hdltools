@@ -9,21 +9,28 @@ from hdltools.verilog.codegen import VerilogCodeGenerator
 
 if __name__ == "__main__":
 
-    @HDLModule('lfsr', ports=[input_port('clk'),
-                              input_port('rst'),
-                              input_port('en'),
-                              output_port('out', 8)])
+    @HDLModule(
+        "lfsr",
+        ports=[
+            input_port("clk"),
+            input_port("rst"),
+            input_port("en"),
+            output_port("out", 8),
+        ],
+    )
     def lfsr_module(mod):
         """LFSR Module."""
         # signals
-        mod.add([
-            HDLSignal('comb', 'feedback'),
-            HDLSignal('reg', 'out_reg', size=8)
-        ])
+        mod.add(
+            [
+                HDLSignal("comb", "feedback"),
+                HDLSignal("reg", "out_reg", size=8),
+            ]
+        )
 
         @HDLBlock(mod)
         @ParallelBlock()
-        def lfsr_body(clk, rst, en, feedback, out_reg, out):
+        def lfsr_body():
             """Build module body."""
             # assign feedback signal
             feedback = not (out[7] ^ out[3])
@@ -32,13 +39,21 @@ if __name__ == "__main__":
 
             # sequential block generation
             @ClockedBlock(clk)
-            def gen_lfsr(rst, en, feedback, out_reg, out):
+            def gen_lfsr():
                 if rst == 1:
                     out_reg = 0
                 else:
                     if en == 1:
-                        out_reg = [out[6], out[5], out[4], out[3],
-                                   out[2], out[1], out[0], feedback]
+                        out_reg = [
+                            out[6],
+                            out[5],
+                            out[4],
+                            out[3],
+                            out[2],
+                            out[1],
+                            out[0],
+                            feedback,
+                        ]
                     else:
                         out_reg = out_reg
 
