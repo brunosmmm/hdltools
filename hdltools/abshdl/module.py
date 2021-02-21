@@ -7,7 +7,7 @@ from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.macro import HDLMacro
 from hdltools.abshdl.port import HDLModulePort, HDLModuleTypedPort
 from hdltools.abshdl.instance import HDLInstance
-from hdltools.abshdl.interface import HDLModuleInterface
+from hdltools.abshdl.interface import HDLModuleInterface, HDLInterfaceDeferred
 
 
 class HDLModuleParameter(HDLObject):
@@ -139,6 +139,10 @@ class HDLModule(HDLObject):
                 # interface is intrinsically typed
                 typed_ports_added = True
                 self.ports.append(port)
+            elif isinstance(port, HDLInterfaceDeferred):
+                # in this case, we will parameterize this later with module params
+                self.ports.append(port)
+                typed_ports_added = True
             else:
                 raise TypeError(
                     "list may only contain HDLModulePort instances, "

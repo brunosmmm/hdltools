@@ -2,6 +2,7 @@
 
 from . import HDLObject
 import hdltools.abshdl.module
+from hdltools.abshdl.interface import HDLModuleInterface, HDLInterfaceDeferred
 
 
 class HDLInstance(HDLObject):
@@ -50,6 +51,11 @@ class HDLInstance(HDLObject):
                     port_name, self._type.name
                 )
             )
+        inst_port = inst_ports[port_name]
+        if isinstance(inst_port, HDLModuleInterface):
+            raise NotImplementedError
+        elif isinstance(inst_port, HDLInterfaceDeferred):
+            raise NotImplementedError
         self._ports[port_name] = signal_name
 
     @property

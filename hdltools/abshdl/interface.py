@@ -153,3 +153,23 @@ class HDLParameterizedInterface(HDLObject):
             port.rename(name + port.name)
 
         return inst_ports
+
+
+class HDLInterfaceDeferred(HDLObject):
+    """Deferred instantiation of an interface."""
+
+    def __init__(self, inst_name, if_type):
+        """Initialize."""
+        if not issubclass(if_type, HDLModuleInterface):
+            raise TypeError("must be a subclass of HDLModuleInterface")
+        self._name = inst_name
+        self._iftype = if_type
+
+    @property
+    def name(self):
+        """Get name."""
+        return self._name
+
+    def instantiate(self, **kwargs):
+        """Instantiate."""
+        return self._iftype.instantiate(self.name, **kwargs)
