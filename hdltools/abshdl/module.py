@@ -6,8 +6,12 @@ from hdltools.abshdl.scope import HDLScope
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.macro import HDLMacro
 from hdltools.abshdl.port import HDLModulePort, HDLModuleTypedPort
-from hdltools.abshdl.instance import HDLInstance
+from hdltools.abshdl.instance import HDLInstance, HDLInstanceStatement
 from hdltools.abshdl.interface import HDLModuleInterface, HDLInterfaceDeferred
+
+
+class HDLModuleError(Exception):
+    """HDL Module error."""
 
 
 class HDLModuleParameter(HDLObject):
@@ -190,17 +194,42 @@ class HDLModule(HDLObject):
     def add_instances(self, instances):
         """Add instances."""
         if isinstance(instances, HDLInstance):
+            if instances.name in self.instances:
+                raise HDLModuleError(
+                    f"instance named '{instances.name}' already exists"
+                )
             self.instances[instances.name] = instances
+            self.scope.add(
+                HDLInstanceStatement(instances, tag="_inst_" + instances.name)
+            )
         elif isinstance(instances, (tuple, list)):
             for instance in instances:
                 if not isinstance(instance, HDLInstance):
                     raise TypeError("must be HDLInstance object")
+                if instance.name in self.instances:
+                    raise HDLModuleError(
+                        f"instance named '{instances.name} already exists"
+                    )
                 self.instances[instance.name] = instance
+                self.scope.add(
+                    HDLInstanceStatement(
+                        instance, tag="_inst_" + instances.name
+                    )
+                )
         elif isinstance(instances, dict):
             for inst_name, inst in instances.items():
                 if not isinstance(inst, HDLInstance):
                     raise TypeError("must be HDLInstance object")
-            self.instances.update(instances)
+                if inst_name in self.instances:
+                    # update instance (if different)
+                    if inst != self.instances[inst_name]:
+                        self.scope.find_by_tag("_inst_" + inst_name)
+                    else:
+                        continue
+                self.scope.add(
+                    HDLInstanceStatement(inst, tag="_inst_" + inst_name)
+                )
+                self.instances[inst_name] = inst
         else:
             raise TypeError("must be list, dictionary or HDLInstance")
 
