@@ -37,6 +37,7 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         "--replace-param", help="replace parameter value", nargs="+"
     )
+    arg_parser.add_argument("-o", help="output to file")
 
     args = arg_parser.parse_args()
 
@@ -271,4 +272,12 @@ if __name__ == "__main__":
         )
         reg_select.add_case(this_case)
 
-    print(vlog.dump_element(slave))
+    if args.o is not None:
+        try:
+            with open(args.o, "w") as dumpfile:
+                dumpfile.write(vlog.dump_element(slave))
+        except Exception:
+            print("ERROR: could not output to file")
+            exit(1)
+    else:
+        print(vlog.dump_element(slave))
