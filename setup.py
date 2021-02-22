@@ -8,7 +8,12 @@ setup(
     packages=find_packages(),
     package_dir={"": "."},
     package_data={
-        "hdltools": ["vecgen/*.tx", "binutils/*.tx", "vcd/trigger/*.tx"]
+        "hdltools": [
+            "vecgen/*.tx",
+            "binutils/*.tx",
+            "vcd/trigger/*.tx",
+            "mmap/*.tx",
+        ]
     },
     author="Bruno Morais",
     author_email="brunosmmm@gmail.com",
@@ -17,8 +22,8 @@ setup(
         "colorama",
         "textX",
         "astunparse",
-        "scoff @ git+https://github.com/brunosmmm/scoff@f8a4a0c#egg=scoff",
-        "dictator @ git+https://github.com/brunosmmm/dictator@04f9a0e8#egg=dictator",
+        "scoff @ git+https://github.com/brunosmmm/scoff@77abf0306443d98155e5dfc9e7626297cbc2c38b#egg=scoff",
+        "dictator @ git+https://github.com/brunosmmm/dictator@80e135607682140b4a2787cc226a09753ffa1a1c#egg=dictator",
     ],
     scripts=[
         "tools/mmap_docgen",
