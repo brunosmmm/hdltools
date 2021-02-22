@@ -47,7 +47,7 @@ class HDLModuleInterface(HDLObject):
                 m = EXPRESSION_REGEX.findall(size)
                 if m:
                     # is expression
-                    names = re.findall(r"[_a-zA-Z]\w+", size)
+                    names = re.findall(r"[_a-zA-Z]\w*", size)
                     for name in names:
                         if name not in kwargs and port_optional is False:
                             raise HDLModuleInterfaceError(
