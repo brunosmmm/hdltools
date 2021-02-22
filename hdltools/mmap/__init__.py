@@ -3,12 +3,15 @@
 import pkg_resources
 from textx.metamodel import metamodel_from_file
 from hdltools.abshdl.port import HDLModulePort
+from hdltools.mmap.ast import MMAP_AST_CLASSES
 
 MMAP_COMPILER_GRAMMAR = pkg_resources.resource_filename(
     "hdltools", "mmap/mmap.tx"
 )
 
-MMAP_METAMODEL = metamodel_from_file(MMAP_COMPILER_GRAMMAR)
+MMAP_METAMODEL = metamodel_from_file(
+    MMAP_COMPILER_GRAMMAR, classes=MMAP_AST_CLASSES
+)
 
 
 def bitfield_pos_to_slice(pos):
