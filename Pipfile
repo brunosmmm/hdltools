@@ -1,0 +1,47 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+appdirs = "==1.4.3"
+Arpeggio = "==1.9.2"
+astunparse = "==1.6.3"
+attrs = "==19.3.0"
+click = "==7.0"
+coverage = "==5.0.3"
+entrypoints = "==0.3"
+flake8 = "==3.7.9"
+flake8-docstrings = "==1.5.0"
+flake8-polyfill = "==1.0.2"
+mccabe = "==0.6.1"
+more-itertools = "==8.2.0"
+pluggy = "==0.13.1"
+py = "==1.8.1"
+pycodestyle = "==2.5.0"
+pydocstyle = "==5.0.2"
+pyflakes = "==2.1.1"
+pyparsing = "==2.4.6"
+pytest = "==5.3.5"
+pytest-cov = "==2.8.1"
+redis = "==3.4.0"
+six = "==1.14.0"
+snowballstemmer = "==2.0.0"
+textX = "==2.1.0"
+wcwidth = "==0.1.8"
+colorama = "==0.4.4"
+ptvsd = "*"
+debugpy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
+
+[packages.scoff]
+git = "https://github.com/brunosmmm/scoff.git"
+ref = "master"
+
+[packages.dictator]
+git = "https://github.com/brunosmmm/dictator.git"
+ref = "master"
