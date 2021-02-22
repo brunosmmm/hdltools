@@ -136,7 +136,7 @@ class HDLIntegerConstant(HDLConstant):
         elif isinstance(other, HDLIntegerConstant):
             return bool(self.value == other.value)
         else:
-            raise TypeError
+            return False
 
     def __lt__(self, other):
         """Les than."""
