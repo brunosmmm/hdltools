@@ -1,32 +1,32 @@
 AXIDescription:
-  static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement;
+  (static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement)#;
 StaticStatement:
-  '#' var=ID value=StaticValue ';';
+  '#' var=ID value=StaticStmtValue ';';
 ParameterStatement:
-  'param' name=ID value=StaticValue ';';
+  'param' name=ID value=StaticStmtValue ';';
+StaticStmtValue:
+    StaticValue | FnCall;
+FnCall:
+    '$' fn=ID '(' args*=FnArgument[','] ')';
+FnArgument:
+    ID | INT;
 Statement:
-  (SlaveRegister | SlaveRegisterField | SlavePort) ';';
+  (SlaveRegister | SlaveRegisterField | SlavePort | GenerateStatement) ';';
 SlaveRegister:
-  /register\s+/ name=TemplatedNameDecl ('at' address=PositiveIntegerValue )?
+  /register\s+/ name=TemplatedNameSubst ('at' address=PositiveIntegerValue )?
   properties*=RegisterProperty;
-TemplatedNameDecl[noskipws]:
-  fragments += TemplatedNameDeclFragment;
-TemplatedNameDeclFragment:
-  fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameDeclRule;
-TemplatedNameDeclRule:
-  '[' rule=/[^\]]+/ ']';
 TemplatedNameSubst[noskipws]:
   fragments += TemplatedNameSubstFragment;
 TemplatedNameSubstFragment:
   fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameSubstFmt;
 TemplatedNameSubstFmt:
-  '{' arg=/[0-9]+/ '}';
+  '{' arg=/[0-9a-zA-Z_\-\+\*\/]+/ '}';
 SlaveRegisterField:
-  'field' ('source='? source=FieldBitAccessor
-           'position='? position=BitField
-           'access='? access=AccessPermission
-           ('default=' default=StaticValue)?
-           properties*=RegisterProperty)#;
+    /field\s+/ source=SourceBitAccessor
+    ('position='? position=BitField
+    'access='? access=AccessPermission
+    ('default=' default=StaticValue)?
+    properties*=RegisterProperty)#;
 SlavePort:
   SlaveOutput | SlaveInput;
 SlaveOutput:
@@ -34,19 +34,23 @@ SlaveOutput:
 SlaveInput:
   /input\s+/ desc=InputDescriptor;
 OutputDescriptor:
-  name=TemplatedNameDecl sig=SignalSource;
+  name=TemplatedNameSubst sig=SignalSource;
 InputDescriptor:
-  name=TemplatedNameDecl sig=SignalDestination;
+  name=TemplatedNameSubst sig=SignalDestination;
 SignalSource:
   'source' '=' dest=SourceDestField;
 SignalDestination:
   'dest' '=' dest=SourceDestField;
+SourceBitAccessor:
+    register=TemplatedNameSubst '.' bit=ID;
 SourceDestField:
   SourceBitAccessor | TemplatedNameSubst | ID;
-SourceBitAccessor:
-  register=TemplatedNameSubst '.' bit=ID;
 FieldBitAccessor:
-  register=ID '.' bit=ID;
+    register=ID '.' bit=ID;
+GenerateStatement:
+    'for' var=ID 'in' range=Range 'generate' gen_scope+=Statement 'end';
+Range:
+    '<' left=StaticValue ',' right=StaticValue '>';
 RegisterProperty:
   name=ID '=' '"' value=/[^"]+/ '"';
 StaticValue:
@@ -54,7 +58,9 @@ StaticValue:
 PositiveIntegerValue:
   hex=Hex | posint=PositiveInteger;
 BitField:
-  left=PositiveInteger ('..' right=PositiveInteger)?;
+  left=BitFieldValue ('..' right=BitFieldValue)?;
+BitFieldValue:
+    PositiveInteger | TemplatedNameSubst;
 Hex:
   '0x' /[0-9a-fA-F]+/;
 PositiveInteger:

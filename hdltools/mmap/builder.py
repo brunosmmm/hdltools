@@ -1,13 +1,21 @@
 """Memory mapped interface builder."""
 
+import copy
+import re
+
 from scoff.ast.visits.syntax import SyntaxChecker
 
-from hdltools.abshdl.module import HDLModuleParameter
+# from scoff.ast.visits.control import SetFlag, ClearFlagAfter
+import hdltools.util
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.expr import HDLExpression
-from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
-from hdltools.mmap import FlagPort
 from hdltools.abshdl.mmap import MemoryMappedInterface
+from hdltools.abshdl.module import HDLModuleParameter
+from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
+from hdltools.logging import DEFAULT_LOGGER
+from hdltools.mmap import FlagPort
+
+EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 
 
 class MMBuilder(SyntaxChecker):
@@ -22,6 +30,13 @@ class MMBuilder(SyntaxChecker):
         self._registers = {}
         self._ports = {}
         self._cur_reg_addr = 0
+        self._replacement_values = {}
+
+    def _get_parameter_value(self, param_name):
+        """Get parameter value."""
+        if param_name in self._replacement_values:
+            return self._replacement_values[param_name]
+        return self._parameters[param_name]
 
     @staticmethod
     def slice_size(slic):
@@ -89,11 +104,26 @@ class MMBuilder(SyntaxChecker):
         else:
             raise RuntimeError("unknown setting: '{}'".format(node.var))
 
+    def visit_FnCall(self, node):
+        """Visit function call."""
+        # function calls only allowed for members of the hdltools.util module
+        if not hasattr(hdltools.util, node.fn):
+            raise NameError(f"function '{node.fn}' is unknown")
+
+        fn = getattr(hdltools.util, node.fn)
+        fn_args = []
+        for arg in node.args:
+            if isinstance(arg, str):
+                # lookup parameter name
+                if arg not in self._parameters:
+                    raise NameError(f"unknown name '{arg}'")
+                fn_args.append(self._get_parameter_value(arg).value.value)
+            else:
+                fn_args.append(arg)
+        return fn(*fn_args)
+
     def visit_ParameterStatement(self, node):
         """Visit parameter statement."""
-        if not isinstance(node.value, int):
-            raise ValueError("identifier or expressions not supported")
-
         if node.name in self._parameters:
             # warning, re-defining!
             pass
@@ -101,6 +131,63 @@ class MMBuilder(SyntaxChecker):
         self._parameters[node.name] = HDLModuleParameter(
             node.name, "integer", value
         )
+
+    def visit_Range(self, node):
+        """Visit range."""
+        if isinstance(node.left, str):
+            if node.left not in self._parameters:
+                raise NameError(f"unknown name '{node.left}'")
+            node.left = self._get_parameter_value(node.left).value.value
+
+        if isinstance(node.right, str):
+            if node.right not in self._parameters:
+                raise NameError(f"unknown name '{node.right}'")
+            node.right = self._get_parameter_value(node.right).value.value
+
+        return node
+
+    def visitPre_GenerateStatement(self, node):
+        """Enter generate statement."""
+        generated_scope = []
+        # visit ahead
+        super().visit(node.range)
+        for range_val in range(node.range.left, node.range.right):
+            # HACK insert temporary parameter value
+            self._parameters[node.var] = HDLModuleParameter(
+                node.var, "integer", range_val
+            )
+            for stmt in node.gen_scope:
+                cpy_stmt = copy.deepcopy(stmt)
+                super().visit(cpy_stmt)
+                generated_scope.append(cpy_stmt)
+            del self._parameters[node.var]
+        node.gen_scope = generated_scope
+
+    def visit_TemplatedNameSubstFmt(self, node):
+        """Visit template substitution."""
+
+        def _find_name(name):
+            """Find name."""
+            if name not in self._parameters:
+                raise NameError(f"in template: unknown name '{name}'")
+            return self._get_parameter_value(name).value
+
+        m = EXPRESSION_REGEX.findall(node.arg)
+        if m:
+            # is expression
+            expr = ""
+            names = re.findall(r"[_a-zA-Z]\w*", node.arg)
+            for name in names:
+                value = _find_name(name)
+                expr = node.arg.replace(name, str(value))
+            expr = expr.replace("/", "//")
+            try:
+                expr = eval(expr)
+            except SyntaxError:
+                raise RuntimeError("invalid expression in template")
+            return expr
+        # is name
+        return _find_name(node.arg)
 
     def visit_SlaveRegister(self, node):
         """Visit register declaration."""
@@ -121,12 +208,13 @@ class MMBuilder(SyntaxChecker):
                 # warning, re-defining!
                 pass
             # add register
+            DEFAULT_LOGGER.debug(f"adding register '{register.name}'")
             self._registers[register.name] = register
         else:
             (fragment,) = node.name.fragments
             (template,) = fragment.templates
             try:
-                start, end = template.rule.split("-")
+                start, end = template.arg.split("-")
                 _addr = reg_addr
                 for reg in range(int(start), int(end) + 1):
                     reg_name = fragment.fragment + str(reg)
@@ -148,7 +236,7 @@ class MMBuilder(SyntaxChecker):
 
     def visit_SlaveRegisterField(self, node):
         """Visit register field."""
-        src_reg = node.source.register
+        src_reg, src_field = node.source
         if src_reg not in self._registers:
             raise ValueError("unknown register: {}".format(src_reg))
 
@@ -174,7 +262,7 @@ class MMBuilder(SyntaxChecker):
             defval = 0
 
         reg_field = HDLRegisterField(
-            node.source.bit,
+            src_field,
             self.bitfield_pos_to_slice(node.position),
             node.access,
             default_value=defval,
@@ -188,18 +276,15 @@ class MMBuilder(SyntaxChecker):
         """Visit source bit accessor."""
         return (node.register, node.bit)
 
+    def visit_TemplatedNameSubstFragment(self, node):
+        """Visit fragments."""
+        return node.fragment + "".join(
+            [str(template) for template in node.templates]
+        )
+
     def visit_TemplatedNameSubst(self, node):
         """Templated name."""
-        if len(node.fragments) > 1:
-            raise NotImplementedError
-        (fragment,) = node.fragments
-        if len(fragment.templates) > 1:
-            raise NotImplementedError
-        if not fragment.templates:
-            # simple string, return
-            return fragment.fragment
-        # do not process yet
-        return node
+        return "".join(node.fragments)
 
     def visit_TemplatedNameDecl(self, node):
         """Visit templated name declaration."""
@@ -291,8 +376,18 @@ class MMBuilder(SyntaxChecker):
                 # placeholder for syntax error
                 raise
 
-    def visit(self, node):
+    def visit(self, node, param_replace=None):
         """Visit."""
+        self._replacement_values = (
+            {
+                name: HDLModuleParameter(
+                    name, "integer", HDLIntegerConstant(value)
+                )
+                for name, value in param_replace.items()
+            }
+            if param_replace is not None
+            else {}
+        )
         super().visit(node)
         mmap = MemoryMappedInterface(self._reg_size, self._reg_addr_offset)
         for register in self._registers.values():
@@ -300,6 +395,11 @@ class MMBuilder(SyntaxChecker):
         for port in self._ports.values():
             mmap.add_port(port)
         for param_name, param in self._parameters.items():
-            mmap.add_parameter(param_name, param)
+            if param_name in self._replacement_values:
+                mmap.add_parameter(
+                    param_name, self._replacement_values[param_name]
+                )
+            else:
+                mmap.add_parameter(param_name, param)
 
         return mmap
