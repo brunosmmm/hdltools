@@ -3,20 +3,21 @@
 """Build AXI MM Slaves from specification files."""
 import argparse
 import os
-from hdltools.abshdl.macro import HDLMacro
-from hdltools.abshdl.signal import HDLSignal
-from hdltools.verilog.codegen import VerilogCodeGenerator
-from hdltools.abshdl.const import HDLIntegerConstant
-from hdltools.abshdl.assign import HDLAssignment
-from hdltools.abshdl.expr import HDLExpression
-from hdltools.abshdl.concat import HDLConcatenation
-from hdltools.abshdl.switch import HDLCase
-from hdltools.abshdl.ifelse import HDLIfElse
-from hdltools.hdllib.aximm import get_axi_mm_slave, get_register_write_logic
-from hdltools.mmap import parse_mmap_file
-from hdltools.mmap.builder import MMBuilder
 import sys
 
+from hdltools.abshdl.assign import HDLAssignment
+from hdltools.abshdl.concat import HDLConcatenation
+from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.ifelse import HDLIfElse
+from hdltools.abshdl.macro import HDLMacro
+from hdltools.abshdl.signal import HDLSignal
+from hdltools.abshdl.switch import HDLCase
+from hdltools.hdllib.aximm import get_axi_mm_slave, get_register_write_logic
+from hdltools.logging import DEFAULT_LOGGER
+from hdltools.mmap import parse_mmap_file
+from hdltools.mmap.builder import MMBuilder
+from hdltools.verilog.codegen import VerilogCodeGenerator
 
 DEFAULT_TEMPLATE = os.path.join("assets", "verilog", "axi_slave.v")
 
@@ -32,13 +33,31 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         "--modname", help="Module name", default="aximm_slave", action="store"
     )
+    arg_parser.add_argument("-v", help="verbose", action="store_true")
+    arg_parser.add_argument(
+        "--replace-param", help="replace parameter value", nargs="+"
+    )
 
     args = arg_parser.parse_args()
+
+    param_replacements = {}
+    if args.replace_param is not None:
+        for replacement in args.replace_param:
+            try:
+                param, value = replacement.split("=")
+                value = int(value)
+            except (IndexError, ValueError):
+                print(f"FATAL: malformed parameter replacement: {replacement}")
+            param_replacements[param] = value
+
+    DEFAULT_LOGGER.set_dest(sys.stderr)
+    if args.v:
+        DEFAULT_LOGGER.set_level("debug")
 
     # parse file
     text, mmap_model = parse_mmap_file(args.model)
     mmbuilder = MMBuilder(text)
-    mmap = mmbuilder.visit(mmap_model)
+    mmap = mmbuilder.visit(mmap_model, param_replace=param_replacements)
 
     sys.stderr.write(mmap.dumps())
 
@@ -127,7 +146,9 @@ if __name__ == "__main__":
         # create a proxy signal
         sig = HDLSignal("comb", name, port.vector)
         reg_sig = HDLSignal(
-            "reg", "REG_" + port.target_register.name, port.target_register.size
+            "reg",
+            "REG_" + port.target_register.name,
+            port.target_register.size,
         )
         if port.target_field is not None:
             target_field = port.target_register.get_field(port.target_field)
