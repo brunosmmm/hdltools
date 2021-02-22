@@ -85,5 +85,9 @@ class DefaultLogger:
         """Set logging level."""
         self._level = level
 
+    def set_dest(self, output):
+        """Set destination."""
+        self._dest = output
+
 
 DEFAULT_LOGGER = DefaultLogger()
