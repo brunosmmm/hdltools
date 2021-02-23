@@ -77,6 +77,11 @@ class HDLInstance(HDLObject):
         """Get ports."""
         return self._ports
 
+    def rename_port(self, port_name, new_name):
+        """Rename a port."""
+        port = self._ports.pop(port_name)
+        self._ports[new_name] = port
+
 
 class HDLInstanceStatement(HDLStatement):
     """Instance statement."""

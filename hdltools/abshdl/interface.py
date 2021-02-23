@@ -31,6 +31,7 @@ class HDLModuleInterface(HDLObject):
 
     @classmethod
     def parameterize(cls, **kwargs):
+        """Parameterize interface ports."""
         ports = []
         for port_name, port_desc in cls._PORTS.items():
             port_optional = port_desc.get("optional", False)
@@ -53,7 +54,7 @@ class HDLModuleInterface(HDLObject):
                             raise HDLModuleInterfaceError(
                                 f"in expression '{size}': unknown name '{name}'"
                             )
-                        elif port_optional:
+                        if port_optional:
                             # ignore port
                             continue
                         size = size.replace(name, str(kwargs[name]))
@@ -69,15 +70,14 @@ class HDLModuleInterface(HDLObject):
                     # is name
                     if size not in kwargs and port_optional is False:
                         raise HDLModuleInterfaceError(f"unknown name: {size}")
-                    elif port_optional:
+                    if port_optional:
                         # not specified, so ignore
                         continue
                     if not isinstance(kwargs[size], int):
                         raise HDLModuleInterfaceError(
                             "port sizes must be integer values"
                         )
-                    else:
-                        size = kwargs[size]
+                    size = kwargs[size]
             else:
                 enable_port = kwargs.get(f"enable{port_name}", False)
                 if port_optional and bool(enable_port) is False:
@@ -86,7 +86,7 @@ class HDLModuleInterface(HDLObject):
             if size == 0:
                 # ignore port
                 continue
-            elif size < 0:
+            if size < 0:
                 raise HDLModuleInterfaceError(f"invalid port size: {size}")
             if port_desc["dir"] == "input":
                 direction = "in"
@@ -102,13 +102,22 @@ class HDLModuleInterface(HDLObject):
         return HDLParameterizedInterface(*ports)
 
     @classmethod
-    def instantiate(cls, name, **kwargs):
+    def instantiate(cls, name, decorate=None, **kwargs):
         """Instantiate."""
+        if decorate is not None:
+
+            @decorate
+            def decorated_parameterize(**kwargs):
+                return cls.parameterize(**kwargs)
+
+            return decorated_parameterize.instantiate(name)
+
         interface = cls.parameterize(**kwargs)
         return interface.instantiate(name)
 
     @classmethod
     def get_flipped(cls):
+        """Get interface with flipped port directions."""
         flipped_ports = {}
         for name, config in cls._PORTS.items():
             port_flips = config.get("flips", True)
@@ -133,6 +142,7 @@ class HDLParameterizedInterface(HDLObject):
 
     def __init__(self, *ports):
         """Initialize."""
+        super().__init__()
         for port in ports:
             if not isinstance(port, HDLModulePort):
                 raise HDLModuleInterfaceError(
@@ -160,6 +170,7 @@ class HDLInterfaceDeferred(HDLObject):
 
     def __init__(self, inst_name, if_type):
         """Initialize."""
+        super().__init__()
         if not issubclass(if_type, HDLModuleInterface):
             raise TypeError("must be a subclass of HDLModuleInterface")
         self._name = inst_name
