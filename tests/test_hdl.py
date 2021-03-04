@@ -40,10 +40,10 @@ def test_constants():
         _ = HDLIntegerConstant(2) * 1.0
 
     ret = HDLIntegerConstant(2) == 2
-    assert ret == True
+    assert ret is True
 
     ret = HDLIntegerConstant(2) == "x"
-    assert ret == False
+    assert ret is False
 
     _ = abs(HDLIntegerConstant(-1))
 
