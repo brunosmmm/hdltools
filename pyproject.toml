@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "hdltools"
+version = "0.1.0"
+description = ""
+authors = ["Bruno <brunosmmm@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+textX = "2.3.0"
+scoff = {git = "https://github.com/brunosmmm/scoff.git", rev = "master"}
+dictator = {git = "https://github.com/brunosmmm/dictator.git", rev = "master"}
+colorama = "0.4.4"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
