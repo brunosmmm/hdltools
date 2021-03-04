@@ -42,8 +42,8 @@ def test_constants():
     ret = HDLIntegerConstant(2) == 2
     assert ret == True
 
-    with pytest.raises(TypeError):
-        _ = HDLIntegerConstant(2) == "x"
+    ret = HDLIntegerConstant(2) == "x"
+    assert ret == False
 
     _ = abs(HDLIntegerConstant(-1))
 

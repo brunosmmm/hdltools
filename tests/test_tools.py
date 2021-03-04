@@ -51,7 +51,7 @@ def test_mmap():
     field control.IRQEN 0 RW description="Enable Interrupts";
     field control.STOP_ON_ERROR 1 RW description="Stop on Error";
     field status.IRQCLR 7 RW description="Interrupt flag; write 1 to clear";
-    field position=2..1 source=status.TEST access=R;
+    field status.TEST position=2..1 access=R;
     //field unknown.UNKNOWN 0;
     //field position=2 source=status.Conflict access=R;
 
