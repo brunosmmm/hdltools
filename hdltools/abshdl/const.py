@@ -39,6 +39,9 @@ class HDLIntegerConstant(HDLConstant):
         """
         super().__init__(**kwargs)
 
+        if not isinstance(value, int):
+            raise TypeError("value must be an integer")
+
         if size is not None:
             # check size
             if self.value_fits_width(size, value) is True:
