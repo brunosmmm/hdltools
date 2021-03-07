@@ -308,15 +308,27 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 vec = HDLVectorDescriptor(index, index)
                 return HDLSignalSlice(signal, vec)
             elif isinstance(node.slice, ast.Slice):
-                if isinstance(node.slice.upper, ast.Num):
-                    upper = node.slice.upper.n
+                if isinstance(node.slice.upper, ast.Constant):
+                    upper = node.slice.upper.value
                 else:
                     upper = node.slice.upper
-                if isinstance(node.slice.lower, ast.Num):
-                    lower = node.slice.lower.n
+                if isinstance(node.slice.lower, ast.Constant):
+                    lower = node.slice.lower.value
                 else:
                     lower = node.slice.lower
                 return HDLSignalSlice(signal, [upper, lower])
+            elif isinstance(node.slice, ast.Constant):
+                if isinstance(node.slice.value, int):
+                    vec = HDLVectorDescriptor(
+                        node.slice.value, node.slice.value
+                    )
+                    return HDLSignalSlice(signal, vec)
+                else:
+                    raise TypeError(
+                        "type {} not supported".format(
+                            node.slice.value.__class__.__name__
+                        )
+                    )
             else:
                 raise TypeError(
                     "type {} not supported".format(
@@ -328,9 +340,11 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 "type {} not supported".format(node.value.__class__.__name__)
             )
 
-    def visit_Num(self, node):
-        """Visit Num."""
-        return HDLExpression(node.n)
+    def visit_Constant(self, node):
+        """Visit Constant."""
+        if isinstance(node.value, int):
+            return HDLExpression(node.value)
+        return node
 
     def visit_Name(self, node):
         """Visit Name."""
@@ -398,12 +412,12 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                         self._signal_lookup(node.value.id),
                     )
                 )
-        elif isinstance(node.value, ast.Num):
+        elif isinstance(node.value, ast.Constant):
             for assignee in assignees:
                 assignments.append(
                     HDLAssignment(
                         self._signal_lookup(assignee),
-                        HDLExpression(node.value.n),
+                        HDLExpression(node.value.value),
                     )
                 )
         elif isinstance(node.value, (ast.List, ast.Tuple)):
@@ -429,7 +443,13 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 else:
                     # dont do anything for now, lazy
                     fn = node.value.func.id
-                    ret = (HDLLazyValue(fn, fnargs=args, fnkwargs=kwargs,),)
+                    ret = (
+                        HDLLazyValue(
+                            fn,
+                            fnargs=args,
+                            fnkwargs=kwargs,
+                        ),
+                    )
                 assignments.append(
                     HDLAssignment(self._signal_lookup(assignee), ret)
                 )

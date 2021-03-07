@@ -80,11 +80,11 @@ class HDLExpression(HDLValue):
             self.size = size
             self.from_type = "expr"
         elif isinstance(value, HDLIntegerConstant):
-            self.tree = ast.Expression(body=ast.Num(n=value.value))
+            self.tree = ast.Expression(body=ast.Constant(value=value.value))
             self.size = len(value)
             self.from_type = "const"
         elif isinstance(value, int):
-            self.tree = ast.Expression(body=ast.Num(n=value))
+            self.tree = ast.Expression(body=ast.Constant(value=value))
             if size is None:
                 # automatically generate size
                 self.size = HDLIntegerConstant.minimum_value_size(value)
@@ -159,8 +159,8 @@ class HDLExpression(HDLValue):
         """
         if isinstance(node, ast.Expression):
             return self._evaluate(node.body, **kwargs)
-        elif isinstance(node, ast.Num):
-            return node.n
+        elif isinstance(node, ast.Constant):
+            return node.value
         elif isinstance(node, ast.Name):
             if node.id in kwargs:
                 return kwargs[node.id]
@@ -222,8 +222,8 @@ class HDLExpression(HDLValue):
             return "({}{}{})".format(
                 left_expr, self._ast_op_names[node.op.__class__], right_expr
             )
-        elif isinstance(node, ast.Num):
-            return str(node.n)
+        elif isinstance(node, ast.Constant):
+            return str(node.value)
         elif isinstance(node, ast.Name):
             return node.id
         elif isinstance(node, ast.NameConstant):
@@ -529,27 +529,27 @@ class HDLExpression(HDLValue):
             binop.op,
             (ast.Add, ast.Sub, ast.LShift, ast.RShift, ast.BitOr, ast.BitXor),
         ):
-            if isinstance(left, ast.Num):
-                prune_left = bool(left.n == 0)
+            if isinstance(left, ast.Constant):
+                prune_left = bool(left.value == 0)
             else:
                 prune_left = False
 
-            if isinstance(right, ast.Num):
-                prune_right = bool(right.n == 0)
+            if isinstance(right, ast.Constant):
+                prune_right = bool(right.value == 0)
             else:
                 prune_right = False
         elif isinstance(binop.op, (ast.Mult, ast.Div)):
-            if isinstance(left, ast.Num):
+            if isinstance(left, ast.Constant):
                 if left.n == 0:
-                    return ast.Num(n=0)
-                prune_left = bool(left.n == 1)
+                    return ast.Constant(value=0)
+                prune_left = bool(left.value == 1)
             else:
                 prune_left = False
 
-            if isinstance(right, ast.Num):
+            if isinstance(right, ast.Constant):
                 if right.n == 0:
                     if isinstance(right, ast.Mult):
-                        return ast.Num(n=0)
+                        return ast.Constant(value=0)
                     else:
                         raise ValueError("division by zero")
                 prune_right = bool(right.n == 1)
@@ -562,7 +562,7 @@ class HDLExpression(HDLValue):
         # prune
         if prune_left is True and prune_right is True:
             # doesn't do anything
-            return ast.Num(n=0)
+            return ast.Constant(value=0)
         elif prune_left is True:
             return right
         elif prune_right is True:

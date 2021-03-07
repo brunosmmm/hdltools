@@ -82,9 +82,9 @@ def test_vector_descriptor():
 
 def test_module_port():
     """Test ports."""
-    port = HDLModulePort("in", "myport", 3)
-    port = HDLModulePort("out", "myport", (2, 0))
-    port = HDLModulePort("inout", "myport", HDLVectorDescriptor(2, 0))
+    HDLModulePort("in", "myport", 3)
+    HDLModulePort("out", "myport", (2, 0))
+    HDLModulePort("inout", "myport", HDLVectorDescriptor(2, 0))
 
     # fail cases
     with pytest.raises(ValueError):
@@ -181,15 +181,15 @@ def test_hdl_expression():
     full_expr = expr_a << 0 | expr_b << 16 | HDLExpression(0)
 
     case_1 = ast.BinOp(
-        left=ast.Num(n=0), op=ast.BitOr(), right=ast.Name(id="VAR")
+        left=ast.Constant(value=0), op=ast.BitOr(), right=ast.Name(id="VAR")
     )
 
     case_2 = ast.BinOp(
-        left=ast.Num(n=1), op=ast.Mult(), right=ast.Name(id="VAR")
+        left=ast.Constant(value=1), op=ast.Mult(), right=ast.Name(id="VAR")
     )
 
     case_3 = ast.BinOp(
-        left=ast.Num(n=0), op=ast.Mult(), right=ast.Name(id="VAR")
+        left=ast.Constant(value=0), op=ast.Mult(), right=ast.Name(id="VAR")
     )
 
     hdl_expr = HDLExpression(ast.Expression(body=case_1))

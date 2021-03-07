@@ -164,7 +164,10 @@ class VerilogModuleParser(object):
             direction = self._class_to_port_dir[port.__class__.__name__]
             name = port.decl.port_name
             if port.decl.srange is not None:
-                size = (port.decl.srange.left_size, port.decl.srange.right_size)
+                size = (
+                    port.decl.srange.left_size,
+                    port.decl.srange.right_size,
+                )
 
                 # use ast to parse, avoiding complicated grammar
                 left_str = port.decl.srange.left_size.replace("$", "_")
@@ -204,7 +207,7 @@ class VerilogModuleParser(object):
             deps.extend(left_node_dep)
             deps.extend(right_node_dep)
             return deps
-        elif isinstance(node, (ast.Num, ast.Call)):
+        elif isinstance(node, (ast.Constant, ast.Call)):
             return []
         elif isinstance(node, ast.Name):
             return [node.id]
