@@ -11,6 +11,18 @@ dev = ["wheel", "mkdocs", "mike", "twine"]
 test = ["flake8", "coverage", "coveralls", "pytest"]
 
 [[package]]
+category = "main"
+description = "An AST unparser for Python"
+name = "astunparse"
+optional = false
+python-versions = "*"
+version = "1.6.3"
+
+[package.dependencies]
+six = ">=1.6.1,<2.0"
+wheel = ">=0.23.0,<1.0"
+
+[[package]]
 category = "dev"
 description = "Atomic file writes."
 marker = "sys_platform == \"win32\""
@@ -165,6 +177,14 @@ url = "https://github.com/brunosmmm/scoff.git"
 
 [[package]]
 category = "main"
+description = "Python 2 and 3 compatibility utilities"
+name = "six"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+version = "1.15.0"
+
+[[package]]
+category = "main"
 description = "Meta-language for DSL implementation inspired by Xtext"
 name = "textx"
 optional = false
@@ -187,8 +207,19 @@ optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "0.10.2"
 
+[[package]]
+category = "main"
+description = "A built-package format for Python"
+name = "wheel"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+version = "0.36.2"
+
+[package.extras]
+test = ["pytest (>=3.0.0)", "pytest-cov"]
+
 [metadata]
-content-hash = "996889f1832f8750b7163deee4cc8091404fd6830b5636d603d68e9dc7983672"
+content-hash = "436fd5f361a46dc8f76fd15f2816af46c2b3c2fb0acbf7437034cdbb06821587"
 lock-version = "1.0"
 python-versions = "^3.9"
 
@@ -196,6 +227,10 @@ python-versions = "^3.9"
 arpeggio = [
     {file = "Arpeggio-1.10.1-py2.py3-none-any.whl", hash = "sha256:f01a330148d972714458faf7bc142e9780fb443d33bb2474e5df2ad0a81635bc"},
     {file = "Arpeggio-1.10.1.tar.gz", hash = "sha256:920d12cc762edb2eb56daae64a14c93e43dc181b481c88fc79314c0df6ee639e"},
+]
+astunparse = [
+    {file = "astunparse-1.6.3-py2.py3-none-any.whl", hash = "sha256:c2652417f2c8b5bb325c885ae329bdf3f86424075c4fd1a128674bc6fba4b8e8"},
+    {file = "astunparse-1.6.3.tar.gz", hash = "sha256:5ad93a8456f0d084c3456d059fd9a92cce667963232cbf763eac3bc5b7940872"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -293,6 +328,10 @@ pytest-cov = [
     {file = "pytest_cov-2.11.1-py2.py3-none-any.whl", hash = "sha256:bdb9fdb0b85a7cc825269a4c56b48ccaa5c7e365054b6038772c32ddcdc969da"},
 ]
 scoff = []
+six = [
+    {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
+    {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
+]
 textx = [
     {file = "textX-2.3.0-py2.py3-none-any.whl", hash = "sha256:f24aa485580ea5f81020b3a1af32760155f889a83490822e94159664c2bf5c8d"},
     {file = "textX-2.3.0.tar.gz", hash = "sha256:265afc12d4ae421a7794c8cdc58c6eed44cc879f078cb54c32d5dc6bc74efbac"},
@@ -300,4 +339,8 @@ textx = [
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
+]
+wheel = [
+    {file = "wheel-0.36.2-py2.py3-none-any.whl", hash = "sha256:78b5b185f0e5763c26ca1e324373aadd49182ca90e825f7853f4b2509215dc0e"},
+    {file = "wheel-0.36.2.tar.gz", hash = "sha256:e11eefd162658ea59a60a0f6c7d493a7190ea4b9a85e335b33489d9f17e0245e"},
 ]
