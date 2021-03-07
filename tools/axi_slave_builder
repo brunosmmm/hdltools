@@ -109,7 +109,7 @@ if __name__ == "__main__":
         elif isinstance(value, HDLConcatenation):
             def_val = value
 
-            concat = HDLConcatenation()
+            concat = HDLConcatenation(None)
             # build parameter buffers
             for field in reg.fields:
                 if isinstance(field.default_value, HDLExpression):

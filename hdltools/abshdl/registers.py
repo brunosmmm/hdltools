@@ -7,8 +7,9 @@ from .expr import HDLExpression
 class HDLRegisterField(object):
     """Bitfield inside a register."""
 
-    def __init__(self, name, reg_slice,
-                 permissions, default_value=0, properties=None):
+    def __init__(
+        self, name, reg_slice, permissions, default_value=0, properties=None
+    ):
         """Initialize."""
         self.name = name
 
@@ -25,13 +26,14 @@ class HDLRegisterField(object):
     def _validate_slice(self, reg_slice):
         if isinstance(reg_slice, (tuple, list)):
             if len(reg_slice) > 2:
-                raise ValueError('invalid range')
+                raise ValueError("invalid range")
             return reg_slice
         elif isinstance(reg_slice, int):
             return [reg_slice]
         else:
-            raise TypeError('invalid type '
-                            'for slice: "{}"'.format(type(reg_slice)))
+            raise TypeError(
+                "invalid type " 'for slice: "{}"'.format(type(reg_slice))
+            )
 
     def add_properties(self, **kwargs):
         """Add a property."""
@@ -41,9 +43,9 @@ class HDLRegisterField(object):
         """Get which bits are claimed by this field."""
         if len(self.reg_slice) > 1:
             if self.reg_slice[1] > self.reg_slice[0]:
-                return list(range(self.reg_slice[0], self.reg_slice[1]+1))
+                return list(range(self.reg_slice[0], self.reg_slice[1] + 1))
             else:
-                return list(range(self.reg_slice[1], self.reg_slice[0]+1))
+                return list(range(self.reg_slice[1], self.reg_slice[0] + 1))
         else:
             return self.reg_slice
 
@@ -57,9 +59,9 @@ class HDLRegisterField(object):
     def dumps_slice(self):
         """Print formatted slice."""
         if len(self.reg_slice) == 2:
-            return '[{}..{}]'.format(*self.reg_slice)
+            return "[{}..{}]".format(*self.reg_slice)
         else:
-            return '[{}]'.format(self.reg_slice[0])
+            return "[{}]".format(self.reg_slice[0])
 
 
 class HDLRegister(object):
@@ -101,13 +103,15 @@ class HDLRegister(object):
         """Add fields."""
         for arg in args:
             if not isinstance(arg, HDLRegisterField):
-                raise TypeError('only HDLRegisterField type allowed')
+                raise TypeError("only HDLRegisterField type allowed")
 
             # check clashes
             clashes = self.check_bit_clash(arg.get_range())
             if clashes is not None:
-                raise ValueError('Cannot insert field,'
-                                 ' bits "{}" already reserved'.format(clashes))
+                raise ValueError(
+                    "Cannot insert field,"
+                    ' bits "{}" already reserved'.format(clashes)
+                )
 
             # else, insert
             self.fields.append(arg)
@@ -132,11 +136,11 @@ class HDLRegister(object):
         """Get register write access mask."""
         wr_mask = 0
         for field in self.fields:
-            if field.permissions == 'R':
+            if field.permissions == "R":
                 continue
 
             for bit in field.get_range():
-                wr_mask |= (1 << bit)
+                wr_mask |= 1 << bit
 
         return wr_mask
 
@@ -155,13 +159,14 @@ class HDLRegister(object):
             for field in self.fields:
                 field_offset = field.get_range()[0]
 
-                val |= (field.default_value << field_offset)
+                val |= field.default_value << field_offset
 
             return val
         else:
-            val = HDLConcatenation()
-            for field in sorted(self.fields,
-                                key=lambda x: x.reg_slice[0])[::-1]:
+            val = HDLConcatenation(None)
+            for field in sorted(self.fields, key=lambda x: x.reg_slice[0])[
+                ::-1
+            ]:
                 val.append(field.default_value)
 
             return val
