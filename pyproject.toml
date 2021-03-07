@@ -13,6 +13,8 @@ colorama = "0.4.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
+coverage = "^5.5"
+pytest-cov = "^2.11.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
