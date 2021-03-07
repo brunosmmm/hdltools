@@ -18,9 +18,9 @@ for file in ./usage/*.py; do
 done
 
 # do other tests manually
-python $(which coverage) run ./tools/axi_slave_builder.py assets/tests/videochk.mmap > /dev/null
+python $(which coverage) run --source=hdltools ./tools/axi_slave_builder assets/tests/videochk.mmap > /dev/null
 mv .coverage .coverage.axislave
-python $(which coverage) run ./tools/mmap_docgen.py assets/tests/videochk.mmap > /dev/null
+python $(which coverage) run --source=hdltools ./tools/mmap_docgen assets/tests/videochk.mmap > /dev/null
 mv .coverage .coverage.docgen
 
 coverage_report_options='-i --omit=usage/*,tests/*,venv/*,tools/*'
