@@ -3,8 +3,9 @@
 """Build documentation from memory mapped descriptions."""
 
 import argparse
-import os
-from hdltools.mmap import MemoryMappedInterface
+
+from hdltools.mmap.builder import MMBuilder
+from hdltools.mmap import parse_mmap_file
 from hdltools.docgen.ghmd import GHMarkDownTable, GHMarkDownDocument
 from hdltools.docgen.markdown import MarkDownHeader
 
@@ -23,9 +24,10 @@ if __name__ == "__main__":
 
     args = arg_parser.parse_args()
 
-    mmap = MemoryMappedInterface()
-    mmap.parse_file(args.model)
-
+    _, mmap = parse_mmap_file(args.model)
+    text, mmap_model = parse_mmap_file(args.model)
+    mmbuilder = MMBuilder(text)
+    mmap = mmbuilder.visit(mmap_model)
     doc = GHMarkDownDocument()
 
     # build documentation
