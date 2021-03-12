@@ -13,6 +13,7 @@ setup(
             "binutils/*.tx",
             "vcd/trigger/*.tx",
             "mmap/*.tx",
+            "verilog/*.tx",
         ]
     },
     author="Bruno Morais",

@@ -1,61 +1,12 @@
 """Verilog module declaration parser."""
+import pkg_resources
+from textx.metamodel import metamodel_from_file
+from hdltools.abshdl.module import HDLModule, HDLModuleParameter
+from hdltools.abshdl.port import HDLModulePort
 
-from textx.metamodel import metamodel_from_str
-from ..abshdl.module import HDLModule, HDLModuleParameter
-from ..abshdl.port import HDLModulePort
-
-from ..abshdl.expr import HDLExpression
+from hdltools.abshdl.expr import HDLExpression
 import re
 import ast
-
-VERILOG_DECL_GRAMMAR = """
-VerilogFile:
-  VerilogTimescale? VerilogDefine* mod_decl=ModuleDeclaration /.*/*;
-VerilogTimescale:
-  '`' 'timescale' val_1=/[0-9]+/ /[unpm]s/ '/' val_2=/[0-9]+/ /[unpm]s/;
-VerilogDefine:
-  '`' 'define' alias=ID val=VectorRangeElement;
-ModuleDeclaration:
-  'module' mod_name=ID param_decl=ModuleParameterDecl?
-  '('ports*=ModulePort fport=FinalModulePort')' ';';
-ModuleParameterDecl:
-  '#(' params*=ModuleParameter fparam=FinalParameter ')';
-ModuleParameter:
-  FinalParameter ',';
-FinalParameter:
-  'parameter' par_type=ParameterType?
-  par_name=ID ('=' def_val=ParameterValue)?;
-ModulePort:
-  FinalModulePort ',';
-FinalModulePort:
-  (ModuleInput|ModuleOutput|ModuleInout);
-ModuleInout:
-  'inout' decl=ModulePortDeclaration;
-ModuleInput:
-  'input' decl=ModulePortDeclaration;
-ModuleOutput:
-  'output' decl=ModulePortDeclaration;
-ModulePortDeclaration:
-  ('wire'|'reg')? (srange=VectorRange)? port_name=ID;
-VectorRange:
-  '[' left_size=VectorRangeElement ':' right_size=VectorRangeElement ']';
-VectorRangeElement:
-  /[0-9a-zA-Z_\+\-\*\/\(\))\$]+/;
-ParameterValue:
-  expr=VectorRangeElement | bitstr=BitString;
-ParameterType:
-  'integer';
-BitString:
-  BinBitString | DecBitString | HexBitString;
-BinBitString:
-  width=INT? "'b" val=/(0|1)+/;
-DecBitString:
-  width=INT? "'d" val=/[0-9]+/;
-HexBitString:
-  width=INT? "'h" val=/[0-9a-fA-F]+/;
-Comment:
-  /\/\/.*$/;
-"""
 
 
 def verilog_bitstring_to_int(bitstring):
@@ -113,7 +64,11 @@ class VerilogModuleParser(object):
 
     def _parse_file(self):
         """Parse file."""
-        meta_model = metamodel_from_str(VERILOG_DECL_GRAMMAR)
+        meta_model = metamodel_from_file(
+            pkg_resources.resource_filename(
+                "hdltools", "verilog/module_grammar.tx"
+            )
+        )
 
         module_decl = meta_model.model_from_file(self.mod_file)
 
