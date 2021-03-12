@@ -78,7 +78,6 @@ class VerilogModuleParser(object):
         # create and add parameters
         if module_decl.mod_decl.param_decl is not None:
             params = module_decl.mod_decl.param_decl.params[:]
-            params.append(module_decl.mod_decl.param_decl.fparam)
             for param in params:
 
                 # use ast to parse
@@ -112,8 +111,6 @@ class VerilogModuleParser(object):
 
         # create and add ports
         ports = module_decl.mod_decl.ports[:]
-        # add last port
-        ports.append(module_decl.mod_decl.fport)
         for port in ports:
             # ugly, but not my fault
             direction = self._class_to_port_dir[port.__class__.__name__]
