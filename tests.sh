@@ -10,7 +10,7 @@ echo "Running usage examples / other..."
 test_count=0
 for file in ./usage/*.py; do
     echo "$file"
-    if ! python $(which coverage) run  $file > /dev/null; then
+    if ! python $(which coverage) run  $file > /dev/null 2> /dev/null; then
         exit 1 # error
     fi
     ((test_count ++))
@@ -18,7 +18,7 @@ for file in ./usage/*.py; do
 done
 
 # do other tests manually
-python $(which coverage) run --source=hdltools ./tools/axi_slave_builder assets/tests/videochk.mmap > /dev/null
+python $(which coverage) run --source=hdltools ./tools/axi_slave_builder assets/tests/videochk.mmap > /dev/null 2> /dev/null
 mv .coverage .coverage.axislave
 python $(which coverage) run --source=hdltools ./tools/mmap_docgen assets/tests/videochk.mmap > /dev/null
 mv .coverage .coverage.docgen
