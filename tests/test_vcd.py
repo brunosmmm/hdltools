@@ -14,6 +14,7 @@ def test_parser():
     vparser = BaseVCDParser()
     vparser.parse(vcd_data)
 
+
 def test_vcd_scope():
     """Test VCDScope."""
     scope = VCDScope("some", "scopes", "inside")
@@ -21,28 +22,26 @@ def test_vcd_scope():
     other_scope = VCDScope("some", "other", "scopes")
     contained_scope = VCDScope("some", "scopes", "inside", "scopes")
 
-    assert (scope != other_scope)
-    assert (scope == similar_scope)
-    assert(repr(scope) == "some::scopes::inside")
-    assert(scope.contains(contained_scope))
-    assert(not scope.contains(other_scope))
-    assert(len(scope) == 3)
-    assert(scope[0] == "some")
+    assert scope != other_scope
+    assert scope == similar_scope
+    assert repr(scope) == "some::scopes::inside"
+    assert scope.contains(contained_scope)
+    assert not scope.contains(other_scope)
+    assert len(scope) == 3
+    assert scope[0] == "some"
 
-
-    with pytest.raises(TypeError):
-        scope == None
 
 def test_vcd_scope_fromstr():
     """Test building VCDScope from string."""
 
     scope, inclusive = VCDScope.from_str("VCD::Scope::example")
-    assert(inclusive is False)
+    assert inclusive is False
     scope, inclusive = VCDScope.from_str("VCD::Scope::example::")
-    assert(inclusive is True)
+    assert inclusive is True
 
     with pytest.raises(TypeError):
-        scope = VCDScope.from_str(123)
+        VCDScope.from_str(123)
+
 
 def test_vcd_value_history():
     """Test VCD value history."""
