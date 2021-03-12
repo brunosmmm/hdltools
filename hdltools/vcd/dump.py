@@ -1,5 +1,6 @@
 """VCD Dump."""
 
+from typing import Tuple
 from hdltools.vcd import VCDObject
 from hdltools.vcd.variable import VCDVariable
 from hdltools.sim import HDLSimulationPort
@@ -8,8 +9,13 @@ from hdltools.sim import HDLSimulationPort
 class VCDDump(VCDObject):
     """Complete VCD dump."""
 
-    def __init__(self, name, timescale="1 ns", **kwargs):
-        """Initialize."""
+    def __init__(self, name: str, timescale: str = "1 ns", **kwargs):
+        """Initialize.
+
+        :param name: VCD dump name
+        :param timescale: Time scale string
+        :param kwargs: Any other keyword arguments
+        """
         super().__init__(**kwargs)
         self.variables = {}
         self.variable_identifiers = {}
@@ -27,8 +33,13 @@ class VCDDump(VCDObject):
         )
         self.var_counter += 1
 
-    def add_variables(self, *args, **kwargs):
-        """Add variables."""
+    def add_variables(self, *args: VCDVariable, **kwargs: HDLSimulationPort):
+        """Add variables.
+
+        Add variables to current VCD dump.
+        :param args: The variables to be added
+        :param kwargs: Add named ports as variables
+        """
         for arg in args:
             if not isinstance(arg, VCDVariable):
                 raise TypeError("only VCDVariable allowed")
@@ -62,8 +73,11 @@ class VCDDump(VCDObject):
 
         return changes
 
-    def load_dump(self, steps):
-        """Load data."""
+    def load_dump(self, steps: Tuple[str, str]):
+        """Load data.
+
+        :param steps: List of signal state changes
+        """
         for step in steps:
             sim_time, signals = step
             signals = self._combine_signals(signals)

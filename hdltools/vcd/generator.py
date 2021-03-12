@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 class VCDGenerator(HDLCodeGenerator):
-    """Make dumps."""
+    """Generate VCD dumps."""
 
     def __init__(self, **kwargs):
         """Initialize."""
@@ -17,46 +17,50 @@ class VCDGenerator(HDLCodeGenerator):
 
     def gen_VCDDump(self, element, **kwargs):
         """Dump VCD dump descriptor."""
-        ret_str = ''
-        ret_str += '$date\n {} \n$end\n'.format(datetime.now())
-        ret_str += '$version hdltools VCDGenerator $end\n'
-        ret_str += '$timescale {} $end'.format(element.timescale) + '\n'
-        ret_str += '$scope module {} $end\n'.format(element.name)
+        ret_str = ""
+        ret_str += "$date\n {} \n$end\n".format(datetime.now())
+        ret_str += "$version hdltools VCDGenerator $end\n"
+        ret_str += "$timescale {} $end".format(element.timescale) + "\n"
+        ret_str += "$scope module {} $end\n".format(element.name)
         for identifier, var in element.variables.items():
-            ret_str += self.dump_element(var, identifier=identifier) + '\n'
+            ret_str += self.dump_element(var, identifier=identifier) + "\n"
 
-        ret_str += '$upscope $end\n'
-        ret_str += '$enddefinitions $end\n'
+        ret_str += "$upscope $end\n"
+        ret_str += "$enddefinitions $end\n"
 
         # dump initial
-        ret_str += '#0\n$dumpvars\n'
+        ret_str += "#0\n$dumpvars\n"
         for name, value in element.initial.items():
             if element.variables[element.variable_identifiers[name]].size > 1:
-                fmt_value = 'b{0:b} '.format(value)
+                fmt_value = "b{0:b} ".format(value)
             else:
-                fmt_value = '1' if bool(value) else '0'
-            ret_str += '{}{}\n'.format(fmt_value,
-                                       element.variable_identifiers[name])
-        ret_str += '$end\n'
+                fmt_value = "1" if bool(value) else "0"
+            ret_str += "{}{}\n".format(
+                fmt_value, element.variable_identifiers[name]
+            )
+        ret_str += "$end\n"
         for step, changes in enumerate(element.vcd):
             if len(changes) == 0:
                 continue
-            ret_str += '#{}\n'.format(step+1)
+            ret_str += "#{}\n".format(step + 1)
             for name, value in changes.items():
-                ret_str += '{}{}\n'.format(value,
-                                           element.variable_identifiers[name])
+                ret_str += "{}{}\n".format(
+                    value, element.variable_identifiers[name]
+                )
 
-        #ret_str += '$dumpoff\n'
-        #for name, value in element.initial.items():
-        #ret_str += 'x{}\n'.format(element.variable_identifiers[name])
-        #ret_str += '$end'
+        # ret_str += '$dumpoff\n'
+        # for name, value in element.initial.items():
+        # ret_str += 'x{}\n'.format(element.variable_identifiers[name])
+        # ret_str += '$end'
 
         return ret_str
 
     def gen_VCDVariable(self, element, **kwargs):
         """Dump variable."""
-        ret_str = '$var {} {} {} {} $end'.format(element.var_type,
-                                                 element.size,
-                                                 kwargs['identifier'],
-                                                 *element.identifiers)
+        ret_str = "$var {} {} {} {} $end".format(
+            element.var_type,
+            element.size,
+            kwargs["identifier"],
+            *element.identifiers
+        )
         return ret_str

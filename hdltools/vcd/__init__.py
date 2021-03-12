@@ -39,6 +39,7 @@ class VCDScope(VCDObject):
 
     def __eq__(self, other):
         """Scope equality."""
+        # FIXME: raising TypeError is weird
         if not isinstance(other, VCDScope):
             raise TypeError(
                 f"other must be a VCDScope object, got {type(other)}"
@@ -49,7 +50,7 @@ class VCDScope(VCDObject):
         """Get hash."""
         return hash(tuple(self._scopes))
 
-    def contains(self, other) -> bool:
+    def contains(self, other: "VCDScope") -> bool:
         """Get whether this scope contains other scope.
 
         Arguments
@@ -70,7 +71,7 @@ class VCDScope(VCDObject):
         return True
 
     @staticmethod
-    def from_str(scope_str):
+    def from_str(scope_str: str) -> "VCDScope":
         """Build from string."""
         if not isinstance(scope_str, str):
             raise TypeError("must be a string")
@@ -78,6 +79,6 @@ class VCDScope(VCDObject):
         inclusive = len(scopes[-1]) < 1
         return (VCDScope(*scopes), inclusive)
 
-    def pack(self):
+    def pack(self) -> str:
         """Pack."""
         return str(self)

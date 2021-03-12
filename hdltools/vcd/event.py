@@ -1,7 +1,7 @@
 """VCD Event tracker."""
 
 
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, Union, Type
 from colorama import Fore, Back, init
 from uuid import uuid4
 from hdltools.vcd import VCDObject
@@ -27,7 +27,13 @@ class VCDEvent(VCDObject):
         duration: int = 0,
         uuid: Optional[str] = None,
     ):
-        """Initialize."""
+        """Initialize.
+
+        :param evt_type: Event type
+        :param time: Event start time
+        :param duration: Event duration
+        :param uuid: Optional unique identifier
+        """
         self._type = evt_type
         self._time = time
         self._duration = duration
@@ -37,34 +43,37 @@ class VCDEvent(VCDObject):
             self._uuid = uuid4()
 
     @property
-    def uuid(self):
+    def uuid(self) -> Union[None, str]:
         """Get uuid."""
         return self._uuid
 
     @property
-    def evt_type(self):
+    def evt_type(self) -> str:
         """Get event type."""
         return self._type
 
     @property
-    def time(self):
+    def time(self) -> int:
         """Get occurence time."""
         return self._time
 
     @property
-    def duration(self):
+    def duration(self) -> int:
         """Get duration."""
         return self._duration
 
     @duration.setter
-    def duration(self, value):
-        """Set duration."""
+    def duration(self, value: int):
+        """Set duration.
+
+        :param value: The event duration
+        """
         if not isinstance(value, int):
             raise TypeError("value must be integer")
         self._duration = value
 
     @property
-    def serialized(self):
+    def serialized(self) -> Dict[str, Union[str, int]]:
         """Get serializeable version."""
         return {
             "uuid": str(self.uuid),
@@ -74,7 +83,12 @@ class VCDEvent(VCDObject):
         }
 
 
-def get_tracker_class(parser_class):
+def get_tracker_class(parser_class: Type) -> Type:
+    """Build event tracker class dynamically.
+
+    :param parser_class: Parser base class
+    """
+
     class VCDEventTracker(
         parser_class, VCDConditionMixin, VCDTimeRestrictionMixin
     ):
@@ -85,7 +99,11 @@ def get_tracker_class(parser_class):
             events: Dict[str, Tuple[Tuple[VCDTriggerDescriptor], str]],
             **kwargs,
         ):
-            """Initialize."""
+            """Initialize.
+
+            :param events: Dictionary of events
+            :param kwargs: Any other parser kwargs
+            """
             super().__init__(**kwargs)
             self._events = events
             self._evt_triggers = {}
@@ -220,7 +238,8 @@ def get_tracker_class(parser_class):
                 print(
                     Back.YELLOW
                     + Fore.BLACK
-                    + f"DEBUG: @{self.last_cycle_time}: evt starts: {trigger_fsm.evt_name} -> ({new_evt.uuid})"
+                    + f"DEBUG: @{self.last_cycle_time}: evt starts: "
+                    f"{trigger_fsm.evt_name} -> ({new_evt.uuid})"
                 )
 
         def _evt_trigger_callback(self, trigger_fsm):
@@ -237,7 +256,8 @@ def get_tracker_class(parser_class):
                 print(
                     Back.YELLOW
                     + Fore.BLACK
-                    + f"DEBUG: @{self.last_cycle_time}: evt fired{end_msg}: {trigger_fsm.evt_name} -> ({evt.uuid})"
+                    + f"DEBUG: @{self.last_cycle_time}: evt fired{end_msg}: "
+                    f"{trigger_fsm.evt_name} -> ({evt.uuid})"
                 )
 
         def _evt_end_callback(self, trigger_fsm):
@@ -252,7 +272,9 @@ def get_tracker_class(parser_class):
                 print(
                     Back.YELLOW
                     + Fore.BLACK
-                    + f"DEBUG: @{self.last_cycle_time}: evt deactivates after {evt_done.duration} cycles: {trigger_fsm.evt_name} -> ({evt_done.uuid})"
+                    + f"DEBUG: @{self.last_cycle_time}: evt deactivates after"
+                    f" {evt_done.duration} cycles: {trigger_fsm.evt_name} ->"
+                    f" ({evt_done.uuid})"
                 )
 
         def _evt_timeout_callback(self, trigger_fsm):
@@ -263,7 +285,8 @@ def get_tracker_class(parser_class):
                 print(
                     Back.RED
                     + Fore.BLACK
-                    + f"DEBUG: @{self.last_cycle_time}: evt timeout: {trigger_fsm.evt_name} -> ({evt.uuid})"
+                    + f"DEBUG: @{self.last_cycle_time}: evt timeout: "
+                    f"{trigger_fsm.evt_name} -> ({evt.uuid})"
                 )
 
         def _state_change_handler(self, old_state, new_state):
@@ -312,7 +335,8 @@ def get_tracker_class(parser_class):
                     if self._debug:
                         print(
                             Fore.CYAN
-                            + f"DEBUG: @{self.last_cycle_time}: table {condtable.triggerid} changes:"
+                            + f"DEBUG: @{self.last_cycle_time}: table"
+                            f" {condtable.triggerid} changes:"
                         )
                         for cond, state in changed:
                             msg_color = (

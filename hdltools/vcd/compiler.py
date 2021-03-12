@@ -3,7 +3,6 @@
 # import struct
 import pickle
 from hdltools.vcd import VCDObject
-from hdltools.vcd.variable import VCDVariable
 from hdltools.vcd.parser import BaseVCDParser
 from hdltools.vcd.mixins.hierarchy import VCDHierarchyAnalysisMixin
 
