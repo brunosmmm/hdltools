@@ -30,7 +30,7 @@ mkdir -p tmp
 python $(which coverage) run --source=hdltools ./tools/vgc assets/tests/input1.vg --output tmp/input.json
 mv .coverage .coverage.vgc
 python $(which coverage) run --source=hdltools ./tools/inputgen tmp/input.json --output tmp/input.txt
-mv .coverage coverage.inputgen
+mv .coverage .coverage.inputgen
 
 rm -rf tmp
 
