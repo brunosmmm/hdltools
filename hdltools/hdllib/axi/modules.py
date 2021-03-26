@@ -12,8 +12,8 @@ class AXI4LiteSlaveMod(HDLModule):
     def __init__(self, extra_ports=None):
         """Initialize."""
         module_params = [
-            HDLModuleParameter("data_width", "integer", 32),
-            HDLModuleParameter("addr_width", "integer", 16),
+            HDLModuleParameter("C_S_AXI_DATA_WIDTH", "integer", 32),
+            HDLModuleParameter("C_S_AXI_ADDR_WIDTH", "integer", 16),
         ]
         module_ports = [HDLInterfaceDeferred("s_axi", AXI4LiteSlaveIf)]
         if extra_ports is not None:
