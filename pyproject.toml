@@ -5,7 +5,7 @@ description = ""
 authors = ["Bruno <brunosmmm@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.10"
 textX = "2.3.0"
 scoff = {git = "https://github.com/brunosmmm/scoff.git", rev = "2021.1"}
 dictator = {git = "https://github.com/brunosmmm/dictator.git", rev = "master"}
