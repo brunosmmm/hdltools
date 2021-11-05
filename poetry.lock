@@ -167,7 +167,7 @@ version = "0.1.0"
 description = "Simple COmpiler Framework"
 category = "main"
 optional = false
-python-versions = "^3.9"
+python-versions = ">=3.8,<3.11"
 develop = false
 
 [package.dependencies]
@@ -176,8 +176,8 @@ textx = "^2.3.0"
 [package.source]
 type = "git"
 url = "https://github.com/brunosmmm/scoff.git"
-reference = "2021.1"
-resolved_reference = "342defb8a6c863d9bb48126a6148b3d3f3739c97"
+reference = "2021.1.1"
+resolved_reference = "44553e9c2a641dbbed18b3655c309395ef36c668"
 
 [[package]]
 name = "six"
@@ -214,7 +214,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.10"
-content-hash = "a14bcb5e0c2b13589de03da35d3bdb318963f0806c1b40c488355ec60c7fc826"
+content-hash = "1342c2b119887b82bd40f93410ab192304059c707d7bb0123539659f41ecaf14"
 
 [metadata.files]
 arpeggio = [
