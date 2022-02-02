@@ -41,7 +41,6 @@ class JoinerGenerator(HDLEntityGenerator):
         )
         def gen_module(mod):
             """Generate the module."""
-
             # add selector signal
             mod.add(selector_signal)
 
@@ -49,7 +48,7 @@ class JoinerGenerator(HDLEntityGenerator):
             @HDLBlock(mod)
             @ParallelBlock()
             def module_body(input_count):
-                """The actual implementation."""
+                """Generate the actual implementation."""
 
                 @ClockedBlock(clk)
                 def join_seq():
