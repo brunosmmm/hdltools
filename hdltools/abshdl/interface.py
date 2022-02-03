@@ -2,7 +2,7 @@
 
 from hdltools.abshdl import HDLObject
 from hdltools.abshdl.port import HDLModulePort
-from typing import Dict, Union
+from typing import Dict, Union, Tuple
 import re
 import copy
 
@@ -18,6 +18,7 @@ class HDLModuleInterface(HDLObject):
     """Module interface."""
 
     _PORTS: Dict[str, Dict[str, Union[str, int]]] = {}
+    _ALIASES: Dict[str, Tuple[str]] = {}
 
     def __init__(self):
         """Initialize."""
@@ -28,6 +29,15 @@ class HDLModuleInterface(HDLObject):
             raise HDLModuleInterfaceError(
                 "interface must have at least 1 port"
             )
+
+    @classmethod
+    def find_alias(cls, name):
+        """Find alias."""
+        for used_name, aliases in cls._ALIASES.items():
+            for alias_name in aliases:
+                if alias_name == name:
+                    return used_name
+        return None
 
     @classmethod
     def parameterize(cls, **kwargs):
@@ -50,6 +60,9 @@ class HDLModuleInterface(HDLObject):
                     # is expression
                     names = re.findall(r"[_a-zA-Z]\w*", size)
                     for name in names:
+                        original_name = name
+                        if name not in kwargs:
+                            name = cls.find_alias(name)
                         if name not in kwargs and port_optional is False:
                             raise HDLModuleInterfaceError(
                                 f"in expression '{size}': unknown name '{name}'"
@@ -57,7 +70,7 @@ class HDLModuleInterface(HDLObject):
                         if port_optional:
                             # ignore port
                             continue
-                        size = size.replace(name, str(kwargs[name]))
+                        size = size.replace(original_name, str(kwargs[name]))
                     # force integer division
                     size = size.replace("/", "//")
                     try:
