@@ -178,12 +178,20 @@ class HDLSimulationObject(HDLObject):
         else:
             super().__setattr__(name, value)
             return
-        print(f"value change: {name} -> {value}")
         if isinstance(port, HDLSimulationPort):
             # do magic stuff
             if value is None:
                 raise ValueError("cannot set port to None")
-            port._value_change(value)
+            if isinstance(value, HDLSimulationPort):
+                value = value.value
+            elif isinstance(value, list):
+                value = HDLSimulationPort.normalize_list_to_vector(value)
+            changed = port._value_change(value)
+            if changed:
+                print(f"value change: {self.identifier}.{name} -> {value}")
+            return
+
+        print(f"value change: {self.identifier}.{name} -> {value}")
 
     def __getattr__(self, name):
         """Get an attribute."""
@@ -196,7 +204,9 @@ class HDLSimulationObject(HDLObject):
         else:
             raise AttributeError("invalid member: '{}'".format(name))
         if isinstance(attr, HDLSimulationPort):
-            return attr.value
+            if len(attr) == 1:
+                return bool(attr)
+            return attr
         else:
             return attr
 
