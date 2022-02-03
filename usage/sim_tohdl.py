@@ -2,6 +2,8 @@
 
 from hdltools.sim.hdl import HDLSimulationObjectScheduler
 from hdltools.sim import HDLSimulationObject
+from hdltools.sim.simulation import HDLSimulation
+from hdltools.sim.primitives import ClockGenerator, OneshotSignal
 from hdltools.verilog.codegen import VerilogCodeGenerator
 
 
@@ -30,7 +32,7 @@ class LFSR(HDLSimulationObject):
         self.add_input("clk")
         self.add_input("rst")
         self.add_input("en")
-        self.add_output("out", size=8)
+        self.add_output("out", size=8, initial=0b111001101)
 
     def logic(self, **kwargs):
         """Do internal logic."""
@@ -60,3 +62,13 @@ if __name__ == "__main__":
     sched = HDLSimulationObjectScheduler(lfsr)
     print("*LFSR Verilog Code*")
     print(gen.dump_element(sched.schedule()[0]))
+
+    ckgen = ClockGenerator("clk")
+    reset = OneshotSignal("rst", 10, initial_value=True)
+    enable = OneshotSignal("en", 20)
+    sim = HDLSimulation()
+    sim.add_stimulus(lfsr, reset, ckgen, enable)
+    sim.connect("rst.sig", "lfsr.rst")
+    sim.connect("clk.clk", "lfsr.clk")
+    sim.connect("en.sig", "lfsr.en")
+    sim.simulate(100)
