@@ -52,6 +52,8 @@ class HDLSimulation(HDLObject):
                 for name, obj in self.sim_objects.items()
             ]
         )
+        # force initial values to be propagated
+        self._propagate(True)
         for time, values in enumerate(iterator):
             self.current_time += 1
             # propagate
@@ -62,13 +64,13 @@ class HDLSimulation(HDLObject):
 
         return value_dump
 
-    def _propagate(self):
+    def _propagate(self, force=False):
         """Propagate values."""
         for name, signal in self._signals.items():
             if name not in self.connection_matrix:
                 continue
 
-            if signal.value_changed() is True:
+            if signal.value_changed() is True or force:
                 connections = self.connection_matrix[name]
                 for connection in connections:
                     # update
