@@ -122,6 +122,10 @@ class HDLSPIMaster(HDLSimulationObject):
 class HDLSpiSlave(HDLSimulationObject):
     """SPI Slave."""
 
+    NOP = 0x80
+    READ_COUNT = 0x01
+    ERASE_COUNT = 0x02
+
     def __init__(
         self, identifier=None, clk_period=1, tx_size=8, lsb_first=True
     ):
@@ -135,10 +139,13 @@ class HDLSpiSlave(HDLSimulationObject):
 
     def initialstate(self):
         """Initial state."""
-        self._state = "idle"
+        self._rxstate = "idle"
+        self._txstate = "idle"
         self._txdata = None
         self._rxdata = None
         self._pos = 0
+        self._txpos = 0
+        self._count = 0
 
     def structure(self):
         """Hierarchical structure."""
@@ -155,13 +162,25 @@ class HDLSpiSlave(HDLSimulationObject):
     def input_changed(self, which_input, value):
         """Input change callback."""
         print("changed: {} -> {}".format(which_input, value))
-        pass
+
+    def _byte_received(self, byte):
+        """Byte received."""
+        self.rx_queue.appendleft(byte)
+        self._count += 1
+        if byte == self.NOP:
+            return
+        if byte == self.READ_COUNT:
+            self._txstate = "transmit"
+            self.tx_queue.appendleft(self._count)
+            return
+        if byte == self.ERASE_COUNT:
+            self._count = 0
 
     def logic(self, **kwargs):
         """Do internal logic."""
-        if self._state == "idle":
+        if self._rxstate == "idle":
             if self.ce is True:
-                self._state = "receive"
+                self._rxstate = "receive"
 
                 # first bit might already be there
                 if self.clk is True:
@@ -170,14 +189,37 @@ class HDLSpiSlave(HDLSimulationObject):
                 else:
                     self._pos = 0
                     self._rxdata = 0
-        elif self._state == "receive":
+        elif self._rxstate == "receive":
             if self.clk is True:
-                self._rxdata |= int(self.di) << self._pos
+                if self.ce is False:
+                    # abort
+                    self._rxstate = "idle"
+                    self._pos = 0
+                    self._rxdata = 0
+                else:
+                    self._rxdata |= int(self.di) << self._pos
 
-                self._pos += 1
-                if self._pos > self.tx_size - 1:
-                    self._state = "idle"
-                    self.rx_queue.appendleft(self._rxdata)
+                    self._pos += 1
+                    if self._pos > self.tx_size - 1:
+                        self._rxstate = "idle"
+                        self._byte_received(self._rxdata)
+
+        # tx state machine
+        if self._txstate == "transmit":
+            if self.ce is True and self.clk is True:
+                # do cool stuff
+                self._txdata = self.tx_queue.pop()
+                self._txstate = "transmitting"
+                self._txpos = 0
+            else:
+                self._txstate = "idle"
+                self._txpos = 0
+        elif self._txstate == "transmitting":
+            if self.clk is True:
+                self.do = bool(self._txdata & (1 << self._txpos))
+                self._txpos += 1
+                if self._txpos == 8:
+                    self._txstate = "idle"
 
 
 if __name__ == "__main__":
@@ -192,9 +234,12 @@ if __name__ == "__main__":
     sim.connect("mspi.ce", "sspi.ce")
     sim.connect("sspi.do", "mspi.di")
 
-    print("Will send 3 bytes")
-    mspi.transmit_blocks(0x10, 0xAA)
-    mspi.transmit_blocks(0x80)
+    print("Will send 3 bytes (NOP)")
+    mspi.transmit_blocks(0x80, 0x80, 0x80)
+    # read count
+    mspi.transmit_blocks(0x01, 0x80)
+    # erase count
+    mspi.transmit_blocks(0x02)
     print("Simulating 100 steps")
     dump = sim.simulate(100)
 
@@ -202,7 +247,8 @@ if __name__ == "__main__":
     vcd_dump.add_variables(**sim.signals)
     vcd_dump.load_dump(dump)
     vcd = VCDGenerator()
-    print(vcd.dump_element(vcd_dump))
+    with open("spi.vcd", "w") as dump:
+        dump.write(vcd.dump_element(vcd_dump))
 
     rx_bytes = []
     while len(sspi.rx_queue) > 0:

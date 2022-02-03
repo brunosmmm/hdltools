@@ -5,6 +5,8 @@ from hdltools.sim import HDLSimulationObject
 from hdltools.sim.simulation import HDLSimulation
 from hdltools.sim.primitives import ClockGenerator, OneshotSignal
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.vcd.dump import VCDDump
+from hdltools.vcd.generator import VCDGenerator
 
 
 class Multiplexer(HDLSimulationObject):
@@ -32,7 +34,7 @@ class LFSR(HDLSimulationObject):
         self.add_input("clk")
         self.add_input("rst")
         self.add_input("en")
-        self.add_output("out", size=8, initial=0b111001101)
+        self.add_output("out", size=8)
 
     def logic(self, **kwargs):
         """Do internal logic."""
@@ -40,7 +42,7 @@ class LFSR(HDLSimulationObject):
 
         if self.rising_edge("clk"):
             if self.rst is True:
-                self.out = 0
+                self.out = 0b11001101
             else:
                 if self.en is True:
                     self.out = [self.out[6:0], feedback]
@@ -71,4 +73,12 @@ if __name__ == "__main__":
     sim.connect("rst.sig", "lfsr.rst")
     sim.connect("clk.clk", "lfsr.clk")
     sim.connect("en.sig", "lfsr.en")
-    sim.simulate(100)
+    dump = sim.simulate(100)
+
+    vcd_dump = VCDDump("spi")
+    vcd_dump.add_variables(**sim.signals)
+    vcd_dump.load_dump(dump)
+    vcd = VCDGenerator()
+
+    with open("test.vcd", "w") as dump:
+        dump.write(vcd.dump_element(vcd_dump))
