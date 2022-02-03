@@ -61,6 +61,8 @@ class HDLModule(HDLObject):
             Module or entity name
         ports: list
             List of ports in module declaration
+        params: list
+            List of parameters in module declaration
         """
         self.name = module_name
         self.ports = []
