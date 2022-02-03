@@ -244,11 +244,10 @@ class HDLExpression(HDLValue):
         elif isinstance(node, ast.Subscript):
             signal_name = self._get_expr(node.value)
             _slice = self._get_expr(node.slice)
+            if len(_slice) == 1:
+                _slice = f"[{_slice}]"
             # return string only
             return signal_name + _slice
-        elif isinstance(node, ast.Index):
-            # NOTICE: THIS IS LANGUAGE DEPENDENT!!!!!!
-            return "[{}]".format(self._get_expr(node.value))
         elif isinstance(node, ast.Slice):
             upper = self._get_expr(node.upper)
             lower = self._get_expr(node.lower)
