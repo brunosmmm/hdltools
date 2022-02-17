@@ -7,10 +7,10 @@ authors = ["Bruno <brunosmmm@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 textX = "2.3.0"
-scoff = {git = "https://github.com/brunosmmm/scoff", rev = "e1a0b5f98dd"}
 dictator = {git = "https://github.com/brunosmmm/dictator", rev = "master"}
 colorama = "0.4.4"
 astunparse = "^1.6.3"
+scoff = {git = "https://github.com/brunosmmm/scoff", rev = "11734473fa22481cf147e0ae30f1840831d7d6ee"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
