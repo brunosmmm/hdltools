@@ -179,8 +179,8 @@ textx = "^2.3.0"
 [package.source]
 type = "git"
 url = "https://github.com/brunosmmm/scoff"
-reference = "803206d7d9279aad6a3774f8bf0c7d0ac512a72a"
-resolved_reference = "803206d7d9279aad6a3774f8bf0c7d0ac512a72a"
+reference = "efeb42faefb1e4a7e21fbcfc3569d1f4146dcdad"
+resolved_reference = "efeb42faefb1e4a7e21fbcfc3569d1f4146dcdad"
 
 [[package]]
 name = "six"
@@ -217,7 +217,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "2b4232c722eec17e1501a09cecdecb690249d14bc5b8c1f53cc1a16bafe3c37e"
+content-hash = "3635914eace8c741d0e1a04827819dc105cf09534fb702643c79a1b085cc4a28"
 
 [metadata.files]
 arpeggio = [
