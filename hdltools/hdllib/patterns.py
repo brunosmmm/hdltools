@@ -213,6 +213,8 @@ def get_multiplexer(target, select, *options):
             )
         if isinstance(opt, HDLModulePort):
             opt = opt.signal.name
+        elif isinstance(opt, HDLSignal):
+            opt = opt.name
         # None is placeholder for last expression
         if idx < len(options) - 1:
             _ifexp = HDLIfExp(HDLExpression(select == idx), opt, None)
