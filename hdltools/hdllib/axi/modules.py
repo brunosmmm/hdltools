@@ -7,7 +7,7 @@ from hdltools.hdllib.axi.interfaces import AXI4LiteSlaveIf
 
 
 class AXI4LiteSlaveMod(HDLModule):
-    """AXI4 Lite slave module skeleton"""
+    """AXI4 Lite slave module skeleton."""
 
     def __init__(self, extra_ports=None):
         """Initialize."""
