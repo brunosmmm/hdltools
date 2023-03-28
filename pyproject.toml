@@ -17,6 +17,16 @@ pytest = "^6.2.2"
 coverage = "^5.5"
 pytest-cov = "^2.11.1"
 
+[tool.poetry.scripts]
+axi_slave_builder = "hdltools.tools.axi_slave_builder:main"
+fnboundary = "hdltools.tools.fnboundary:main"
+inputgen = "hdltools.tools.inputgen:main"
+mmap_docgen = "hdltools.tools.mmap_docgen:main"
+vcdevts = "hdltools.tools.vcdevts:main"
+vcdhier = "hdltools.tools.vcdhier:main"
+vcdtracker = "hdltools.tools.vcdtracker:main"
+vgc = "hdltools.tools.vgc:main"
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
