@@ -82,7 +82,9 @@ class HDLModuleInterface(HDLObject):
                 else:
                     # is name
                     if size not in kwargs:
-                        size = cls.find_alias(size)
+                        _size = cls.find_alias(size)
+                        if _size is not None:
+                            size = _size
                     if size not in kwargs and port_optional is False:
                         raise HDLModuleInterfaceError(f"unknown name: {size}")
                     if port_optional:
