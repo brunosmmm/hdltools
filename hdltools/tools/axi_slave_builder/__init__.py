@@ -59,6 +59,9 @@ def main():
     text, mmap_model = parse_mmap_file(args.model)
     mmbuilder = MMBuilder(text)
     mmap = mmbuilder.visit(mmap_model, param_replace=param_replacements)
+    if not mmap.registers:
+        print(f"FATAL: no registers declared in model")
+        exit(1)
 
     sys.stderr.write(mmap.dumps())
 
