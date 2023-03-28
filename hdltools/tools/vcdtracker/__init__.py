@@ -15,8 +15,8 @@ from hdltools.vcd.tools.argparse import (
 
 DEBUG = os.environ.get("DEBUG")
 
-if __name__ == "__main__":
 
+def main():
     parser = ArgumentParser()
     parser.add_argument("vcd", help="path to vcd file")
     parser.add_argument("pattern", help="pattern to search for")
@@ -150,3 +150,7 @@ if __name__ == "__main__":
                     arrival - origin
                 )
             )
+
+
+if __name__ == "__main__":
+    main()

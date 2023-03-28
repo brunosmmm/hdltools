@@ -79,7 +79,7 @@ class VCDHierarchyExplorer(BaseVCDParser, VCDHierarchyAnalysisMixin):
         return self._selected_vars
 
 
-if __name__ == "__main__":
+def main():
     parser = ArgumentParser()
     parser.add_argument("vcd", help="path to vcd file")
     cmds = parser.add_subparsers(dest="command")
@@ -124,3 +124,7 @@ if __name__ == "__main__":
             print(var)
             if aliases:
                 print(var.dump_aliases())
+
+
+if __name__ == "__main__":
+    main()

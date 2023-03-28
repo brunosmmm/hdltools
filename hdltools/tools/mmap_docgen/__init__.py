@@ -10,8 +10,7 @@ from hdltools.docgen.ghmd import GHMarkDownTable, GHMarkDownDocument
 from hdltools.docgen.markdown import MarkDownHeader
 
 
-if __name__ == "__main__":
-
+def main():
     # argument parser
     arg_parser = argparse.ArgumentParser(
         description="Generate documentation"
@@ -66,3 +65,7 @@ if __name__ == "__main__":
 
     else:
         print(doc)
+
+
+if __name__ == "__main__":
+    main()

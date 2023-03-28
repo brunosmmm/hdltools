@@ -85,7 +85,8 @@ EVT_CFG_OPT = {
     "values": validate_values,
 }
 
-if __name__ == "__main__":
+
+def main():
     parser = ArgumentParser()
 
     parser.add_argument("evt_def", help="Path to event definition file")
@@ -246,3 +247,7 @@ if __name__ == "__main__":
             count = output["counts"][evt_name]
             cycles = output["cycles"][evt_name]
             print("{:<20}{:>10}{:>10}".format(evt_name, count, cycles))
+
+
+if __name__ == "__main__":
+    main()

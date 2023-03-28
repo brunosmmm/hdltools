@@ -7,8 +7,7 @@ from hdltools.binutils import parse_objdump
 from hdltools.binutils.tools.boundary import get_boundaries
 
 
-if __name__ == "__main__":
-
+def main():
     parser = ArgumentParser()
     parser.add_argument("asm", help="output from objdump")
     exclusive = parser.add_mutually_exclusive_group()
@@ -36,3 +35,7 @@ if __name__ == "__main__":
 
         print(f"ERROR: function {args.fn_boundary} not found")
         exit(1)
+
+
+if __name__ == "__main__":
+    main()

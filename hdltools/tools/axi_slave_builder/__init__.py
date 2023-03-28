@@ -21,8 +21,8 @@ from hdltools.verilog.codegen import VerilogCodeGenerator
 
 DEFAULT_TEMPLATE = os.path.join("assets", "verilog", "axi_slave.v")
 
-if __name__ == "__main__":
 
+def main():
     # argument parser
     arg_parser = argparse.ArgumentParser(
         description="Build AXI MM" " Slaves from high-level description"
@@ -281,3 +281,7 @@ if __name__ == "__main__":
             exit(1)
     else:
         print(vlog.dump_element(slave))
+
+
+if __name__ == "__main__":
+    main()

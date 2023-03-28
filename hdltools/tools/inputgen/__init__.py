@@ -17,8 +17,7 @@ def fatal_error(msg):
     exit(1)
 
 
-if __name__ == "__main__":
-
+def main():
     parser = ArgumentParser()
     parser.add_argument("config", help="event file")
     parser.add_argument("--output", help="output", default="input.txt")
@@ -97,3 +96,7 @@ if __name__ == "__main__":
             )
     except OSError:
         fatal_error("cannot write output file")
+
+
+if __name__ == "__main__":
+    main()
