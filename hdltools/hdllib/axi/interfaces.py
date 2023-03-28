@@ -7,8 +7,8 @@ class AXI4LiteSlaveIf(HDLModuleInterface):
     """AXI4 Lite slave interface."""
 
     _ALIASES = {
-        "data_width": ("C_S_AXI_DATA_WIDTH"),
-        "addr_width": ("C_S_AXI_ADDR_WIDTH"),
+        "C_S_AXI_DATA_WIDTH": ("data_width",),
+        "C_S_AXI_ADDR_WIDTH": ("addr_width",),
     }
 
     _PORTS = {
