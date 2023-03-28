@@ -34,7 +34,9 @@ def slice_size(slic):
 class FlagPort(HDLModulePort):
     """A port dependent on a register field."""
 
-    def __init__(self, target_register, target_field, direction, name):
+    def __init__(
+        self, target_register, target_field, direction, name, is_trigger=False
+    ):
         """Initialize."""
         if target_field is not None:
             field = target_register.get_field(target_field)
@@ -43,6 +45,7 @@ class FlagPort(HDLModulePort):
             field_size = target_register.size
         self.target_register = target_register
         self.target_field = target_field
+        self.is_trigger = is_trigger
         super().__init__(direction, name, field_size)
 
 

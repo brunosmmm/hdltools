@@ -196,7 +196,7 @@ def main():
     for name, reg in mmap.registers.items():
         for field in reg.fields:
             if "autoclear" in field.properties:
-                if field.properties["autoclear"] == "true":
+                if field.properties["autoclear"] in ("true", True):
                     # insert auto clearing flag behavior
                     field_sig = slave_signals["REG_" + name]
                     clr_if = HDLIfElse(

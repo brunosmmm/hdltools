@@ -72,6 +72,26 @@ class MemoryMappedInterface(HDLObject):
 
         self._parameters[name] = value
 
+    @staticmethod
+    def _dump_properties(properties):
+        """Dump properties."""
+        has_properties = False
+        props = []
+        for pname, pval in properties.items():
+            if pname == "description":
+                continue
+            else:
+                has_properties = True
+            if isinstance(pval, bool):
+                props.append(pname)
+            else:
+                props.append(f"{pname}={pval}")
+
+        if has_properties is False:
+            return ""
+
+        return "[" + ", ".join(props) + "]"
+
     def dumps(self):
         """Dump summary."""
         ret_str = "PARAMETERS:\n"
@@ -84,11 +104,12 @@ class MemoryMappedInterface(HDLObject):
             ret_str += "0x{:02X}: {}\n".format(register.addr, regname)
             # dump field information
             for field in sorted(register.fields, key=lambda x: x.reg_slice[0]):
-                ret_str += "{: <2}{} -> {} ({})\n".format(
+                ret_str += "{: <2}{} -> {} ({}) {}\n".format(
                     field.permissions,
                     field.dumps_slice(),
                     field.name,
                     field.default_value,
+                    self._dump_properties(field.properties),
                 )
 
         ret_str += "PORTS:\n"
@@ -98,13 +119,14 @@ class MemoryMappedInterface(HDLObject):
             else:
                 dir_str = "->"
 
-            ret_str += "{} {} {}{}\n".format(
+            ret_str += "{} {} {}{}{}\n".format(
                 port.name,
                 dir_str,
                 port.target_register.name,
                 "." + port.target_field
                 if port.target_field is not None
                 else "",
+                " [trigger]" if port.is_trigger else "",
             )
 
         return ret_str

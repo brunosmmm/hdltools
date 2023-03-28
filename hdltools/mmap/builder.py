@@ -234,7 +234,7 @@ class MMBuilder(SyntaxChecker):
             except:
                 raise RuntimeError("error in template rule")
 
-    def visit_SlaveRegisterField(self, node):
+    def visit_SlaveRegisterFieldImplicit(self, node):
         """Visit register field."""
         src_reg, src_field = node.source
         if src_reg not in self._registers:
@@ -270,6 +270,52 @@ class MMBuilder(SyntaxChecker):
 
         for prop in node.properties:
             reg_field.add_properties(**{prop.name: prop.value})
+        self._registers[src_reg].add_fields(reg_field)
+
+    def visit_SlaveRegisterFieldExplicit(self, node):
+        """Visit register field."""
+        src_reg, src_field = node.source
+        if src_reg not in self._registers:
+            raise ValueError("unknown register: {}".format(src_reg))
+
+        ssize = self.slice_size(
+            self.bitfield_pos_to_slice(node.position.position)
+        )
+        if node.default is not None:
+            if isinstance(node.default, int):
+                param_size = HDLIntegerConstant.minimum_value_size(
+                    node.default.default
+                )
+                defval = node.default.default
+            else:
+                if node.default.default.strip() in self._parameters:
+                    param_size = 0
+                    defval = HDLExpression(
+                        node.default.default.strip(), size=ssize
+                    )
+                else:
+                    raise RuntimeError(
+                        "unknown identifier: {}".format(
+                            node.default.default.strip()
+                        )
+                    )
+
+            if ssize < param_size:
+                raise RuntimeError("value does not fit in field")
+        else:
+            defval = 0
+
+        reg_field = HDLRegisterField(
+            src_field,
+            self.bitfield_pos_to_slice(node.position.position),
+            node.access.access,
+            default_value=defval,
+        )
+
+        for prop in node.properties:
+            reg_field.add_properties(**{prop.name: prop.value})
+        for qualifier in node.qualifiers:
+            reg_field.add_properties(**{qualifier: True})
         self._registers[src_reg].add_fields(reg_field)
 
     def visit_SourceBitAccessor(self, node):
@@ -327,6 +373,10 @@ class MMBuilder(SyntaxChecker):
             # templated name
             src_reg = node.sig
             src_bit = None
+        if direction == "out" and node.parent.trigger:
+            is_trigger = True
+        else:
+            is_trigger = False
         if isinstance(node.name, str):
             # simple declaration
             if src_reg not in self._registers:
@@ -334,7 +384,7 @@ class MMBuilder(SyntaxChecker):
             src_reg = self._registers[src_reg]
             if src_bit is not None and src_reg.has_field(src_bit) is False:
                 raise KeyError("invalid field: {}".format(src_bit))
-            port = FlagPort(src_reg, src_bit, direction, node.name)
+            port = FlagPort(src_reg, src_bit, direction, node.name, is_trigger)
             if port.name in self._ports:
                 # warning, re-define
                 pass
@@ -358,7 +408,11 @@ class MMBuilder(SyntaxChecker):
                     raise KeyError('invalid field: "{}"'.format(src_bit))
 
                 port = FlagPort(
-                    _reg, src_bit, direction, fragment.fragment + str(port),
+                    _reg,
+                    src_bit,
+                    direction,
+                    fragment.fragment + str(port),
+                    is_trigger,
                 )
                 self._ports[port.name] = port
 

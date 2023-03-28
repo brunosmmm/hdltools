@@ -104,18 +104,14 @@ class TemplatedNameSubst(ScoffASTObject):
         super().__init__(parent=parent, fragments=fragments, **kwargs)
 
 
-class SlaveRegisterField(ScoffASTObject):
+class SlaveRegisterFieldImplicit(ScoffASTObject):
     """SlaveRegisterField AST."""
 
     __slots__ = (
         "source",
         "position",
-        "position",
-        "access",
         "access",
         "default",
-        "default",
-        "properties",
     )
 
     def __init__(
@@ -125,7 +121,6 @@ class SlaveRegisterField(ScoffASTObject):
         position=None,
         access=None,
         default=None,
-        properties=None,
         **kwargs
     ):
         """Initialize."""
@@ -135,7 +130,21 @@ class SlaveRegisterField(ScoffASTObject):
             position=position,
             access=access,
             default=default,
+            **kwargs
+        )
+
+
+class SlaveRegisterFieldExplicit(SlaveRegisterFieldImplicit):
+    """SlaveRegisterField AST."""
+
+    __slots__ = ("properties", "qualifiers")
+
+    def __init__(self, parent, properties=None, qualifiers=None, **kwargs):
+        """Initialize."""
+        super().__init__(
+            parent=parent,
             properties=properties,
+            qualifiers=qualifiers,
             **kwargs
         )
 
@@ -143,11 +152,11 @@ class SlaveRegisterField(ScoffASTObject):
 class SlaveOutput(ScoffASTObject):
     """SlaveOutput AST."""
 
-    __slots__ = ("desc",)
+    __slots__ = ("desc", "trigger")
 
-    def __init__(self, parent, desc, **kwargs):
+    def __init__(self, parent, desc, trigger, **kwargs):
         """Initialize."""
-        super().__init__(parent=parent, desc=desc, **kwargs)
+        super().__init__(parent=parent, desc=desc, trigger=trigger, **kwargs)
 
 
 class SlaveInput(ScoffASTObject):
@@ -272,6 +281,39 @@ class BitField(ScoffASTObject):
         super().__init__(parent=parent, left=left, right=right, **kwargs)
 
 
+class RegisterFieldPosition(ScoffASTObject):
+    """Field position AST."""
+
+    __slots__ = ("position",)
+
+    def __init__(self, parent, position: BitField, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, position=position, **kwargs)
+
+
+class RegisterFieldPermission(ScoffASTObject):
+    """Field permission AST."""
+
+    __slots__ = ("access",)
+
+    def __init__(self, parent, access: str, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, access=access, **kwargs)
+
+
+StaticValue = str | PositiveIntegerValue
+
+
+class RegisterFieldDefault(ScoffASTObject):
+    """Field default AST."""
+
+    __slots__ = ("default",)
+
+    def __init__(self, parent, default: StaticValue, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, default=default, **kwargs)
+
+
 MMAP_AST_CLASSES = (
     AXIDescription,
     StaticStatement,
@@ -281,7 +323,8 @@ MMAP_AST_CLASSES = (
     TemplatedNameSubstFragment,
     TemplatedNameSubstFmt,
     TemplatedNameSubst,
-    SlaveRegisterField,
+    SlaveRegisterFieldImplicit,
+    SlaveRegisterFieldExplicit,
     SlaveOutput,
     SlaveInput,
     OutputDescriptor,
@@ -295,4 +338,7 @@ MMAP_AST_CLASSES = (
     RegisterProperty,
     PositiveIntegerValue,
     BitField,
+    RegisterFieldPosition,
+    RegisterFieldPermission,
+    RegisterFieldDefault,
 )

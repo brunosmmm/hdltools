@@ -21,16 +21,31 @@ TemplatedNameSubstFragment:
   fragment=/[a-zA-Z0-9_]*/ templates*=TemplatedNameSubstFmt;
 TemplatedNameSubstFmt:
   '{' arg=/[0-9a-zA-Z_\-\+\*\/]+/ '}';
+
 SlaveRegisterField:
+    SlaveRegisterFieldImplicit | SlaveRegisterFieldExplicit;
+
+SlaveRegisterFieldExplicit:
     /field\s+/ source=SourceBitAccessor
-    ('position='? position=BitField
-    'access='? access=AccessPermission
-    ('default=' default=StaticValue)?
-    properties*=RegisterProperty)#;
+    (position=RegisterFieldPosition access=RegisterFieldPermission default=RegisterFieldDefault?
+    properties*=RegisterProperty qualifiers*=RegisterFieldQualifier)#;
+
+SlaveRegisterFieldImplicit:
+    /field\s+/ source=SourceBitAccessor position=BitField access=AccessPermission default=StaticValue?;
+
+RegisterFieldPosition:
+    'position' '=' position=BitField;
+RegisterFieldPermission:
+    'access' '=' access=AccessPermission;
+RegisterFieldDefault:
+    'default' '=' default=StaticValue;
+RegisterFieldQualifier:
+    'autoclear';
+
 SlavePort:
   SlaveOutput | SlaveInput;
 SlaveOutput:
-  /output\s+/ desc=OutputDescriptor;
+  trigger?=/trigger\s+/ /output\s+/ desc=OutputDescriptor;
 SlaveInput:
   /input\s+/ desc=InputDescriptor;
 OutputDescriptor:

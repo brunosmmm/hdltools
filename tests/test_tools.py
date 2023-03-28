@@ -48,9 +48,9 @@ def test_mmap():
     register status;
 
     //register fields
-    field control.IRQEN 0 RW description="Enable Interrupts";
-    field control.STOP_ON_ERROR 1 RW description="Stop on Error";
-    field status.IRQCLR 7 RW description="Interrupt flag; write 1 to clear";
+    field control.IRQEN position=0 access=RW description="Enable Interrupts";
+    field control.STOP_ON_ERROR position=1 access=RW description="Stop on Error";
+    field status.IRQCLR position=7 access=RW description="Interrupt flag; write 1 to clear";
     field status.TEST position=2..1 access=R;
     //field unknown.UNKNOWN 0;
     //field position=2 source=status.Conflict access=R;
