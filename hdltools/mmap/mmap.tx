@@ -38,9 +38,11 @@ RegisterFieldPosition:
 RegisterFieldPermission:
     'access' '=' access=AccessPermission;
 RegisterFieldDefault:
-    'default' '=' default=StaticValue;
+    'default' '=' default=DefaultValue;
 RegisterFieldQualifier:
     'autoclear';
+DefaultValue:
+    StaticValue | TemplatedNameSubst;
 
 SlavePort:
   SlaveOutput | SlaveInput;

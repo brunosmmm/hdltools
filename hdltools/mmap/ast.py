@@ -301,7 +301,8 @@ class RegisterFieldPermission(ScoffASTObject):
         super().__init__(parent=parent, access=access, **kwargs)
 
 
-StaticValue = str | PositiveIntegerValue
+StaticValue = str | PositiveIntegerValue | int
+DefaultValue = StaticValue | TemplatedNameSubst
 
 
 class RegisterFieldDefault(ScoffASTObject):
@@ -309,7 +310,7 @@ class RegisterFieldDefault(ScoffASTObject):
 
     __slots__ = ("default",)
 
-    def __init__(self, parent, default: StaticValue, **kwargs):
+    def __init__(self, parent, default: DefaultValue, **kwargs):
         """Initialize."""
         super().__init__(parent=parent, default=default, **kwargs)
 
