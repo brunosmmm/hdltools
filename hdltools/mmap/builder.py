@@ -4,6 +4,7 @@ import copy
 import re
 
 from scoff.ast.visits.syntax import SyntaxChecker
+from scoff.ast.visits.control import no_child_visits
 
 # from scoff.ast.visits.control import SetFlag, ClearFlagAfter
 import hdltools.util
@@ -146,6 +147,7 @@ class MMBuilder(SyntaxChecker):
 
         return node
 
+    @no_child_visits
     def visitPre_GenerateStatement(self, node):
         """Enter generate statement."""
         generated_scope = []
