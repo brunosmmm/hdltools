@@ -21,7 +21,9 @@ class HDLConcatenation(HDLObject):
 
         if value is None:
             if args:
-                raise ValueError("empty concatenation cannot have element list")
+                raise ValueError(
+                    "empty concatenation cannot have element list"
+                )
         else:
             if not args:
                 # nothing to concatenate
@@ -94,6 +96,11 @@ class HDLConcatenation(HDLObject):
                     return index
             _offset += len(item)
 
+    def insert_items(self, *items, offset=None, size=None):
+        """Insert multiple items."""
+        for idx, item in enumerate(items):
+            self.insert(item, offset + idx, size=size)
+
     def insert(self, item, offset, size=None):
         """Add item with location offset."""
         if self.size is None:
@@ -142,7 +149,11 @@ class HDLConcatenation(HDLObject):
         items = []
         last_item = None
         current_pos = 0
-        for item in self.items:
+        if self.direction == "lr":
+            _items = self.items[::-1]
+        else:
+            _items = self.items
+        for item in _items:
             if item.from_type != "const":
                 if current_pos != 0:
                     items.append(
@@ -172,7 +183,11 @@ class HDLConcatenation(HDLObject):
         if len(items) == 1:
             return hdltools.abshdl.expr.HDLExpression(items[0])
         else:
-            return HDLConcatenation(*items)
+            if self.direction == "lr":
+                _items = items[::-1]
+            else:
+                _items = items
+            return HDLConcatenation(*_items)
 
     def dumps(self):
         """Get representation."""

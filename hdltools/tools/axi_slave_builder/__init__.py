@@ -275,7 +275,10 @@ def main():
                 )
             else:
                 # doesn't make sense!
-                reg_read.insert(field.default_value, min(field.get_range()))
+                reg_read.insert_items(
+                    *field.binary_default_value[::-1],
+                    offset=min(field.get_range()),
+                )
 
         # insert case
         this_case = HDLCase(

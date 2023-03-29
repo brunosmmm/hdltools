@@ -63,6 +63,20 @@ class HDLRegisterField(object):
         else:
             return "[{}]".format(self.reg_slice[0])
 
+    @property
+    def size(self):
+        """Get field size."""
+        return len(self.get_range())
+
+    @property
+    def binary_default_value(self):
+        """Get list of bits."""
+        values = []
+        for x in range(0, self.size):
+            bit = 1 if self.default_value & (1 << x) else 0
+            values.append(bit)
+        return values[::-1]
+
 
 class HDLRegister(object):
     """Register."""
