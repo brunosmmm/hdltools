@@ -18,6 +18,7 @@ from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import parse_mmap_file
 from hdltools.mmap.builder import MMBuilder
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.util import clog2
 
 DEFAULT_TEMPLATE = os.path.join("assets", "verilog", "axi_slave.v")
 
@@ -172,9 +173,16 @@ def main():
     scope, where = slave.find_by_tag("reg_write_case")
     index, wr_switch = where
     lsb_bits_sig = slave_signals["ADDR_LSB"]
-    addr_width = slave_signals["OPT_MEM_ADDR_BITS"].default_val.evaluate()
+    default_addr_width = slave_signals[
+        "OPT_MEM_ADDR_BITS"
+    ].default_val.evaluate()
     lsb_bits = lsb_bits_sig.default_val.evaluate(C_S_AXI_DATA_WIDTH=data_width)
     default_case = wr_switch.get_case("default")
+
+    # some registers might have explicit addresses, so check
+    biggest_addr = clog2(max([reg.addr for reg in mmap.registers.values()]))
+    addr_width = max(biggest_addr, default_addr_width)
+
     for name, reg in mmap.registers.items():
         reg_sig = slave_signals["REG_" + name]
         reg_addr = HDLIntegerConstant(
