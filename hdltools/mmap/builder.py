@@ -282,7 +282,13 @@ class MMBuilder(SyntaxChecker):
             self.bitfield_pos_to_slice(node.position.position)
         )
         if node.default is not None:
-            if isinstance(node.default, int):
+            if isinstance(node.default.default, str):
+                try:
+                    int_val = int(node.default.default)
+                    node.default.default = int_val
+                except ValueError:
+                    pass
+            if isinstance(node.default.default, int):
                 param_size = HDLIntegerConstant.minimum_value_size(
                     node.default.default
                 )
