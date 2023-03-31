@@ -38,15 +38,31 @@ class FlagPort(HDLModulePort):
         self, target_register, target_field, direction, name, is_trigger=False
     ):
         """Initialize."""
-        if target_field is not None:
-            field = target_register.get_field(target_field)
-            field_size = len(field.get_range())
+        if is_trigger:
+            if target_field is not None:
+                raise RuntimeError("trigger cannot have target field")
+            field_size = 1
         else:
-            field_size = target_register.size
+            if target_field is not None:
+                field = target_register.get_field(target_field)
+                field_size = len(field.get_range())
+            else:
+                field_size = target_register.size
         self.target_register = target_register
         self.target_field = target_field
         self.is_trigger = is_trigger
+        self._signal = None
         super().__init__(direction, name, field_size)
+
+    @property
+    def signal(self):
+        """Get port signal."""
+        return self._signal
+
+    @signal.setter
+    def signal(self, signal):
+        """Set port signal."""
+        self._signal = signal
 
 
 def parse_mmap_str(text):

@@ -64,7 +64,7 @@ def main():
         print(f"FATAL: no registers declared in model")
         exit(1)
 
-    sys.stderr.write(mmap.dumps())
+    # sys.stderr.write(mmap.dumps())
 
     # code generator
     vlog = VerilogCodeGenerator(indent=True)
@@ -101,6 +101,15 @@ def main():
             ),
         )
         slave.insert_after("REG_DECL", [signal, wrmask])
+
+    # insert trigger ports
+    for name, port in mmap.ports.items():
+        if not port.is_trigger:
+            continue
+        reg_name = port.target_register.name
+        signal = HDLSignal("reg", f"TRIG_{reg_name}", 1)
+        port.signal = signal
+        slave.insert_after("REG_DECL", [signal])
 
     param_buffer_list = []
     for name, reg in mmap.registers.items():
@@ -150,12 +159,21 @@ def main():
             continue
         # create a proxy signal
         sig = HDLSignal("comb", name, port.vector)
+        if port.is_trigger:
+            prefix = "TRIG_"
+            size = 1
+            slave.insert_after("REG_RESET", [port.signal.assign(0)])
+        else:
+            prefix = "REG_"
+            size = port.target_register.size
         reg_sig = HDLSignal(
             "reg",
-            "REG_" + port.target_register.name,
-            port.target_register.size,
+            prefix + port.target_register.name,
+            size,
         )
         if port.target_field is not None:
+            if port.is_trigger:
+                raise RuntimeError("trigger port cannot target field")
             target_field = port.target_register.get_field(port.target_field)
             target_bits = target_field.get_slice()
             assignment = HDLAssignment(sig, reg_sig[target_bits])
@@ -183,24 +201,32 @@ def main():
     biggest_addr = clog2(max([reg.addr for reg in mmap.registers.values()]))
     addr_width = max(biggest_addr, default_addr_width)
 
+    wr_if = wr_switch.get_parent().get_parent().get_parent()
     for name, reg in mmap.registers.items():
         reg_sig = slave_signals["REG_" + name]
         reg_addr = HDLIntegerConstant(
             reg.addr >> int(lsb_bits), size=addr_width, radix="h"
         )
-        case = HDLCase(
-            reg_addr,
-            stmts=[
-                get_register_write_logic(
-                    loop_var, data_width, axi_wstrb, reg_sig, axi_wdata
+        stmts = [
+            get_register_write_logic(
+                loop_var, data_width, axi_wstrb, reg_sig, axi_wdata
+            )
+        ]
+        for port in mmap.ports.values():
+            if port.is_trigger and port.target_register == reg:
+                stmts.append(
+                    HDLAssignment(port.signal, HDLIntegerConstant(1, 1))
                 )
-            ],
-        )
+                # add clear
+                wr_if.insert(
+                    0, HDLAssignment(port.signal, HDLIntegerConstant(0, 1))
+                )
+
+        case = HDLCase(reg_addr, stmts=stmts)
         wr_switch.add_case(case)
         default_case.add_to_scope(reg_sig.assign(reg_sig))
 
     # add autoclear if present
-    wr_if = wr_switch.get_parent().get_parent().get_parent()
     for name, reg in mmap.registers.items():
         for field in reg.fields:
             if "autoclear" in field.properties:
