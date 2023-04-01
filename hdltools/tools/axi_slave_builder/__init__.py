@@ -122,8 +122,9 @@ def main():
         elif isinstance(value, HDLConcatenation):
             def_val = value
 
-            concat = HDLConcatenation(None)
+            concat = HDLConcatenation(None, direction="lr")
             # build parameter buffers
+            print(vlog.dump_element(concat))
             for field in reg.fields:
                 if isinstance(field.default_value, HDLExpression):
                     param_name = field.default_value.dumps()
@@ -138,9 +139,12 @@ def main():
                         new_expr = HDLExpression(
                             "PRM_" + param_name, size=len(field.default_value)
                         )
-                        concat.append(new_expr)
+                        concat.appendleft(new_expr)
                 else:
-                    concat.append(field.default_value)
+                    value = HDLIntegerConstant(
+                        field.default_value, size=field.size
+                    )
+                    concat.appendleft(value)
 
             # check if size matches register size
             if len(concat) < reg.size:
@@ -301,8 +305,9 @@ def main():
                 )
             else:
                 # doesn't make sense!
+                binary_value = field.binary_default_value[::-1]
                 reg_read.insert_items(
-                    *field.binary_default_value[::-1],
+                    *binary_value,
                     offset=min(field.get_range()),
                 )
 
