@@ -124,7 +124,6 @@ def main():
 
             concat = HDLConcatenation(None, direction="lr")
             # build parameter buffers
-            print(vlog.dump_element(concat))
             for field in reg.fields:
                 if isinstance(field.default_value, HDLExpression):
                     param_name = field.default_value.dumps()
