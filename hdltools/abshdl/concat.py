@@ -95,6 +95,10 @@ class HDLConcatenation(HDLObject):
                 else:
                     return index
             _offset += len(item)
+            if _offset > len(self.items) - 1:
+                return len(self.items) - 1
+
+        # if we get here, offset is larger than current size ???
 
     def insert_items(self, *items, offset=None, size=None):
         """Insert multiple items."""
