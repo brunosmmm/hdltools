@@ -296,7 +296,6 @@ def main():
             if field.permissions == "W":
                 # put default value or zero?
                 reg_read.insert(field.default_value, min(field.get_range()))
-                continue
             elif field.permissions == "RW":
                 # since not overriden by a target input, read from register
                 reg_read.insert(
@@ -304,16 +303,22 @@ def main():
                 )
             else:
                 # doesn't make sense!
+                if field.default_value == 0:
+                    continue
+                # hack: if default value is 0, ignore
+                # FIXME: fix case when value is not 0
                 binary_value = field.binary_default_value[::-1]
+                offset = min(field.get_range())
                 reg_read.insert_items(
                     *binary_value,
-                    offset=min(field.get_range()),
+                    offset=offset,
                 )
 
         # insert case
         this_case = HDLCase(
             reg_addr, stmts=[HDLAssignment(reg_data_out, reg_read.pack())]
         )
+
         reg_select.add_case(this_case)
 
     if args.o is not None:
