@@ -13,7 +13,7 @@ astunparse = "^1.6.3"
 scoff = {git = "https://github.com/brunosmmm/scoff", rev = "5b90707a26d92665ca4d6595b3bfa1616be0b35a"}
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.2"
+pytest = "^7.2.0"
 coverage = "^5.5"
 pytest-cov = "^2.11.1"
 
