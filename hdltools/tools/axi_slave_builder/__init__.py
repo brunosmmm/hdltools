@@ -294,8 +294,8 @@ def main():
 
             # write-only bits
             if field.permissions == "W":
-                # put default value or zero?
-                reg_read.insert(field.default_value, min(field.get_range()))
+                # read back zeroes
+                continue
             elif field.permissions == "RW":
                 # since not overriden by a target input, read from register
                 reg_read.insert(
