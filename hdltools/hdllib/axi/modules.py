@@ -9,7 +9,7 @@ from hdltools.hdllib.axi.interfaces import AXI4LiteSlaveIf
 class AXI4LiteSlaveMod(HDLModule):
     """AXI4 Lite slave module skeleton."""
 
-    def __init__(self, extra_ports=None):
+    def __init__(self, extra_ports=None, module_name="axi4liteslave"):
         """Initialize."""
         module_params = [
             HDLModuleParameter("C_S_AXI_DATA_WIDTH", "integer", 32),
@@ -20,12 +20,14 @@ class AXI4LiteSlaveMod(HDLModule):
             if not isinstance(extra_ports, (tuple, list)):
                 raise TypeError("extra_ports must be a tuple-like object")
             module_ports.extend(extra_ports)
-        super().__init__("axi4liteslave", module_ports, module_params)
+        super().__init__(module_name, module_ports, module_params)
 
 
 class AXI4LiteSlave(HDLInstance):
     """AXI4 Lite slave instance."""
 
-    def __init__(self, inst_name, extra_ports=None):
+    def __init__(
+        self, inst_name, extra_ports=None, module_name="axi4liteslave"
+    ):
         """Initialize."""
-        super().__init__(inst_name, AXI4LiteSlaveMod(extra_ports))
+        super().__init__(inst_name, AXI4LiteSlaveMod(extra_ports, module_name))
