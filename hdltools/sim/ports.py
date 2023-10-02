@@ -1,8 +1,8 @@
 """Simulation ports."""
 
-from ..abshdl import HDLObject
-from hdltools.util import clog2
 from typing import List
+
+from hdltools.abshdl import HDLObject
 
 
 class HDLBitVector(HDLObject):
@@ -32,7 +32,7 @@ class HDLBitVector(HDLObject):
             if key < 0 or key > len(self) - 1:
                 raise IndexError
             return self._values[key]
-        elif isinstance(key, slice):
+        if isinstance(key, slice):
             raise NotImplementedError
 
         raise KeyError
@@ -55,7 +55,7 @@ class HDLBitVector(HDLObject):
         """Add two values."""
         if isinstance(other, int):
             raise NotImplementedError
-        elif isinstance(other, HDLBitVector):
+        if isinstance(other, HDLBitVector):
             raise NotImplementedError
         raise TypeError
 
@@ -100,7 +100,7 @@ class HDLBitVector(HDLObject):
         """Get list of bits from integer value."""
         if not isinstance(value, int):
             raise TypeError("value must be integer")
-        max_value = 2 ** size - 1
+        max_value = 2**size - 1
         if value > max_value and truncate is False:
             raise ValueError("value exceeds size")
         bits = []
@@ -112,7 +112,7 @@ class HDLBitVector(HDLObject):
     @staticmethod
     def value_fits(value: int, size: int) -> bool:
         """Determine if int value fits in bit vector."""
-        max_value = 2 ** size - 1
+        max_value = 2**size - 1
         if value <= max_value:
             return True
         return False
@@ -142,8 +142,6 @@ class HDLSimulationPort(HDLObject):
                 if value:
                     ret += 1 << idx
                 idx += 1
-            elif isinstance(value, HDLSimulationPortSlice):
-                raise NotImplementedError
             else:
                 raise TypeError("elements can only be integers")
         return ret
@@ -217,7 +215,7 @@ class HDLSimulationPort(HDLObject):
             if key > self.size - 1 or key < 0:
                 raise IndexError
             return (self._value & (1 << key)) >> key
-        elif isinstance(key, slice):
+        if isinstance(key, slice):
             slice_size = abs(key.start - key.stop) + 1
             if slice_size == 1:
                 return (self._value & (1 << key.start)) >> key.start
@@ -250,14 +248,14 @@ class HDLSimulationPort(HDLObject):
                 self._value &= ~(1 << key)
         elif isinstance(key, slice):
             slice_size = abs(key.start - key.stop) + 1
-            max_value = 2 ** slice_size - 1
+            max_value = 2**slice_size - 1
             if int(value) > max_value:
                 raise ValueError("value exceeds slice size")
             if isinstance(value, HDLBitVector):
                 if len(value) > slice_size:
                     raise ValueError("value size exceeds slice size")
                 raise NotImplementedError
-            elif isinstance(value, int):
+            if isinstance(value, int):
                 bits = HDLBitVector.bits_from_int(value, slice_size)
                 for idx in range(key.start, key.stop):
                     if bits[idx - key.start]:
@@ -271,7 +269,7 @@ class HDLSimulationPort(HDLObject):
 
     def __bool__(self):
         """Get boolean value."""
-        return True if self._value else False
+        return bool(self._value)
 
     def __int__(self):
         """Get integer value."""

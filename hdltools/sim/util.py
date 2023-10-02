@@ -1,7 +1,7 @@
 """Utility functions."""
 
-from ..abshdl.concat import HDLConcatenation
-from ..hdllib.patterns import SequentialBlock
+from hdltools.abshdl.concat import HDLConcatenation
+from hdltools.hdllib.patterns import SequentialBlock
 
 # globals
 _block_count = 0

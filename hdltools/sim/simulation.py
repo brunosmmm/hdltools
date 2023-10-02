@@ -1,18 +1,19 @@
 """Simulation object."""
 
-from ..abshdl import HDLObject
-from . import HDLSimulationObject
+from hdltools.abshdl import HDLObject
+from hdltools.sim import HDLSimulationObject
 
 
 class HDLSimulation(HDLObject):
     """Simulation."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Initialize."""
         self.sim_objects = {}
         self.connection_matrix = {}
         self.current_time = 0
         self._signals = {}
+        super().__init__(**kwargs)
 
     def add_stimulus(self, *stim):
         """Add stimulus."""

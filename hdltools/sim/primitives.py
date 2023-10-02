@@ -46,7 +46,7 @@ class OneshotSignal(HDLSimulationObject):
 
     def structure(self):
         """Set up structure."""
-        self.add_output("sig", initial=True if self.initial_value else False)
+        self.add_output("sig", initial=bool(self.initial_value))
 
     def logic(self, **kwargs):
         """Describe simulation logic."""

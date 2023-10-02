@@ -74,7 +74,7 @@ def test_vector_descriptor():
         vec = HDLVectorDescriptor(7, stored_value="a")
 
     vec = HDLVectorDescriptor(8, stored_value=256)
-    left, right = vec.evaluate()
+    _ = vec.evaluate()
 
     with pytest.raises(ValueError):
         HDLVectorDescriptor(7, stored_value=256)
@@ -151,12 +151,12 @@ def test_hdl_expression():
     hdl_expr_2 = HDLExpression(ast.parse(expr_2, mode="eval"))
     hdl_expr_3 = HDLExpression(expr_3)
     print(hdl_expr_3.dumps())
-    sum = hdl_expr_1 + hdl_expr_2
-    neg = ~sum
-    bool_neg = sum.bool_neg()
+    _sum = hdl_expr_1 + hdl_expr_2
+    neg = ~_sum
+    bool_neg = _sum.bool_neg()
     bool_and = hdl_expr_1.bool_and(hdl_expr_2)
     bool_or = hdl_expr_1.bool_or(hdl_expr_2)
-    print(sum.dumps())
+    print(_sum.dumps())
     print(neg.dumps())
     print(bool_neg.dumps())
     print(bool_and.dumps())

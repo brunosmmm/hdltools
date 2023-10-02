@@ -1,10 +1,10 @@
 """Simulation objects."""
 
-from ..abshdl import HDLObject
-from ..abshdl.const import HDLIntegerConstant
-from ..abshdl.expr import HDLExpression
-from .ports import HDLSimulationPort
-from .state import HDLSimulationState
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.sim.ports import HDLSimulationPort
+from hdltools.sim.state import HDLSimulationState
 
 
 class HDLSimulationObject(HDLObject):
@@ -34,6 +34,7 @@ class HDLSimulationObject(HDLObject):
         self.initialstate()
 
         self._initialized = True
+        super().__init__(**kwargs)
 
     def structure(self):
         """Structural generation."""
@@ -68,7 +69,6 @@ class HDLSimulationObject(HDLObject):
 
     def input_changed(self, which_input, value):
         """Call on input changed."""
-        pass
 
     def next(self, input_states, **kwargs):
         """Get next value."""
@@ -80,7 +80,6 @@ class HDLSimulationObject(HDLObject):
 
     def logic(self, **kwargs):
         """Do internal logic."""
-        pass
 
     def add_state(self, name, initial=None, attrs=None, **kwargs):
         """Add stateful logic element."""
@@ -207,8 +206,7 @@ class HDLSimulationObject(HDLObject):
             if len(attr) == 1:
                 return bool(attr)
             return attr
-        else:
-            return attr
+        return attr
 
     def set_attrs(self, port, attrs):
         """Set special attributes."""

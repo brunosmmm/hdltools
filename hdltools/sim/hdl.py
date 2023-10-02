@@ -1,20 +1,19 @@
 """Generate HDL from stimulus models (when possible)."""
 
-from . import HDLSimulationObject
-from ..abshdl import HDLObject
-from ..abshdl.signal import HDLSignal
-from ..abshdl.highlvl import HDLBlock
-from .util import concat
 import ast
 import inspect
 import textwrap
+
 import astunparse
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.highlvl import HDLBlock
+from hdltools.abshdl.signal import HDLSignal
+from hdltools.sim import HDLSimulationObject
+from hdltools.sim.util import concat
 
 
 class IllegalCodeError(Exception):
     """Illegal code, untranslatable."""
-
-    pass
 
 
 class CombinatorialChecker(ast.NodeVisitor):
@@ -106,7 +105,7 @@ class CombinatorialChecker(ast.NodeVisitor):
                     )
                 else:
                     raise IllegalCodeError(
-                        "cannot infer sequential block: " "unsupported pattern"
+                        "cannot infer sequential block: unsupported pattern"
                     )
 
             # visit children manually
@@ -221,7 +220,7 @@ class CombinatorialChecker(ast.NodeVisitor):
                     self._is_comb = False
         if isinstance(func, ast.Name) and func.id in self._symbols:
             return
-        elif func.id not in self._symbols:
+        if func.id not in self._symbols:
             raise RuntimeError("unknown python function: '{}'".format(func.id))
         self.generic_visit(node)
 
@@ -245,11 +244,7 @@ class CombinatorialChecker(ast.NodeVisitor):
                         # will not imply a register directly
                         # however, we must check
                         # base on current and last state
-                        if prev_state == "ifelse":
-                            # inside if statement
-                            infer_register = True
-                        else:
-                            infer_register = False
+                        infer_register = prev_state == "ifelse"
                     else:
                         # will imply a register.
                         self._is_comb = False
@@ -271,14 +266,13 @@ class CombinatorialChecker(ast.NodeVisitor):
         self._state = prev_state
         if manual_visit is True:
             return assigned_globals
-        else:
-            return None
+        return None
 
     def visit_Name(self, node):
         """Visit names."""
         if self._state == "normal":
             return
-        elif self._state == "assign":
+        if self._state == "assign":
             # perform checking
             for target in self._assign_target:
                 if isinstance(target, ast.Name):
@@ -297,7 +291,7 @@ class CombinatorialChecker(ast.NodeVisitor):
             raise RuntimeError(f"name '{node.value.id}' has no members")
         if self._state == "normal":
             return
-        elif self._state == "assign":
+        if self._state == "assign":
             for target in self._assign_target:
                 if isinstance(target, ast.Attribute):
                     if node != target:
@@ -342,7 +336,7 @@ class CombinatorialChecker(ast.NodeVisitor):
     def get_inferred_regs(self):
         """Get inferred registers."""
         infer = {}
-        for name, scope, is_reg, obj in self._assign_target_list:
+        for name, _, is_reg, _ in self._assign_target_list:
             if name in infer:
                 if infer[name] is False and is_reg is True:
                     infer[name] = True
@@ -354,7 +348,7 @@ class CombinatorialChecker(ast.NodeVisitor):
     def get_inferred_combs(self):
         """Get inferred combinational signals."""
         infer = {}
-        for name, scope, is_reg, obj in self._assign_target_list:
+        for name, _, is_reg, obj in self._assign_target_list:
             if name in infer:
                 if is_reg is True:
                     del infer[name]
@@ -474,8 +468,7 @@ class LogicSanitizer(ast.NodeTransformer):
             self._globals.add(node.attr)
             if node.attr in self._proxy_list:
                 return ast.Name(id="reg_" + node.attr, ctx=node.ctx)
-            else:
-                return ast.Name(id=node.attr, ctx=node.ctx)
+            return ast.Name(id=node.attr, ctx=node.ctx)
 
         return node
 
@@ -497,20 +490,20 @@ class LogicSanitizer(ast.NodeTransformer):
 
         if unparse is True:
             return astunparse.unparse(root)
-        else:
-            return root
+        return root
 
 
 class HDLSimulationObjectScheduler(HDLObject):
     """Schedule a simulation object."""
 
-    def __init__(self, obj):
+    def __init__(self, obj, **kwargs):
         """Initialize."""
         if not isinstance(obj, HDLSimulationObject):
             raise TypeError("only HDLSimulationObject allowed")
 
         self._obj = obj
         self._symbols = {"concat": concat}
+        super().__init__(**kwargs)
 
     def schedule(self, **symbols):
         """Do the scheduling."""
@@ -571,98 +564,92 @@ class HDLSimulationObjectScheduler(HDLObject):
             block = HDLBlock(symbols=self._symbols, **signals)
             block.apply_on_ast(tree)
             return block.get()
-        else:
-            # re-build combinational assignments
-            comb_assignments = []
-            for name, assign in comb_check.get_inferred_combs().items():
-                comb_assignments.append(assign)
-            # build inferred blocks
-            block_num = 0
-            sequential_blocks = []
-            arg_list = []
-            for name, signal in ports.items():
-                arg_list.append(ast.arg(name, None))
-            args = ast.arguments(arg_list, None, [], [], [], [])
-            for edge, sig, body in comb_check._inferred_sequential_blocks:
-                arg_list_inner = []
-                for name, signal in signals.items():
-                    if name != sig[0].s:
-                        arg_list_inner.append(ast.arg(name, None))
-                args_inner = ast.arguments(
-                    arg_list_inner, None, [], [], [], []
-                )
-                seqfn = ast.FunctionDef(
-                    name="gen_{}".format(block_num),
-                    args=args_inner,
-                    body=body,
-                    decorator_list=[
-                        ast.Call(
-                            func=ast.Name(
-                                id="SequentialBlock", ctx=ast.Load()
-                            ),
-                            args=[ast.Name(id=sig[0].s, ctx=ast.Load())],
-                            keywords=[],
-                            starargs=None,
-                        )
-                    ],
-                    returns=None,
-                )
-                block_num += 1
-                sequential_blocks.append(seqfn)
-
-            # create proxy register assignments
-            # TODO: recover size
-            inferred_regs = comb_check.get_inferred_regs()
-            proxies = {
-                "reg_" + name: HDLSignal("reg", "reg_" + name)
-                for name, is_reg in inferred_regs.items()
-                if is_reg is True
-            }
-            signals.update(proxies)
-
-            # create ast items
-            proxy_assignments = [
-                ast.Assign(
-                    targets=[ast.Name(id=name, ctx=ast.Store())],
-                    value=ast.Name(id="reg_" + name, ctx=ast.Load()),
-                )
-                for name, is_reg in inferred_regs.items()
-                if is_reg is True
-            ]
-
-            comb_assignments.extend(proxy_assignments)
-            # add sequential blocks
-            comb_assignments.extend(sequential_blocks)
-            # top-level function
-            topfn = ast.FunctionDef(
-                name=self._obj.identifier,
-                args=args,
-                body=comb_assignments,
+        # re-build combinational assignments
+        comb_assignments = []
+        for name, assign in comb_check.get_inferred_combs().items():
+            comb_assignments.append(assign)
+        # build inferred blocks
+        block_num = 0
+        sequential_blocks = []
+        arg_list = []
+        for name in ports:
+            arg_list.append(ast.arg(name, None))
+        args = ast.arguments(arg_list, None, [], [], [], [])
+        for edge, sig, body in comb_check._inferred_sequential_blocks:
+            arg_list_inner = []
+            for name in signals:
+                if name != sig[0].s:
+                    arg_list_inner.append(ast.arg(name, None))
+            args_inner = ast.arguments(arg_list_inner, None, [], [], [], [])
+            seqfn = ast.FunctionDef(
+                name="gen_{}".format(block_num),
+                args=args_inner,
+                body=body,
                 decorator_list=[
                     ast.Call(
-                        func=ast.Name(id="ParallelBlock", ctx=ast.Load()),
-                        args=[],
+                        func=ast.Name(id="SequentialBlock", ctx=ast.Load()),
+                        args=[ast.Name(id=sig[0].s, ctx=ast.Load())],
                         keywords=[],
                         starargs=None,
                     )
                 ],
+                returns=None,
             )
+            block_num += 1
+            sequential_blocks.append(seqfn)
 
-            block = HDLBlock(symbols=self._symbols, **signals)
-            # sanitize (and insert proxies)
-            infer_reg_list = [name for name, is_reg in inferred_regs.items()]
+        # create proxy register assignments
+        # TODO: recover size
+        inferred_regs = comb_check.get_inferred_regs()
+        proxies = {
+            "reg_" + name: HDLSignal("reg", "reg_" + name)
+            for name, is_reg in inferred_regs.items()
+            if is_reg is True
+        }
+        signals.update(proxies)
 
-            reg_list = []
-            for name in infer_reg_list:
-                if "reg_" + name in state:
-                    #     reg_list.append("reg_" + name)
-                    continue
-                else:
-                    reg_list.append(name)
+        # create ast items
+        proxy_assignments = [
+            ast.Assign(
+                targets=[ast.Name(id=name, ctx=ast.Store())],
+                value=ast.Name(id="reg_" + name, ctx=ast.Load()),
+            )
+            for name, is_reg in inferred_regs.items()
+            if is_reg is True
+        ]
 
-            tree = LogicSanitizer(insert_reg_list=reg_list)
-            tree.apply_on_ast(topfn)
-            final_ast = tree.get_sanitized(rebuild=False)
-            # print(astunparse.unparse(final_ast))
-            block.apply_on_ast(final_ast)
-            return block.get()
+        comb_assignments.extend(proxy_assignments)
+        # add sequential blocks
+        comb_assignments.extend(sequential_blocks)
+        # top-level function
+        topfn = ast.FunctionDef(
+            name=self._obj.identifier,
+            args=args,
+            body=comb_assignments,
+            decorator_list=[
+                ast.Call(
+                    func=ast.Name(id="ParallelBlock", ctx=ast.Load()),
+                    args=[],
+                    keywords=[],
+                    starargs=None,
+                )
+            ],
+        )
+
+        block = HDLBlock(symbols=self._symbols, **signals)
+        # sanitize (and insert proxies)
+        infer_reg_list = [name for name, is_reg in inferred_regs.items()]
+
+        reg_list = []
+        for name in infer_reg_list:
+            if "reg_" + name in state:
+                #     reg_list.append("reg_" + name)
+                continue
+            reg_list.append(name)
+
+        tree = LogicSanitizer(insert_reg_list=reg_list)
+        tree.apply_on_ast(topfn)
+        final_ast = tree.get_sanitized(rebuild=False)
+        # print(astunparse.unparse(final_ast))
+        block.apply_on_ast(final_ast)
+        return block.get()

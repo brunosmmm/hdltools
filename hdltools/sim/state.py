@@ -1,16 +1,17 @@
 """Stateful logic simulation elements."""
 
-from ..abshdl import HDLObject
+from hdltools.abshdl import HDLObject
 
 
 class HDLSimulationState(HDLObject):
     """Stateful logic element."""
 
-    def __init__(self, name, size=1, initial=None):
+    def __init__(self, name, size=1, initial=None, **kwargs):
         """Initialize."""
         self._name = name
         self._initial = initial
         self._size = size
+        super().__init__(**kwargs)
 
     @property
     def name(self):
