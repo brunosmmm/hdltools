@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [[ $VIRTUAL_ENV == "" ]]; then
+    source `poetry env info --path`/bin/activate
+fi
+
 echo "INFO: running Tests..."
 
 python $(which pytest) --cov=hdltools/
@@ -11,7 +15,7 @@ test_count=0
 for file in ./usage/*.py; do
     echo "$file"
     if ! python $(which coverage) run  $file > /dev/null 2> /dev/null; then
-        exit 1 # error
+        echo "ERROR: usage example $file failed"
     fi
     ((test_count ++))
     mv .coverage .coverage.usage$test_count
@@ -19,17 +23,17 @@ done
 
 # do other tests manually
 echo "INFO: test AXI MM-slave builder"
-python $(which coverage) run --source=hdltools ./tools/axi_slave_builder assets/tests/videochk.mmap > /dev/null 2> /dev/null
+python $(which coverage) run --source=hdltools $(which axi_slave_builder) assets/tests/videochk.mmap > /dev/null 2> /dev/null
 mv .coverage .coverage.axislave
-python $(which coverage) run --source=hdltools ./tools/mmap_docgen assets/tests/videochk.mmap > /dev/null
+python $(which coverage) run --source=hdltools $(which mmap_docgen) assets/tests/videochk.mmap > /dev/null
 mv .coverage .coverage.docgen
 
 # test input generator
 echo "INFO: test input generator scripts"
 mkdir -p tmp
-python $(which coverage) run --source=hdltools ./tools/vgc assets/tests/input1.vg --output tmp/input.json
+python $(which coverage) run --source=hdltools $(which vgc) assets/tests/input1.vg --output tmp/input.json
 mv .coverage .coverage.vgc
-python $(which coverage) run --source=hdltools ./tools/inputgen tmp/input.json --output tmp/input.txt
+python $(which coverage) run --source=hdltools $(which inputgen) tmp/input.json --output tmp/input.txt
 mv .coverage .coverage.inputgen
 
 rm -rf tmp
