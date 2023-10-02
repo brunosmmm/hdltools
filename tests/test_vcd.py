@@ -34,9 +34,9 @@ def test_vcd_scope():
 def test_vcd_scope_fromstr():
     """Test building VCDScope from string."""
 
-    scope, inclusive = VCDScope.from_str("VCD::Scope::example")
+    _, inclusive = VCDScope.from_str("VCD::Scope::example")
     assert inclusive is False
-    scope, inclusive = VCDScope.from_str("VCD::Scope::example::")
+    _, inclusive = VCDScope.from_str("VCD::Scope::example::")
     assert inclusive is True
 
     with pytest.raises(TypeError):
@@ -54,9 +54,6 @@ def test_vcd_value_history():
     hist.add_entry(VCDValueHistoryEntry(scope_2, "bar", 1))
     hist.add_entry(VCDValueHistoryEntry(scope_2, "bar_2", 2))
     hist.add_entry(VCDValueHistoryEntry(scope_3, "baz", 3))
-
-    visited = hist.visited_scopes
-    return visited
 
 
 if __name__ == "__main__":
