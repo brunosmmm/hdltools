@@ -29,9 +29,7 @@ class HDLLazyValue(HDLObject):
             symbols = {}
         if not callable(self._fn):
             if self._fn not in symbols or not callable(symbols[self._fn]):
-                raise RuntimeError(
-                    "unresolved lazy function: '{}'".format(self._fn)
-                )
+                raise RuntimeError(f"unresolved lazy function: '{self._fn}'")
             self._fn = symbols[self._fn]
 
         resolved_args = []
@@ -42,18 +40,18 @@ class HDLLazyValue(HDLObject):
                 resolved_args.append(arg)
             else:
                 raise RuntimeError(
-                    "unresolved argument in lazy eval: '{}'".format(arg)
+                    f"unresolved argument in lazy eval: '{arg}'"
                 )
 
         resolved_kwargs = {}
         for name, kwarg in self._kwargs.items():
-            if isinstance(kwarg, str) and arg in signals:
+            if isinstance(kwarg, str) and kwarg in signals:
                 resolved_kwargs[name] = signals[kwarg]
-            elif isinstance(arg, HDLObject):
+            elif isinstance(kwarg, HDLObject):
                 resolved_args[name] = kwarg
             else:
                 raise RuntimeError(
-                    "unresolved argument in lazy eval: '{}'".format(kwarg)
+                    f"unresolved argument in lazy eval: '{kwarg}'"
                 )
 
         return self._fn(*resolved_args, **resolved_kwargs)

@@ -95,19 +95,19 @@ class HDLVectorDescriptor(HDLObject):
             if value < 0:
                 raise ValueError("only positive values allowed for sizes")
 
-    def evaluate_right(self, eval_scope={}):
+    def evaluate_right(self, **eval_scope):
         """Evaluate right side size."""
         return self.right_size.evaluate(**eval_scope)
 
-    def evaluate_left(self, eval_scope={}):
+    def evaluate_left(self, **eval_scope):
         """Evaluate left side size."""
         return self.left_size.evaluate(**eval_scope)
 
-    def evaluate(self, eval_scope={}):
+    def evaluate(self, **eval_scope):
         """Evaluate both sides."""
         return (
-            self.evaluate_left(eval_scope),
-            self.evaluate_right(eval_scope),
+            self.evaluate_left(**eval_scope),
+            self.evaluate_right(**eval_scope),
         )
 
     def get_bounds(self):
@@ -121,16 +121,15 @@ class HDLVectorDescriptor(HDLObject):
     def __repr__(self, eval_scope=None):
         """Represent."""
         if eval_scope is not None:
-            left_size = self.evaluate_left(eval_scope)
-            right_size = self.evaluate_right(eval_scope)
+            left_size = self.evaluate_left(**eval_scope)
+            right_size = self.evaluate_right(**eval_scope)
         else:
             left_size = self.left_size
             right_size = self.right_size
         if self.part_select is False:
-            return "[{}:{}]".format(left_size, right_size)
-        else:
-            return "[{}:{:+}]".format(left_size, self.part_select_length)
+            return f"[{left_size}:{right_size}]"
+        return "[{}:{:+}]".format(left_size, self.part_select_length)
 
     def dumps(self, eval_scope=None):
         """Dump description to string."""
-        return self.__repr__(eval_scope)
+        return repr(eval_scope)
