@@ -144,7 +144,7 @@ class BaseVCDParser(DataParser):
     def _state_header(self, position):
         """Parse."""
         try:
-            size, stmt, fields = self._try_parse(
+            size, stmt, fields, text, consumed = self._try_parse(
                 VCD_DEFINITION_LINES, position
             )
         except ParserError:
@@ -161,23 +161,25 @@ class BaseVCDParser(DataParser):
             exit(1)
 
         self.header_statement_handler(stmt, fields)
-        return (size, stmt, fields)
+        return (size, stmt, fields, text, consumed)
 
     def _state_initial(self, position):
-        size, stmt, fields = self._try_parse(
+        size, stmt, fields, text, consumed = self._try_parse(
             VCD_VAR_LINES + [END_PARSER], position
         )
         if stmt != END_PARSER:
             self.initial_value_handler(stmt, fields)
-        return (size, stmt, fields)
+        return (size, stmt, fields, text, consumed)
 
     def _state_dump(self, position):
-        size, stmt, fields = self._try_parse(VCD_VAR_LINES, position)
+        size, stmt, fields, text, consumed = self._try_parse(
+            VCD_VAR_LINES, position
+        )
         if stmt == SIM_TIME_PARSER:
             self._advance_clock(int(fields["time"]))
         elif stmt != DUMPVARS_PARSER:
             self.value_change_handler(stmt, fields)
-        return (size, stmt, fields)
+        return (size, stmt, fields, text, consumed)
 
 
 class CompiledVCDParser:
