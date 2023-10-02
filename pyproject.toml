@@ -10,7 +10,7 @@ textX = "2.3.0"
 dictator = {git = "https://github.com/brunosmmm/dictator", rev = "master"}
 colorama = "0.4.4"
 astunparse = "^1.6.3"
-scoff = {git = "https://github.com/brunosmmm/scoff", rev = "5b90707a26d92665ca4d6595b3bfa1616be0b35a"}
+scoff = {git = "https://github.com/brunosmmm/scoff", rev = "bdb77eda21d48694d1d34a80d0db97f2dab42381"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.2.0"
