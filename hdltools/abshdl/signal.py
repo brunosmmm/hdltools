@@ -1,9 +1,9 @@
 """HDL Signals."""
 
-from . import HDLObject
+from hdltools.abshdl import HDLObject
 import hdltools.abshdl as hdl
-from .stmt import HDLStatement
-from .const import HDLIntegerConstant
+from hdltools.abshdl.stmt import HDLStatement
+from hdltools.abshdl.const import HDLIntegerConstant
 import hdltools.abshdl.concat
 
 # TODO: allow multiple dimensions

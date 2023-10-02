@@ -1,7 +1,7 @@
 """HDL Code generation."""
 
 from scoff.codegen import CodeGenerator
-from .stmt import HDLStatement
+from hdltools.abshdl.stmt import HDLStatement
 
 
 class HDLCodeGenerator(CodeGenerator):

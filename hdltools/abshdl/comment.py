@@ -1,14 +1,13 @@
 """Comments."""
 
-from .stmt import HDLStatement
+from hdltools.abshdl.stmt import HDLStatement
 
 
 def make_comment(text, tag=None):
     """Make comment."""
     if len(text.split("\n")) > 1:
         return HDLMultiLineComment(text, tag=tag)
-    else:
-        return HDLComment(text, tag=tag)
+    return HDLComment(text, tag=tag)
 
 
 class HDLComment(HDLStatement):

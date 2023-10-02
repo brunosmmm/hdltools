@@ -1,9 +1,9 @@
 """IF-ELSE constructs."""
 
-from .stmt import HDLStatement
-from .scope import HDLScope
-from .expr import HDLExpression
-from .signal import HDLSignal, HDLSignalSlice
+from hdltools.abshdl.stmt import HDLStatement
+from hdltools.abshdl.scope import HDLScope
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 
 
 class HDLIfElse(HDLStatement):

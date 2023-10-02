@@ -1,7 +1,7 @@
 """HDL HDLRegister descriptors and actions."""
 
-from .concat import HDLConcatenation
-from .expr import HDLExpression
+from hdltools.abshdl.concat import HDLConcatenation
+from hdltools.abshdl.expr import HDLExpression
 
 
 class HDLRegisterField(object):

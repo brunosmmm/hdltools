@@ -1,11 +1,11 @@
 """Switch / Case statements."""
 
-from .expr import HDLExpression
-from .const import HDLIntegerConstant
-from .scope import HDLScope
-from .stmt import HDLStatement
-from .signal import HDLSignal, HDLSignalSlice
-from .macro import HDLMacroValue
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.scope import HDLScope
+from hdltools.abshdl.stmt import HDLStatement
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
+from hdltools.abshdl.macro import HDLMacroValue
 
 
 class HDLSwitch(HDLStatement):

@@ -1,14 +1,14 @@
 """Assignment."""
 
-from . import HDLObject
-from .const import HDLIntegerConstant
-from .expr import HDLExpression
-from .signal import HDLSignal, HDLSignalSlice
-from .concat import HDLConcatenation
-from .stmt import HDLStatement
-from .port import HDLModulePort
-from .ifelse import HDLIfExp
-from .macro import HDLMacroValue
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
+from hdltools.abshdl.concat import HDLConcatenation
+from hdltools.abshdl.stmt import HDLStatement
+from hdltools.abshdl.port import HDLModulePort
+from hdltools.abshdl.ifelse import HDLIfExp
+from hdltools.abshdl.macro import HDLMacroValue
 
 
 class HDLLazyValue(HDLObject):
@@ -19,6 +19,7 @@ class HDLLazyValue(HDLObject):
         self._args = kwargs.pop("fnargs", [])
         self._kwargs = kwargs.pop("fnkwargs", {})
         self._fn = fn
+        super().__init__(*args, **kwargs)
 
     def evaluate(self, signals=None, symbols=None):
         """Evaluate."""
@@ -31,8 +32,7 @@ class HDLLazyValue(HDLObject):
                 raise RuntimeError(
                     "unresolved lazy function: '{}'".format(self._fn)
                 )
-            else:
-                self._fn = symbols[self._fn]
+            self._fn = symbols[self._fn]
 
         resolved_args = []
         for arg in self._args:
@@ -123,8 +123,7 @@ class HDLAssignment(HDLStatement):
 
         if sig_type in ("comb", "const"):
             return "parallel"
-        else:
-            return "series"
+        return "series"
 
     def dumps(self):
         """Get representation."""

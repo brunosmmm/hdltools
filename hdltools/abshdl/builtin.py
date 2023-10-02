@@ -1,8 +1,9 @@
 """Builtin functions."""
 
-from . import HDLObject
-from .expr import HDLExpression
 import math
+
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.expr import HDLExpression
 
 
 class HDLBuiltinFunction(HDLObject):
@@ -24,6 +25,7 @@ class HDLBuiltinFunction(HDLObject):
         self.arg_list = args
         self.ret_type = ret
         self.cb = cb
+        super().__init__()
 
     def call(self, *args, **kwargs):
         """Perform function call.
@@ -41,47 +43,42 @@ class HDLBuiltins(HDLObject):
     """Default builtin objects."""
 
     # placeholders
-    _functions = {'_ceil':
-                  HDLBuiltinFunction(
-                      'ceil',
-                      [],
-                      None,
-                      lambda x, **scope:
-                      int(
-                          math.ceil(
-                              HDLBuiltins
-                              ._decide_and_evaluate(x,
-                                                    **scope)))),
-                  '_log2':
-                  HDLBuiltinFunction(
-                      'log2',
-                      [],
-                      None,
-                      lambda x, **scope:
-                      math.log2(HDLBuiltins
-                                ._decide_and_evaluate(x,
-                                                      **scope))),
-                  '_clog2':
-                  HDLBuiltinFunction(
-                      'clog2',
-                      [],
-                      None,
-                      lambda x, **scope:
-                      int(
-                          math.ceil(
-                              math.log2(
-                                  HDLBuiltins.
-                                  _decide_and_evaluate(x,
-                                                       **scope)))))}
+    _functions = {
+        "_ceil": HDLBuiltinFunction(
+            "ceil",
+            [],
+            None,
+            lambda x, **scope: int(
+                math.ceil(HDLBuiltins._decide_and_evaluate(x, **scope))
+            ),
+        ),
+        "_log2": HDLBuiltinFunction(
+            "log2",
+            [],
+            None,
+            lambda x, **scope: math.log2(
+                HDLBuiltins._decide_and_evaluate(x, **scope)
+            ),
+        ),
+        "_clog2": HDLBuiltinFunction(
+            "clog2",
+            [],
+            None,
+            lambda x, **scope: int(
+                math.ceil(
+                    math.log2(HDLBuiltins._decide_and_evaluate(x, **scope))
+                )
+            ),
+        ),
+    }
 
     @staticmethod
     def _decide_and_evaluate(value, **scope):
         if isinstance(value, int):
             return value
-        elif isinstance(value, HDLExpression):
+        if isinstance(value, HDLExpression):
             return value.evaluate(**scope)
-        else:
-            raise TypeError('invalid type: "{}"'.format(type(value)))
+        raise TypeError('invalid type: "{}"'.format(type(value)))
 
     @classmethod
     def get_builtin_scope(cls):

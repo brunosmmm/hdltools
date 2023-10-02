@@ -1,9 +1,9 @@
 """For Loops."""
 
-from .stmt import HDLStatement
-from .expr import HDLExpression
-from .assign import HDLAssignment
-from .scope import HDLScope
+from hdltools.abshdl.stmt import HDLStatement
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.assign import HDLAssignment
+from hdltools.abshdl.scope import HDLScope
 
 
 class HDLForLoop(HDLStatement):

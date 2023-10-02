@@ -1,11 +1,12 @@
 """HDL Expressions."""
 
-from . import HDLValue
-from .const import HDLIntegerConstant
-import hdltools.abshdl.signal as signal
 import ast
-import operator as op
 import copy
+import operator as op
+
+import hdltools.abshdl.signal as signal
+from hdltools.abshdl import HDLValue
+from hdltools.abshdl.const import HDLIntegerConstant
 
 
 class HDLExpression(HDLValue):

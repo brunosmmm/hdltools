@@ -1,6 +1,6 @@
 """HDL Macro declarations."""
 
-from . import (HDLObject)
+from hdltools.abshdl import HDLObject
 
 
 class HDLMacro(HDLObject):
@@ -13,7 +13,7 @@ class HDLMacro(HDLObject):
 
     def dumps(self):
         """Dump representation."""
-        return '    CONST {}: {}'.format(self.name, self.value)
+        return "    CONST {}: {}".format(self.name, self.value)
 
 
 class HDLMacroValue(HDLObject):

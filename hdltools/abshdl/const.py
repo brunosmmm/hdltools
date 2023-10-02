@@ -1,16 +1,18 @@
 """Constants."""
 
-from . import HDLValue
 import math
+
+from hdltools.abshdl import HDLValue
 
 
 class HDLConstant(HDLValue):
     """Abstract class from which other constants inherit."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize."""
         # save kwargs
         self.optional_args = kwargs
+        super().__init__(*args, **kwargs)
 
 
 class HDLStringConstant(HDLConstant):

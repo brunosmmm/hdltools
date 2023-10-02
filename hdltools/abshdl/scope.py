@@ -1,9 +1,10 @@
 """Scope."""
 
-from . import HDLObject
-from .stmt import HDLStatement
-from .comment import make_comment
 import types
+
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.comment import make_comment
+from hdltools.abshdl.stmt import HDLStatement
 
 
 class HDLScope(HDLObject):

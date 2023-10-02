@@ -1,8 +1,8 @@
 """Sensitivity lists."""
 
-from . import HDLObject
-from .signal import HDLSignal, HDLSignalSlice
-from .port import HDLModulePort
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
+from hdltools.abshdl.port import HDLModulePort
 
 
 class HDLSensitivityDescriptor(HDLObject):
@@ -10,7 +10,7 @@ class HDLSensitivityDescriptor(HDLObject):
 
     _sens_types = ["rise", "fall", "both", "any"]
 
-    def __init__(self, sens_type, sig=None):
+    def __init__(self, sens_type, sig=None, **kwargs):
         """Initialize."""
         if sens_type not in self._sens_types:
             raise ValueError(
@@ -27,6 +27,7 @@ class HDLSensitivityDescriptor(HDLObject):
 
         self.sens_type = sens_type
         self.signal = sig
+        super().__init__(**kwargs)
 
     def dumps(self):
         """Get representation."""

@@ -1,11 +1,11 @@
 """Interfaces."""
 
+import copy
+import re
+from typing import Dict, Tuple, Union
+
 from hdltools.abshdl import HDLObject
 from hdltools.abshdl.port import HDLModulePort
-from typing import Dict, Union, Tuple
-import re
-import copy
-
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 

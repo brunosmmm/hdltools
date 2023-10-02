@@ -1,7 +1,7 @@
 """Concatenation."""
 
-from . import HDLObject
-from .const import HDLIntegerConstant
+from hdltools.abshdl import HDLObject
+from hdltools.abshdl.const import HDLIntegerConstant
 import hdltools.abshdl.expr
 import hdltools.abshdl.signal
 
@@ -9,7 +9,7 @@ import hdltools.abshdl.signal
 class HDLConcatenation(HDLObject):
     """Concatenation of HDLObjects."""
 
-    def __init__(self, value, *args, size=None, direction="rl"):
+    def __init__(self, value, *args, size=None, direction="rl", **kwargs):
         """Initialize."""
         self.items = []
         self.size = size
@@ -32,7 +32,7 @@ class HDLConcatenation(HDLObject):
         if self.size is not None:
             # fill with zeros
             fill_len = size - len(args) - 1 if value is not None else size
-            for i in range(fill_len):
+            for _ in range(fill_len):
                 self.append(HDLIntegerConstant(0, size=1, radix="b"))
 
         # HDLExpression is unconstrained!
@@ -40,6 +40,7 @@ class HDLConcatenation(HDLObject):
             self.append(value)
         for arg in args:
             self.append(arg)
+        super().__init__(**kwargs)
 
     @property
     def direction(self):
@@ -92,13 +93,12 @@ class HDLConcatenation(HDLObject):
             if _offset == offset:
                 if self.direction == "lr":
                     return self.size - index - 1
-                else:
-                    return index
+                return index
             _offset += len(item)
             if _offset > len(self.items) - 1:
                 return len(self.items) - 1
-
         # if we get here, offset is larger than current size ???
+        return None
 
     def insert_items(self, *items, offset=None, size=None):
         """Insert multiple items."""
@@ -125,8 +125,7 @@ class HDLConcatenation(HDLObject):
                     "could not determine item size "
                     "and manual size not provided"
                 )
-            else:
-                item_size = size
+            item_size = size
 
         # remove placeholders
         actual_offset = self._find_offset(offset)
@@ -186,12 +185,11 @@ class HDLConcatenation(HDLObject):
 
         if len(items) == 1:
             return hdltools.abshdl.expr.HDLExpression(items[0])
+        if self.direction == "lr":
+            _items = items[::-1]
         else:
-            if self.direction == "lr":
-                _items = items[::-1]
-            else:
-                _items = items
-            return HDLConcatenation(*_items)
+            _items = items
+        return HDLConcatenation(*_items)
 
     def dumps(self):
         """Get representation."""

@@ -1,8 +1,8 @@
 """Sequential block."""
 
-from .stmt import HDLStatement
-from .scope import HDLScope
-from .sens import HDLSensitivityList
+from hdltools.abshdl.stmt import HDLStatement
+from hdltools.abshdl.scope import HDLScope
+from hdltools.abshdl.sens import HDLSensitivityList
 
 
 class HDLSequentialBlock(HDLStatement):

@@ -1,8 +1,8 @@
 """Vector descriptor."""
 
-from . import HDLObject
+from hdltools.abshdl import HDLObject
 import hdltools.abshdl.expr as expr
-from .const import HDLIntegerConstant
+from hdltools.abshdl.const import HDLIntegerConstant
 import hdltools.abshdl.signal as signal
 
 
@@ -21,33 +21,46 @@ class HDLVectorDescriptor(HDLObject):
         stored_value: int, NoneType
            A stored value
         """
-        if not isinstance(left_size, (int, HDLIntegerConstant,
-                                      expr.HDLExpression,
-                                      signal.HDLSignal,
-                                      signal.HDLSignalPartSelect)):
-            raise TypeError('only int or HDLExpression allowed as size,'
-                            ' got: {}'.format(left_size.__class__.__name__))
+        if not isinstance(
+            left_size,
+            (
+                int,
+                HDLIntegerConstant,
+                expr.HDLExpression,
+                signal.HDLSignal,
+                signal.HDLSignalPartSelect,
+            ),
+        ):
+            raise TypeError(
+                "only int or HDLExpression allowed as size,"
+                " got: {}".format(left_size.__class__.__name__)
+            )
 
-        if not isinstance(right_size, (int, HDLIntegerConstant,
-                                       expr.HDLExpression,
-                                       signal.HDLSignal)):
+        if not isinstance(
+            right_size,
+            (int, HDLIntegerConstant, expr.HDLExpression, signal.HDLSignal),
+        ):
             if right_size is None:
                 # take this as zero
                 right_size = 0
             else:
-                raise TypeError('only int or HDLExpression allowed as size')
+                raise TypeError("only int or HDLExpression allowed as size")
 
         if isinstance(left_size, signal.HDLSignal):
-            if left_size.sig_type not in ('const', 'var'):
-                raise ValueError('slices can only contain compile-time '
-                                 'determinable values')
+            if left_size.sig_type not in ("const", "var"):
+                raise ValueError(
+                    "slices can only contain compile-time "
+                    "determinable values"
+                )
         if isinstance(right_size, signal.HDLSignal):
-            if right_size.sig_type not in ('const', 'var'):
-                raise ValueError('slices can only contain compile-time '
-                                 'determinable values')
+            if right_size.sig_type not in ("const", "var"):
+                raise ValueError(
+                    "slices can only contain compile-time "
+                    "determinable values"
+                )
 
         if not isinstance(stored_value, (int, (type(None)))):
-            raise TypeError('stored_value can only be int or None')
+            raise TypeError("stored_value can only be int or None")
 
         # if integer, check bounds
         self._check_value(right_size)
@@ -69,16 +82,18 @@ class HDLVectorDescriptor(HDLObject):
 
         # check for value legality
         if stored_value is not None:
-            if HDLIntegerConstant.value_fits_width(len(self),
-                                                   stored_value) is True:
+            if (
+                HDLIntegerConstant.value_fits_width(len(self), stored_value)
+                is True
+            ):
                 self.stored_value = stored_value
             else:
-                raise ValueError('vector cannot hold passed stored_value')
+                raise ValueError("vector cannot hold passed stored_value")
 
     def _check_value(self, value):
         if isinstance(value, int):
             if value < 0:
-                raise ValueError('only positive values allowed for sizes')
+                raise ValueError("only positive values allowed for sizes")
 
     def evaluate_right(self, eval_scope={}):
         """Evaluate right side size."""
@@ -90,13 +105,14 @@ class HDLVectorDescriptor(HDLObject):
 
     def evaluate(self, eval_scope={}):
         """Evaluate both sides."""
-        return (self.evaluate_left(eval_scope),
-                self.evaluate_right(eval_scope))
+        return (
+            self.evaluate_left(eval_scope),
+            self.evaluate_right(eval_scope),
+        )
 
     def get_bounds(self):
         """Get bounds."""
-        return (self.left_size,
-                self.right_size)
+        return (self.left_size, self.right_size)
 
     def __len__(self):
         """Get vector length."""
@@ -111,9 +127,9 @@ class HDLVectorDescriptor(HDLObject):
             left_size = self.left_size
             right_size = self.right_size
         if self.part_select is False:
-            return '[{}:{}]'.format(left_size, right_size)
+            return "[{}:{}]".format(left_size, right_size)
         else:
-            return '[{}:{:+}]'.format(left_size, self.part_select_length)
+            return "[{}:{:+}]".format(left_size, self.part_select_length)
 
     def dumps(self, eval_scope=None):
         """Dump description to string."""
