@@ -1,14 +1,15 @@
 """VCD Event tracker."""
 
 
-from typing import Optional, Tuple, Dict, Union, Type
-from colorama import Fore, Back, init
+from typing import Dict, Optional, Tuple, Type, Union
 from uuid import uuid4
+
+from colorama import Back, Fore, init
 from hdltools.vcd import VCDObject
-from hdltools.vcd.parser import BaseVCDParser, CompiledVCDParser
-from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
+from hdltools.vcd.parser import BaseVCDParser, CompiledVCDParser
+from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.trigger.condtable import ConditionTableTrigger
 from hdltools.vcd.trigger.fsm import SimpleTrigger
 

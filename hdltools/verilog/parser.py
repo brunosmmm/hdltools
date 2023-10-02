@@ -1,12 +1,12 @@
 """Verilog module declaration parser."""
+import ast
+import re
+
 import pkg_resources
-from textx.metamodel import metamodel_from_file
+from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.module import HDLModule, HDLModuleParameter
 from hdltools.abshdl.port import HDLModulePort
-
-from hdltools.abshdl.expr import HDLExpression
-import re
-import ast
+from textx.metamodel import metamodel_from_file
 
 
 def verilog_bitstring_to_int(bitstring):
@@ -25,20 +25,19 @@ def verilog_bitstring_to_int(bitstring):
         else:
             width = int(m_hex.group(1))
         return (width, int(m_hex.group(2), 16))
-    elif m_dec is not None:
+    if m_dec is not None:
         if m_dec.group == "":
             width = None
         else:
             width = int(m_dec.group(1))
         return (width, int(m_dec.group(2), 10))
-    elif m_bin is not None:
+    if m_bin is not None:
         if m_bin.group == "":
             width = None
         else:
             width = int(m_bin.group(1))
         return (width, int(m_bin.group(2), 2))
-    else:
-        raise ValueError("could not convert bitstring")
+    raise ValueError("could not convert bitstring")
 
 
 class VerilogModuleParser(object):
@@ -152,17 +151,18 @@ class VerilogModuleParser(object):
     def _find_dependencies(self, node):
         if isinstance(node, ast.Expression):
             return self._find_dependencies(node.body)
-        elif isinstance(node, ast.BinOp):
+        if isinstance(node, ast.BinOp):
             left_node_dep = self._find_dependencies(node.left)
             right_node_dep = self._find_dependencies(node.right)
             deps = []
             deps.extend(left_node_dep)
             deps.extend(right_node_dep)
             return deps
-        elif isinstance(node, (ast.Constant, ast.Call)):
+        if isinstance(node, (ast.Constant, ast.Call)):
             return []
-        elif isinstance(node, ast.Name):
+        if isinstance(node, ast.Name):
             return [node.id]
+        return None
 
     def get_module(self):
         """Get intermediate module representation."""

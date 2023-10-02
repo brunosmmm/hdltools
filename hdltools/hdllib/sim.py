@@ -1,7 +1,7 @@
 """Simulation Library."""
 
-from ..sim import HDLSimulationObject
-from ..abshdl.expr import HDLExpression
+from hdltools.sim import HDLSimulationObject
+from hdltools.abshdl.expr import HDLExpression
 
 
 class HDLSimulationConstant(HDLSimulationObject):
@@ -10,10 +10,11 @@ class HDLSimulationConstant(HDLSimulationObject):
     def __init__(self, value, size=None):
         """Initialize."""
         self.value = self._get_constant(value, size)
+        super().__init__()
 
-    def next(self):
+    def next(self, *args, **kwargs):
         """Return the same value always."""
-        for x in iter(int, 1):
+        for _ in iter(int, 1):
             yield self.value
 
 
@@ -26,13 +27,13 @@ class HDLSimulationReset(HDLSimulationObject):
         self.delay = self._get_constant(rst_delay)
         self.lvl = HDLExpression(rst_lvl)
 
-    def next(self):
+    def next(self, *args, **kwargs):
         """Generate value."""
         # assert reset
-        for i in range(self.delay.value):
+        for _ in range(self.delay.value):
             yield bool(self.lvl)
         # deassert forever
-        for x in iter(int, 1):
+        for _ in iter(int, 1):
             yield bool(not self.lvl)
 
 
@@ -47,9 +48,9 @@ class HDLSimulationClock(HDLSimulationObject):
         self._level = bool(self.start_pol)
         self._last_edge = 0
 
-    def next(self):
+    def next(self, *args, **kwargs):
         """Generate values."""
-        for x in iter(int, 1):
+        for _ in iter(int, 1):
             if self._last_edge > self.period - 1:
                 self._level = not self._level
                 self._last_edge = 1

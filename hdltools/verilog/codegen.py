@@ -1,9 +1,10 @@
 """Generate Verilog Statements."""
 
 import math
-from ..abshdl.codegen import HDLCodeGenerator
+
 from scoff.codegen import indent
-from ..abshdl.const import HDLIntegerConstant
+from hdltools.abshdl.codegen import HDLCodeGenerator
+from hdltools.abshdl.const import HDLIntegerConstant
 
 
 _INDENT_STR = "    "
@@ -66,8 +67,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
 
         if no_size is False:
             return self.dumps_vector(element.evaluate(), size, radix)
-        else:
-            return str(element.evaluate())
+        return str(element.evaluate())
 
     def gen_HDLMacro(self, element, **kwargs):
         """Generate a define."""
@@ -112,8 +112,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             else:
                 ret_str += ";"
             return ret_str
-        else:
-            return "{}".format(element.name)
+        return str(element.name)
 
     def gen_HDLSignalSlice(self, element, **kwargs):
         """Generate sliced signal."""

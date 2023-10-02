@@ -46,7 +46,7 @@ class InstructionClass(Enum):
 
 
 class MetaAsmInstruction(type):
-    """Metaclass for assembly instructions"""
+    """Metaclass for assembly instructions."""
 
     @property
     def instruction_class(cls):

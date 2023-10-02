@@ -1,18 +1,16 @@
 """Common HDL patterns."""
 
-from ..abshdl.seq import HDLSequentialBlock
-from ..abshdl.ifelse import HDLIfElse, HDLIfExp
-from ..abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
-from ..abshdl.scope import HDLScope
-from ..abshdl.module import HDLModule
-from ..abshdl.port import HDLModulePort
-from ..abshdl.switch import HDLSwitch, HDLCase
-from ..abshdl.macro import HDLMacro, HDLMacroValue
-from ..abshdl.assign import HDLAssignment
-from ..abshdl.comment import HDLComment
-from hdltools.abshdl.expr import HDLExpression
-from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from functools import wraps
+
+from hdltools.abshdl.assign import HDLAssignment
+from hdltools.abshdl.expr import HDLExpression
+from hdltools.abshdl.ifelse import HDLIfElse, HDLIfExp
+from hdltools.abshdl.module import HDLModule
+from hdltools.abshdl.port import HDLModulePort
+from hdltools.abshdl.scope import HDLScope
+from hdltools.abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
+from hdltools.abshdl.seq import HDLSequentialBlock
+from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 
 
 def get_sequential_block(sens_list, *stmts, **kwargs):
@@ -122,7 +120,7 @@ class SequentialBlock:
 class ClockedBlock(SequentialBlock):
     """Clocked sequential block."""
 
-    def __init__(self, clk, edge="rise", *args, **kwargs):
+    def __init__(self, clk, *args, edge="rise", **kwargs):
         """Initialize."""
         super().__init__(clk, edge, *args, **kwargs)
         self.clk = clk

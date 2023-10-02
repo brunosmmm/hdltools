@@ -1,28 +1,25 @@
 """Finite state machines."""
 
-from hdltools.abshdl.ifelse import HDLIfElse
-from hdltools.abshdl.switch import HDLSwitch, HDLCase
-from hdltools.abshdl.macro import HDLMacro, HDLMacroValue
-from hdltools.abshdl.comment import HDLComment
-from hdltools.abshdl.assign import HDLAssignment
-from hdltools.hdllib.patterns import ClockedBlock
-from functools import wraps
-from collections import OrderedDict
 import inspect
-import re
 import math
+import re
+from collections import OrderedDict
+from functools import wraps
+
+from hdltools.abshdl.assign import HDLAssignment
+from hdltools.abshdl.comment import HDLComment
+from hdltools.abshdl.ifelse import HDLIfElse
+from hdltools.abshdl.macro import HDLMacro, HDLMacroValue
+from hdltools.abshdl.switch import HDLCase, HDLSwitch
+from hdltools.hdllib.patterns import ClockedBlock
 
 
 class FSMInputError(Exception):
     """FSM Input signal error."""
 
-    pass
-
 
 class FSMInvalidStateError(Exception):
     """Invalid FSM state error."""
-
-    pass
 
 
 class FSMProxy:
@@ -191,15 +188,13 @@ class FSM:
         rst_if.add_to_else_scope(sw)
 
         i = 0
-        for state, (method, inputs) in states.items():
+        for state in states:
             state_mapping[state] = i
-            case = HDLCase(
-                HDLMacroValue(state), tag="__autogen_case_{}".format(state)
-            )
+            case = HDLCase(HDLMacroValue(state), tag=f"__autogen_case_{state}")
             case.add_to_scope(
                 HDLComment(
-                    "case {}".format(state),
-                    tag="__autogen_case_{}".format(state),
+                    f"case {state}",
+                    tag=f"__autogen_case_{state}",
                 )
             )
             cases.append(case)
