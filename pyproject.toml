@@ -6,11 +6,11 @@ authors = ["Bruno <brunosmmm@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-textX = "2.3.0"
+textX = "3.1.0"
 dictator = {git = "https://github.com/brunosmmm/dictator", rev = "master"}
 colorama = "0.4.4"
 astunparse = "^1.6.3"
-scoff = {git = "https://github.com/brunosmmm/scoff", rev = "c3b2ad1d77c14b286788d11c30de3d29784805e"}
+scoff = {git = "https://github.com/brunosmmm/scoff", rev = "88c5da822491d82536b0cd18a914787c5e62e1f7"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.2.0"

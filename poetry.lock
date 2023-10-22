@@ -234,13 +234,13 @@ files = []
 develop = false
 
 [package.dependencies]
-textx = "^2.3.0"
+textx = "^3.1.0"
 
 [package.source]
 type = "git"
 url = "https://github.com/brunosmmm/scoff"
-reference = "c3b2ad1d77c14b286788d11c30de3d29784805e"
-resolved_reference = "c3b2ad1d77c14b286788d11c30de3d29784805eb"
+reference = "88c5da822491d82536b0cd18a914787c5e62e1f7"
+resolved_reference = "88c5da822491d82536b0cd18a914787c5e62e1f7"
 
 [[package]]
 name = "six"
@@ -256,18 +256,18 @@ files = [
 
 [[package]]
 name = "textx"
-version = "2.3.0"
+version = "3.1.0"
 description = "Meta-language for DSL implementation inspired by Xtext"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "textX-2.3.0-py2.py3-none-any.whl", hash = "sha256:f24aa485580ea5f81020b3a1af32760155f889a83490822e94159664c2bf5c8d"},
-    {file = "textX-2.3.0.tar.gz", hash = "sha256:265afc12d4ae421a7794c8cdc58c6eed44cc879f078cb54c32d5dc6bc74efbac"},
+    {file = "textX-3.1.0-py2.py3-none-any.whl", hash = "sha256:ca16d47b3368336a02125ef38b20e0faa69eb86bba3b91a2283f01033610ed08"},
+    {file = "textX-3.1.0.tar.gz", hash = "sha256:1e48af0d3ae26fcc5c34a461b575a267149b51c5772b8649dfd822b772e9c992"},
 ]
 
 [package.dependencies]
-Arpeggio = ">=1.9.0"
+Arpeggio = ">=2.0.0"
 
 [package.extras]
 cli = ["click (>=7.0,<8.0)"]
@@ -316,4 +316,4 @@ test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "3bb9685da837831339b79b5c1653e96fdec4f792eb464f197b412390c86f00f6"
+content-hash = "56351be134459be2a9988c7dafb854df2170022bb8b53ae49c9bd471bcf74333"
