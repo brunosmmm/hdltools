@@ -239,8 +239,8 @@ textx = "^2.3.0"
 [package.source]
 type = "git"
 url = "https://github.com/brunosmmm/scoff"
-reference = "bdb77eda21d48694d1d34a80d0db97f2dab42381"
-resolved_reference = "bdb77eda21d48694d1d34a80d0db97f2dab42381"
+reference = "c3b2ad1d77c14b286788d11c30de3d29784805e"
+resolved_reference = "c3b2ad1d77c14b286788d11c30de3d29784805eb"
 
 [[package]]
 name = "six"
@@ -316,4 +316,4 @@ test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "594de6afa47fa05fd7723311455d49fe30c9fd0b47322294dc32e593336393d4"
+content-hash = "3bb9685da837831339b79b5c1653e96fdec4f792eb464f197b412390c86f00f6"
