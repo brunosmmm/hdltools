@@ -11,6 +11,7 @@ dictator = {git = "https://github.com/brunosmmm/dictator", rev = "master"}
 colorama = "0.4.4"
 astunparse = "^1.6.3"
 scoff = {git = "https://github.com/brunosmmm/scoff", rev = "5388cf76dd069838f03041422476b39e904d8117"}
+rich = "^13.7.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.2.0"
