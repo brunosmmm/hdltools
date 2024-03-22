@@ -17,6 +17,7 @@ from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
+TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
 
 
 class MMBuilder(SyntaxChecker):
@@ -165,23 +166,21 @@ class MMBuilder(SyntaxChecker):
             del self._parameters[node.var]
         node.gen_scope = generated_scope
 
-    def visit_TemplatedNameSubstFmt(self, node):
-        """Visit template substitution."""
-
+    def _templated_name_subst(self, node):
         def _find_name(name):
             """Find name."""
             if name not in self._parameters:
                 raise NameError(f"in template: unknown name '{name}'")
             return self._get_parameter_value(name).value
 
-        m = EXPRESSION_REGEX.findall(node.arg)
+        m = EXPRESSION_REGEX.findall(node)
         if m:
             # is expression
             expr = ""
-            names = re.findall(r"[_a-zA-Z]\w*", node.arg)
+            names = re.findall(r"[_a-zA-Z]\w*", node)
             for name in names:
                 value = _find_name(name)
-                expr = node.arg.replace(name, str(value))
+                expr = node.replace(name, str(value))
             expr = expr.replace("/", "//")
             try:
                 expr = eval(expr)
@@ -189,7 +188,12 @@ class MMBuilder(SyntaxChecker):
                 raise RuntimeError("invalid expression in template")
             return expr
         # is name
-        return _find_name(node.arg)
+        return _find_name(node)
+
+    def visit_TemplatedNameSubstFmt(self, node):
+        """Visit template substitution."""
+        return self._templated_name_subst(node.arg)
+
 
     def visit_SlaveRegister(self, node):
         """Visit register declaration."""
@@ -437,6 +441,16 @@ class MMBuilder(SyntaxChecker):
             except ValueError:
                 # placeholder for syntax error
                 raise
+
+    def visit_RegisterProperty(self, node):
+        """Visit register property."""
+        def _replace_template(value):
+            return str(self._templated_name_subst(value.group(1)))
+        # find and replace templates.
+        templated_str = TEMPLATE_REGEX.sub(_replace_template, node.value)
+
+        node.value = templated_str
+        return node
 
     def visit(self, node, param_replace=None):
         """Visit."""
