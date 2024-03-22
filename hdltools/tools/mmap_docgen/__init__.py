@@ -4,6 +4,7 @@
 
 import argparse
 import logging
+import textx
 from rich.logging import RichHandler
 from rich.console import Console
 
@@ -49,7 +50,11 @@ def main():
         exit(1)
 
     _, mmap = parse_mmap_file(args.model)
-    text, mmap_model = parse_mmap_file(args.model)
+    try:
+        text, mmap_model = parse_mmap_file(args.model)
+    except textx.exceptions.TextXSyntaxError as ex:
+        logger.error(f"syntax error: {ex}")
+        exit(1)
     mmbuilder = MMBuilder(text)
     mmap = mmbuilder.visit(mmap_model, param_replace=param_replacements)
     doc = GHMarkDownDocument()
