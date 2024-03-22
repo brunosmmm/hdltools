@@ -1,7 +1,7 @@
 AXIDescription:
   (static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement)#;
 StaticStatement:
-  '#' var=ID value=StaticStmtValue ';'?;
+  'define' var=ID value=StaticStmtValue ';'?;
 ParameterStatement:
   'param' name=ID value=StaticStmtValue ';'?;
 StaticStmtValue:
