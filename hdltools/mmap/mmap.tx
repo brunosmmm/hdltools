@@ -1,9 +1,9 @@
 AXIDescription:
   (static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement)#;
 StaticStatement:
-  '#' var=ID value=StaticStmtValue ';';
+  '#' var=ID value=StaticStmtValue ';'?;
 ParameterStatement:
-  'param' name=ID value=StaticStmtValue ';';
+  'param' name=ID value=StaticStmtValue ';'?;
 StaticStmtValue:
     StaticValue | FnCall;
 FnCall:
@@ -11,7 +11,7 @@ FnCall:
 FnArgument:
     ID | INT;
 Statement:
-  (SlaveRegister | SlaveRegisterField | SlavePort | GenerateStatement) ';';
+  (SlaveRegister | SlaveRegisterField | SlavePort | GenerateStatement) ';'?;
 SlaveRegister:
   /register\s+/ name=TemplatedNameSubst ('at' address=PositiveIntegerValue )?
   properties*=RegisterProperty;
