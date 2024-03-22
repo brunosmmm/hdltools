@@ -2,8 +2,12 @@
 
 """Build AXI MM Slaves from specification files."""
 import argparse
+import logging
 import os
 import sys
+import textx
+from rich.logging import RichHandler
+from rich.console import Console
 
 from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.concat import HDLConcatenation
@@ -17,8 +21,18 @@ from hdltools.hdllib.aximm import get_axi_mm_slave, get_register_write_logic
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import parse_mmap_file
 from hdltools.mmap.builder import MMBuilder
-from hdltools.verilog.codegen import VerilogCodeGenerator
 from hdltools.util import clog2
+from hdltools.verilog.codegen import VerilogCodeGenerator
+
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="INFO",
+    format=FORMAT,
+    datefmt="[%X]",
+    handlers=[RichHandler(console=Console(stderr=True))],
+)
+
+logger = logging.getLogger("hdltools.axi_mmb_builder")
 
 DEFAULT_TEMPLATE = os.path.join("assets", "verilog", "axi_slave.v")
 
@@ -49,7 +63,8 @@ def main():
                 param, value = replacement.split("=")
                 value = int(value)
             except (IndexError, ValueError):
-                print(f"FATAL: malformed parameter replacement: {replacement}")
+                logger.error(f"malformed parameter replacement: {replacement}")
+                exit(1)
             param_replacements[param] = value
 
     DEFAULT_LOGGER.set_dest(sys.stderr)
@@ -57,11 +72,15 @@ def main():
         DEFAULT_LOGGER.set_level("debug")
 
     # parse file
-    text, mmap_model = parse_mmap_file(args.model)
+    try:
+        text, mmap_model = parse_mmap_file(args.model)
+    except textx.exceptions.TextXSyntaxError as e:
+        logger.error(f"syntax error: {e}")
+        exit(1)
     mmbuilder = MMBuilder(text)
     mmap = mmbuilder.visit(mmap_model, param_replace=param_replacements)
     if not mmap.registers:
-        print(f"FATAL: no registers declared in model")
+        logger.error("no registers declared in model")
         exit(1)
 
     # sys.stderr.write(mmap.dumps())
@@ -326,7 +345,7 @@ def main():
             with open(args.o, "w") as dumpfile:
                 dumpfile.write(vlog.dump_element(slave))
         except Exception:
-            print("ERROR: could not output to file")
+            logger.error("ERROR: could not output to file")
             exit(1)
     else:
         print(vlog.dump_element(slave))
