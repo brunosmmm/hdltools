@@ -65,9 +65,9 @@ class FlagPort(HDLModulePort):
         self._signal = signal
 
 
-def parse_mmap_str(text):
+def parse_mmap_str(text, file_name=None):
     """Parse mmap definition."""
-    return MMAP_METAMODEL.model_from_str(text)
+    return MMAP_METAMODEL.model_from_str(text, file_name=file_name)
 
 
 def parse_mmap_file(fpath):
@@ -75,6 +75,6 @@ def parse_mmap_file(fpath):
     with open(fpath, "r") as f:
         text = f.read()
 
-    ret = parse_mmap_str(text)
+    ret = parse_mmap_str(text, file_name=fpath)
 
     return (text, ret)
