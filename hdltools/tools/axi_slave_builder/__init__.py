@@ -23,6 +23,11 @@ from hdltools.mmap import parse_mmap_file
 from hdltools.mmap.builder import MMBuilder
 from hdltools.util import clog2
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.tools.common.mmap import (
+    add_param_replace_args,
+    parse_param_replace_args,
+    MmapError,
+)
 
 FORMAT = "%(message)s"
 logging.basicConfig(
@@ -49,23 +54,16 @@ def main():
         "--modname", help="Module name", default="aximm_slave", action="store"
     )
     arg_parser.add_argument("-v", help="verbose", action="store_true")
-    arg_parser.add_argument(
-        "--replace-param", help="replace parameter value", nargs="+"
-    )
     arg_parser.add_argument("-o", help="output to file")
+    add_param_replace_args(arg_parser)
 
     args = arg_parser.parse_args()
 
-    param_replacements = {}
-    if args.replace_param is not None:
-        for replacement in args.replace_param:
-            try:
-                param, value = replacement.split("=")
-                value = int(value)
-            except (IndexError, ValueError):
-                logger.error(f"malformed parameter replacement: {replacement}")
-                exit(1)
-            param_replacements[param] = value
+    try:
+        param_replacements = parse_param_replace_args(args)
+    except MmapError as ex:
+        logger.error(ex)
+        exit(1)
 
     DEFAULT_LOGGER.set_dest(sys.stderr)
     if args.v:
