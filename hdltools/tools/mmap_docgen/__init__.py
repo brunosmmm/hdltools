@@ -49,7 +49,6 @@ def main():
         logger.error(str(ex))
         exit(1)
 
-    _, mmap = parse_mmap_file(args.model)
     try:
         text, mmap_model = parse_mmap_file(args.model)
     except textx.exceptions.TextXSyntaxError as ex:
