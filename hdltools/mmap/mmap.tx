@@ -69,7 +69,11 @@ GenerateStatement:
 Range:
     '<' left=StaticValue ',' right=StaticValue '>';
 RegisterProperty:
-  name=ID '=' '"' value=/[^"]+/ '"';
+    StrProperty | IntProperty;
+IntProperty:
+    name=ID '=' value=PositiveIntegerValue;
+StrProperty:
+    name=ID '=' '"' value=/[^"]+/ '"';
 StaticValue:
   ID | PositiveIntegerValue;
 PositiveIntegerValue:

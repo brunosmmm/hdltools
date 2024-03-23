@@ -251,8 +251,17 @@ class Range(ScoffASTObject):
         super().__init__(parent=parent, left=left, right=right, **kwargs)
 
 
-class RegisterProperty(ScoffASTObject):
-    """RegisterProperty AST."""
+class IntProperty(ScoffASTObject):
+    """IntProperty AST."""
+
+    __slots__ = ("name", "value")
+
+    def __init__(self, parent, name, value, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, name=name, value=value, **kwargs)
+
+class StrProperty(ScoffASTObject):
+    """StrProperty AST."""
 
     __slots__ = ("name", "value")
 
@@ -336,7 +345,8 @@ MMAP_AST_CLASSES = (
     FieldBitAccessor,
     GenerateStatement,
     Range,
-    RegisterProperty,
+    IntProperty,
+    StrProperty,
     PositiveIntegerValue,
     BitField,
     RegisterFieldPosition,

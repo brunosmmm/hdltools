@@ -442,7 +442,7 @@ class MMBuilder(SyntaxChecker):
                 # placeholder for syntax error
                 raise
 
-    def visit_RegisterProperty(self, node):
+    def visit_StrProperty(self, node):
         """Visit register property."""
         def _replace_template(value):
             return str(self._templated_name_subst(value.group(1)))
