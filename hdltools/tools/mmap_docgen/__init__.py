@@ -68,7 +68,7 @@ def main():
             descr = reg.properties["description"]
         else:
             descr = "---"
-        reg_table.add_line(reg.addr, name, descr)
+        reg_table.add_line(hex(reg.addr), name, descr)
 
     doc.append(reg_table)
 
