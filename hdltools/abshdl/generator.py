@@ -47,11 +47,14 @@ class HDLEntityGenerator:
         parser = ArgumentParser()
         for param_name, param_desc in cls.REQUIRED_PARAMETERS.items():
             param_help, param_type, param_default = param_desc
-            parser.add_argument(
-                param_name,
-                help=param_help,
-                type=param_type,
-                default=param_default,
+            if param_default is None:
+                parser.add_argument(param_name, help=param_help, type=param_type)
+            else:
+                parser.add_argument(
+                    f"--{param_name}",
+                    help=param_help,
+                    type=param_type,
+                    default=param_default,
             )
         for param_name, param_desc in cls.OPTIONAL_PARAMETERS.items():
             param_help, param_type = param_desc
