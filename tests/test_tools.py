@@ -41,8 +41,8 @@ def test_template():
 def test_mmap():
     """Test memory-mapped AXI slave generator."""
     TEST_STR = """
-    #register_size 32;
-    #addr_mode byte;
+    define register_size 32;
+    define addr_mode byte;
     //registers
     register control;
     register status;
