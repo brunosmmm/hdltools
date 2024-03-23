@@ -45,18 +45,17 @@ def test_mmap():
     define addr_mode byte;
     //registers
     register control {
-      field IRQEN position=0 access=RW description="Enable Interrupts";
-      field STOP_ON_ERROR position=1 access=RW description="Stop on Error";
+      field IRQEN position=0 access=RW description="Enable Interrupts"
+      field STOP_ON_ERROR position=1 access=RW description="Stop on Error"
     }
     register status {
-      field IRQCLR position=7 access=RW description="Interrupt flag; write 1 to clear";
-      field TEST position=2..1 access=R;
+      field IRQCLR position=7 access=RW description="Interrupt flag; write 1 to clear"
+      field TEST position=2..1 access=R
     }
 
     //outputs from register bits
-    output IRQ_EN source=control.IRQEN;
-    output STOP_ON_ERR source=control.STOP_ON_ERROR;
-    //output UNKNOWN source=unknown.UNKNOWN;
+    output IRQ_EN source=control.IRQEN
+    output STOP_ON_ERR source=control.STOP_ON_ERROR
     """
 
     decl = parse_mmap_str(TEST_STR)
