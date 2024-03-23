@@ -28,12 +28,11 @@ class HDLRegisterField(object):
             if len(reg_slice) > 2:
                 raise ValueError("invalid range")
             return reg_slice
-        elif isinstance(reg_slice, int):
+        if isinstance(reg_slice, int):
             return [reg_slice]
-        else:
-            raise TypeError(
-                "invalid type " 'for slice: "{}"'.format(type(reg_slice))
-            )
+        raise TypeError(
+            "invalid type " 'for slice: "{}"'.format(type(reg_slice))
+        )
 
     def add_properties(self, **kwargs):
         """Add a property."""
@@ -44,24 +43,22 @@ class HDLRegisterField(object):
         if len(self.reg_slice) > 1:
             if self.reg_slice[1] > self.reg_slice[0]:
                 return list(range(self.reg_slice[0], self.reg_slice[1] + 1))
-            else:
-                return list(range(self.reg_slice[1], self.reg_slice[0] + 1))
-        else:
-            return self.reg_slice
+            return list(range(self.reg_slice[1], self.reg_slice[0] + 1))
+        return self.reg_slice
 
     def get_slice(self):
         """Get a slice object."""
         if len(self.reg_slice) > 1:
             return slice(self.reg_slice[0], self.reg_slice[1])
-        else:
-            return self.reg_slice[0]
+        return self.reg_slice[0]
 
     def dumps_slice(self):
         """Print formatted slice."""
         if len(self.reg_slice) == 2:
-            return "[{}..{}]".format(*self.reg_slice)
-        else:
-            return "[{}]".format(self.reg_slice[0])
+            left, right = self.reg_slice
+            if left != right:
+                return "[{}..{}]".format(*self.reg_slice)
+        return f"[{self.reg_slice[0]}]"
 
     @property
     def size(self):
