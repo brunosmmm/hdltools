@@ -1,6 +1,6 @@
 //static declarations
-#register_size 32;
-#addr_mode byte;
+define register_size 32;
+define addr_mode byte;
 
 //registers
 register CONTROL description="Control Register";
