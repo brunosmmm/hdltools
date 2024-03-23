@@ -6,24 +6,26 @@ param MAX_HSIZE 2048;
 param MAX_VSIZE 2048;
 
 //registers
-register CONTROL description="Control Register";
-register FSIZE description="Frame Size Register";
+register CONTROL description="Control Register" {
+  //control register fields
+  field IRQEN position=0 access=RW description="Enable Interrupt"
+  field FREERUN position=1 access=RW description="Free Running Mode"
+  field IRQFLAG position=2 access=RW description="Interrupt Flag; write 1 to clear"
+}
 
-//control register fields
-field CONTROL.IRQEN position=0 access=RW description="Enable Interrupt";
-field CONTROL.FREERUN position=1 access=RW description="Free Running Mode";
-field CONTROL.IRQFLAG position=2 access=RW description="Interrupt Flag; write 1 to clear";
+register FSIZE description="Frame Size Register" {
+  //frame size register fields
+  field HSIZE position=15..0 access=RW description="Horizontal Size" default=MAX_HSIZE
+  field VSIZE position=31..16 access=RW description="Vertical Size" default=MAX_VSIZE
+}
 
-//frame size register fields
-field FSIZE.HSIZE position=15..0 access=RW description="Horizontal Size" default=MAX_HSIZE;
-field FSIZE.VSIZE position=31..16 access=RW description="Vertical Size" default=MAX_VSIZE;
 
 //flag and value outputs
-output IRQ_EN source=CONTROL.IRQEN;
-output FREE_RUN source=CONTROL.FREERUN;
-output H_SIZE source=FSIZE.HSIZE;
-output V_SIZE source=FSIZE.VSIZE;
-output IRQ_ACK source=CONTROL.IRQFLAG;
+output IRQ_EN source=CONTROL.IRQEN
+output FREE_RUN source=CONTROL.FREERUN
+output H_SIZE source=FSIZE.HSIZE
+output V_SIZE source=FSIZE.VSIZE
+output IRQ_ACK source=CONTROL.IRQFLAG
 
 //flag inputs
-input IRQ_FLAG dest=CONTROL.IRQFLAG;
+input IRQ_FLAG dest=CONTROL.IRQFLAG

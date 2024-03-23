@@ -55,21 +55,47 @@ class FnCall(ScoffASTObject):
         """Initialize."""
         super().__init__(parent=parent, fn=fn, args=args, **kwargs)
 
+class TemplateRegister(ScoffASTObject):
+    """TemplateRegister AST."""
+    __slots__ = ("name", "properties", "scope", "_fields")
+
+    def __init__(self, parent, name, properties=None, scope=None, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, name=name, properties=properties, scope=scope, **kwargs)
+        self._fields = []
+
+    def add_fields(self, *args):
+        """Add fields."""
+        self._fields.extend(args)
+
+    def get_fields(self):
+        """Get fields."""
+        return self._fields
 
 class SlaveRegister(ScoffASTObject):
     """SlaveRegister AST."""
 
-    __slots__ = ("name", "address", "properties")
+    __slots__ = ("name", "address", "properties", "scope", "_fields")
 
-    def __init__(self, parent, name, address, properties=None, **kwargs):
+    def __init__(self, parent, name, address, properties=None, scope=None, **kwargs):
         """Initialize."""
         super().__init__(
             parent=parent,
             name=name,
             address=address,
             properties=properties,
+            scope=scope,
             **kwargs
         )
+        self._fields = []
+
+    def add_fields(self, *args):
+        """Add fields."""
+        self._fields.extend(args)
+
+    def get_fields(self):
+        """Get fields."""
+        return self._fields
 
 
 class TemplatedNameSubstFragment(ScoffASTObject):
@@ -229,8 +255,19 @@ class FieldBitAccessor(ScoffASTObject):
         super().__init__(parent=parent, register=register, bit=bit, **kwargs)
 
 
-class GenerateStatement(ScoffASTObject):
-    """GenerateStatement AST."""
+class MainScopeGenerateStatement(ScoffASTObject):
+    """MainScopeGenerateStatement AST."""
+
+    __slots__ = ("var", "range", "gen_scope")
+
+    def __init__(self, parent, var, range, gen_scope, **kwargs):
+        """Initialize."""
+        super().__init__(
+            parent=parent, var=var, range=range, gen_scope=gen_scope, **kwargs
+        )
+
+class RegisterScopeGenerateStatement(ScoffASTObject):
+    """MainScopeGenerateStatement AST."""
 
     __slots__ = ("var", "range", "gen_scope")
 
@@ -323,6 +360,15 @@ class RegisterFieldDefault(ScoffASTObject):
         """Initialize."""
         super().__init__(parent=parent, default=default, **kwargs)
 
+class RegisterScope(ScoffASTObject):
+    """RegisterScope AST."""
+
+    __slots__ = ("statements",)
+
+    def __init__(self, parent, statements, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, statements=statements, **kwargs)
+
 
 MMAP_AST_CLASSES = (
     AXIDescription,
@@ -343,7 +389,8 @@ MMAP_AST_CLASSES = (
     SignalDestination,
     SourceBitAccessor,
     FieldBitAccessor,
-    GenerateStatement,
+    MainScopeGenerateStatement,
+    RegisterScopeGenerateStatement,
     Range,
     IntProperty,
     StrProperty,
@@ -352,4 +399,6 @@ MMAP_AST_CLASSES = (
     RegisterFieldPosition,
     RegisterFieldPermission,
     RegisterFieldDefault,
+    TemplateRegister,
+    RegisterScope
 )

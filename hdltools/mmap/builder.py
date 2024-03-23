@@ -15,6 +15,7 @@ from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
+from hdltools.mmap.ast import TemplateRegister
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
@@ -33,6 +34,7 @@ class MMBuilder(SyntaxChecker):
         self._ports = {}
         self._cur_reg_addr = 0
         self._replacement_values = {}
+        self._templates = {}
 
     def _get_parameter_value(self, param_name):
         """Get parameter value."""
@@ -149,7 +151,12 @@ class MMBuilder(SyntaxChecker):
         return node
 
     @no_child_visits
-    def visitPre_GenerateStatement(self, node):
+    def visitPre_RegisterScopeGenerateStatement(self, node):
+        """Enter generate in register scope."""
+        self.visitPre_MainScopeGenerateStatement(node)
+
+    @no_child_visits
+    def visitPre_MainScopeGenerateStatement(self, node):
         """Enter generate statement."""
         generated_scope = []
         # visit ahead
@@ -213,6 +220,9 @@ class MMBuilder(SyntaxChecker):
             if register.name in self._registers:
                 # warning, re-defining!
                 pass
+            # add fields
+            for field in node.get_fields():
+                register.add_fields(field)
             # add register
             DEFAULT_LOGGER.debug(f"adding register '{register.name}'")
             self._registers[register.name] = register
@@ -240,12 +250,28 @@ class MMBuilder(SyntaxChecker):
             except:
                 raise RuntimeError("error in template rule")
 
+
+    def visit_TemplateRegister(self, node):
+        """Visit register template."""
+        if node.name in self._templates:
+            raise RuntimeError(f"re-defining template '{node.name}'")
+        register = HDLRegister(
+            node.name, size=self._reg_size, addr=None
+        )
+        # add properties
+        for prop in node.properties:
+            register.add_properties(**{prop.name: prop.value})
+        # add fields
+        for field in node.get_fields():
+            register.add_fields(field)
+
+        DEFAULT_LOGGER.debug(f"adding template '{register.name}'")
+        self._templates[register.name] = register
+
     def visit_SlaveRegisterFieldImplicit(self, node):
         """Visit register field."""
-        src_reg, src_field = node.source
-        if src_reg not in self._registers:
-            raise ValueError("unknown register: {}".format(src_reg))
-
+        src_reg = node.parent.parent
+        src_field = node.source
         ssize = self.slice_size(self.bitfield_pos_to_slice(node.position))
         if node.default is not None:
             if isinstance(node.default, int):
@@ -276,14 +302,12 @@ class MMBuilder(SyntaxChecker):
 
         for prop in node.properties:
             reg_field.add_properties(**{prop.name: prop.value})
-        self._registers[src_reg].add_fields(reg_field)
+        src_reg.add_fields(reg_field)
 
     def visit_SlaveRegisterFieldExplicit(self, node):
         """Visit register field."""
-        src_reg, src_field = node.source
-        if src_reg not in self._registers:
-            raise ValueError("unknown register: {}".format(src_reg))
-
+        src_reg = node.parent.parent
+        src_field = node.source
         ssize = self.slice_size(
             self.bitfield_pos_to_slice(node.position.position)
         )
@@ -328,7 +352,7 @@ class MMBuilder(SyntaxChecker):
             reg_field.add_properties(**{prop.name: prop.value})
         for qualifier in node.qualifiers:
             reg_field.add_properties(**{qualifier: True})
-        self._registers[src_reg].add_fields(reg_field)
+        src_reg.add_fields(reg_field)
 
     def visit_SourceBitAccessor(self, node):
         """Visit source bit accessor."""

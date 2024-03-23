@@ -44,16 +44,14 @@ def test_mmap():
     define register_size 32;
     define addr_mode byte;
     //registers
-    register control;
-    register status;
-
-    //register fields
-    field control.IRQEN position=0 access=RW description="Enable Interrupts";
-    field control.STOP_ON_ERROR position=1 access=RW description="Stop on Error";
-    field status.IRQCLR position=7 access=RW description="Interrupt flag; write 1 to clear";
-    field status.TEST position=2..1 access=R;
-    //field unknown.UNKNOWN 0;
-    //field position=2 source=status.Conflict access=R;
+    register control {
+      field IRQEN position=0 access=RW description="Enable Interrupts";
+      field STOP_ON_ERROR position=1 access=RW description="Stop on Error";
+    }
+    register status {
+      field IRQCLR position=7 access=RW description="Interrupt flag; write 1 to clear";
+      field TEST position=2..1 access=R;
+    }
 
     //outputs from register bits
     output IRQ_EN source=control.IRQEN;

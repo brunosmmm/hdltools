@@ -1,5 +1,5 @@
 AXIDescription:
-  (static_declarations*=StaticStatement params*=ParameterStatement statements*=Statement)#;
+  (static_declarations*=StaticStatement params*=ParameterStatement statements*=MainScopeStatement)#;
 StaticStatement:
   'define' var=ID value=StaticStmtValue ';'?;
 ParameterStatement:
@@ -10,11 +10,17 @@ FnCall:
     '$' fn=ID '(' args*=FnArgument[','] ')';
 FnArgument:
     ID | INT;
-Statement:
-  (SlaveRegister | SlaveRegisterField | SlavePort | GenerateStatement) ';'?;
+MainScopeStatement:
+  (SlaveRegister | SlaveRegisterField | SlavePort | MainScopeGenerateStatement | TemplateRegister) ';'?;
+RegisterScopeStatement:
+  SlaveRegisterField | RegisterScopeGenerateStatement;
+TemplateRegister:
+    /template\s+/ /register\s+/ name=ID properties*=RegisterProperty scope=RegisterScope?;
+RegisterScope:
+    '{' statements*=RegisterScopeStatement '}';
 SlaveRegister:
   /register\s+/ name=TemplatedNameSubst ('at' address=PositiveIntegerValue )?
-  properties*=RegisterProperty;
+  properties*=RegisterProperty scope=RegisterScope?;
 TemplatedNameSubst[noskipws]:
   fragments += TemplatedNameSubstFragment;
 TemplatedNameSubstFragment:
@@ -22,16 +28,17 @@ TemplatedNameSubstFragment:
 TemplatedNameSubstFmt:
   '{' arg=/[0-9a-zA-Z_\-\+\*\/]+/ '}';
 
+    // TODO: transition below to register field in scope only
 SlaveRegisterField:
     SlaveRegisterFieldImplicit | SlaveRegisterFieldExplicit;
 
 SlaveRegisterFieldExplicit:
-    /field\s+/ source=SourceBitAccessor
+    /field\s+/ source=ID
     (position=RegisterFieldPosition access=RegisterFieldPermission default=RegisterFieldDefault?
     properties*=RegisterProperty qualifiers*=RegisterFieldQualifier)#;
 
 SlaveRegisterFieldImplicit:
-    /field\s+/ source=SourceBitAccessor position=BitField access=AccessPermission default=StaticValue?;
+    /field\s+/ source=ID position=BitField access=AccessPermission default=StaticValue?;
 
 RegisterFieldPosition:
     'position' '=' position=BitField;
@@ -64,8 +71,10 @@ SourceDestField:
   SourceBitAccessor | TemplatedNameSubst | ID;
 FieldBitAccessor:
     register=ID '.' bit=ID;
-GenerateStatement:
-    'for' var=ID 'in' range=Range 'generate' gen_scope+=Statement 'end';
+MainScopeGenerateStatement:
+    'for' var=ID 'in' range=Range 'generate' gen_scope+=MainScopeStatement 'end';
+RegisterScopeGenerateStatement:
+    'for' var=ID 'in' range=Range 'generate' gen_scope+=RegisterScopeStatement 'end';
 Range:
     '<' left=StaticValue ',' right=StaticValue '>';
 RegisterProperty:
