@@ -1,9 +1,9 @@
 AXIDescription:
   (static_declarations*=StaticStatement params*=ParameterStatement statements*=MainScopeStatement)#;
 StaticStatement:
-  'define' var=ID value=StaticStmtValue ';'?;
+  'define' var=ID value=StaticStmtValue;
 ParameterStatement:
-  'param' name=ID value=StaticStmtValue ';'?;
+  'param' name=ID value=StaticStmtValue;
 StaticStmtValue:
     StaticValue | FnCall;
 FnCall:
@@ -11,7 +11,7 @@ FnCall:
 FnArgument:
     ID | INT;
 MainScopeStatement:
-  (SlaveRegister | SlavePort | MainScopeGenerateStatement | TemplateRegister) ';'?;
+  (SlaveRegister | SlavePort | MainScopeGenerateStatement | TemplateRegister);
 RegisterScopeStatement:
   SlaveRegisterField | RegisterScopeGenerateStatement;
 TemplateRegister:

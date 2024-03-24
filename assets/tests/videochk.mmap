@@ -1,9 +1,9 @@
-define register_size 32;
-define addr_mode byte;
+define register_size 32
+define addr_mode byte
 
 //parameters
-param MAX_HSIZE 2048;
-param MAX_VSIZE 2048;
+param MAX_HSIZE 2048
+param MAX_VSIZE 2048
 
 //registers
 register CONTROL description="Control Register" {
