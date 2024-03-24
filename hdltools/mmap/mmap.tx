@@ -20,7 +20,7 @@ RegisterScope:
     '{' statements*=RegisterScopeStatement '}';
 SlaveRegister:
   /register\s+/ name=TemplatedNameSubst ('at' address=PositiveIntegerValue )?
-  properties*=RegisterProperty scope=RegisterScope? ('using' template=ID)?;
+    properties*=RegisterProperty ('using' template=ID)? scope=RegisterScope?;
 TemplatedNameSubst[noskipws]:
   fragments += TemplatedNameSubstFragment;
 TemplatedNameSubstFragment:
