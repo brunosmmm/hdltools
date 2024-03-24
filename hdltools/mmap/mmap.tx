@@ -11,7 +11,7 @@ FnCall:
 FnArgument:
     ID | INT;
 MainScopeStatement:
-  (SlaveRegister | SlaveRegisterField | SlavePort | MainScopeGenerateStatement | TemplateRegister) ';'?;
+  (SlaveRegister | SlavePort | MainScopeGenerateStatement | TemplateRegister) ';'?;
 RegisterScopeStatement:
   SlaveRegisterField | RegisterScopeGenerateStatement;
 TemplateRegister:
