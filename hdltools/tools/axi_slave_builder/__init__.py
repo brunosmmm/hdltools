@@ -65,7 +65,6 @@ def main():
         logger.error(ex)
         exit(1)
 
-    DEFAULT_LOGGER.set_dest(sys.stderr)
     if args.v:
         DEFAULT_LOGGER.set_level("debug")
 
