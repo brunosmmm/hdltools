@@ -3,12 +3,11 @@
 """Build documentation from memory mapped descriptions."""
 
 import argparse
-import logging
+import os
 import textx
-from rich.logging import RichHandler
-from rich.console import Console
+from scoff.ast.visits import VisitError
 
-from hdltools.mmap.builder import MMBuilder
+from hdltools.mmap.builder import MMBuilder, MMBuilderSemanticError
 from hdltools.mmap import parse_mmap_file
 from hdltools.docgen.ghmd import GHMarkDownTable, GHMarkDownDocument
 from hdltools.docgen.markdown import MarkDownHeader
@@ -17,16 +16,8 @@ from hdltools.tools.common.mmap import (
     parse_param_replace_args,
     MmapError,
 )
-
-FORMAT = "%(message)s"
-logging.basicConfig(
-    level="INFO",
-    format=FORMAT,
-    datefmt="[%X]",
-    handlers=[RichHandler(console=Console(stderr=True))],
-)
-
-logger = logging.getLogger("hdltools.mmap_docgen")
+from hdltools.logging import DEFAULT_LOGGER
+DEBUG = bool(os.environ.get("DEBUG", False))
 
 
 def main():
@@ -39,23 +30,43 @@ def main():
 
     arg_parser.add_argument("model", help="Model file")
     arg_parser.add_argument("--output", help="Output file", action="store")
+    arg_parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     add_param_replace_args(arg_parser)
 
     args = arg_parser.parse_args()
 
+    if args.verbose:
+        DEFAULT_LOGGER.set_level("debug")
+
     try:
         param_replacements = parse_param_replace_args(args)
     except MmapError as ex:
-        logger.error(str(ex))
+        DEFAULT_LOGGER.error(str(ex))
+        if DEBUG:
+            raise ex
         exit(1)
 
     try:
         text, mmap_model = parse_mmap_file(args.model)
     except textx.exceptions.TextXSyntaxError as ex:
-        logger.error(f"syntax error: {ex}")
+        DEFAULT_LOGGER.error(f"syntax error: {ex}")
+        if DEBUG:
+            raise ex
         exit(1)
     mmbuilder = MMBuilder(text)
-    mmap = mmbuilder.visit(mmap_model, param_replace=param_replacements)
+    try:
+        mmap = mmbuilder.visit(mmap_model, param_replace=param_replacements)
+    except VisitError as ex:
+        embedded_ex = ex.find_embedded_exception()
+        if isinstance(embedded_ex, MMBuilderSemanticError):
+            DEFAULT_LOGGER.error(f"semantic error: {embedded_ex}")
+            if DEBUG:
+                raise ex
+            exit(1)
+        DEFAULT_LOGGER.error(f"unhandled exception: {embedded_ex}")
+        if DEBUG:
+            raise ex
+        exit(1)
     doc = GHMarkDownDocument()
 
     # build documentation
