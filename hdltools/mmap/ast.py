@@ -156,7 +156,7 @@ class TemplatedNameSubst(ScoffASTObject):
         super().__init__(parent=parent, fragments=fragments, **kwargs)
 
 
-class SlaveRegisterFieldImplicit(ScoffASTObject):
+class SlaveRegisterField(ScoffASTObject):
     """SlaveRegisterField AST."""
 
     __slots__ = (
@@ -164,6 +164,8 @@ class SlaveRegisterFieldImplicit(ScoffASTObject):
         "position",
         "access",
         "default",
+        "properties",
+        "qualifiers",
     )
 
     def __init__(
@@ -173,6 +175,8 @@ class SlaveRegisterFieldImplicit(ScoffASTObject):
         position=None,
         access=None,
         default=None,
+        properties=None,
+        qualifiers=None,
         **kwargs
     ):
         """Initialize."""
@@ -182,19 +186,6 @@ class SlaveRegisterFieldImplicit(ScoffASTObject):
             position=position,
             access=access,
             default=default,
-            **kwargs
-        )
-
-
-class SlaveRegisterFieldExplicit(SlaveRegisterFieldImplicit):
-    """SlaveRegisterField AST."""
-
-    __slots__ = ("properties", "qualifiers")
-
-    def __init__(self, parent, properties=None, qualifiers=None, **kwargs):
-        """Initialize."""
-        super().__init__(
-            parent=parent,
             properties=properties,
             qualifiers=qualifiers,
             **kwargs
@@ -435,8 +426,7 @@ MMAP_AST_CLASSES = (
     TemplatedNameSubstFragment,
     TemplatedNameSubstFmt,
     TemplatedNameSubst,
-    SlaveRegisterFieldImplicit,
-    SlaveRegisterFieldExplicit,
+    SlaveRegisterField,
     SlaveOutput,
     SlaveInput,
     OutputDescriptor,

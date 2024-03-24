@@ -16,8 +16,7 @@ from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
 from hdltools.mmap.ast import (
-    SlaveRegisterFieldExplicit,
-    SlaveRegisterFieldImplicit,
+    SlaveRegisterField,
 )
 from hdltools.util import clog2
 
@@ -63,10 +62,7 @@ class MMBuilder(SyntaxChecker):
                     raise MMBuilderSemanticError(
                         f"invalid reset value: '{reset_value}'"
                     )
-            if isinstance(
-                node,
-                (SlaveRegisterFieldExplicit, SlaveRegisterFieldImplicit),
-            ):
+            if isinstance(node, SlaveRegisterField):
                 field_size = self.slice_size(
                     self.bitfield_pos_to_slice(node.position.position)
                 )
@@ -296,45 +292,7 @@ class MMBuilder(SyntaxChecker):
         DEFAULT_LOGGER.debug(f"adding template '{register.name}'")
         self._templates[register.name] = register
 
-    def visit_SlaveRegisterFieldImplicit(self, node):
-        """Visit register field."""
-        src_reg = node.parent.parent
-        src_field = node.source
-        ssize = self.slice_size(self.bitfield_pos_to_slice(node.position))
-        if node.default is not None:
-            if isinstance(node.default, int):
-                param_size = HDLIntegerConstant.minimum_value_size(
-                    node.default
-                )
-                defval = node.default
-            else:
-                if node.default.strip() in self._parameters:
-                    param_size = 0
-                    defval = HDLExpression(node.default.strip(), size=ssize)
-                else:
-                    raise RuntimeError(
-                        "unknown identifier: {}".format(node.default.strip())
-                    )
-
-            if ssize < param_size:
-                raise RuntimeError("value does not fit in field")
-        else:
-            defval = 0
-
-        reg_field = HDLRegisterField(
-            src_field,
-            self.bitfield_pos_to_slice(node.position),
-            node.access,
-            default_value=defval,
-        )
-
-        for prop in node.properties:
-            reg_field.add_properties(
-                **self._parse_properties({prop.name: prop.value}, node)
-            )
-        src_reg.add_fields(reg_field)
-
-    def visit_SlaveRegisterFieldExplicit(self, node):
+    def visit_SlaveRegisterField(self, node):
         """Visit register field."""
         src_reg = node.parent.parent
         src_field = node.source

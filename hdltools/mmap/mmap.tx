@@ -29,15 +29,9 @@ TemplatedNameSubstFmt:
   '{' arg=/[0-9a-zA-Z_\-\+\*\/]+/ '}';
 
 SlaveRegisterField:
-    SlaveRegisterFieldImplicit | SlaveRegisterFieldExplicit;
-
-SlaveRegisterFieldExplicit:
     /field\s+/ source=ID
     (position=RegisterFieldPosition access=RegisterFieldPermission default=RegisterFieldDefault?
     properties*=RegisterProperty qualifiers*=RegisterFieldQualifier)#;
-
-SlaveRegisterFieldImplicit:
-    /field\s+/ source=ID position=BitField access=AccessPermission default=StaticValue?;
 
 RegisterFieldPosition:
     'position' '=' position=BitField;
