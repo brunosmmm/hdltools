@@ -9,14 +9,12 @@ from scoff.ast.visits.control import no_child_visits
 # from scoff.ast.visits.control import SetFlag, ClearFlagAfter
 import hdltools.util
 from hdltools.abshdl.const import HDLIntegerConstant
-from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.mmap import MemoryMappedInterface
 from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
 from hdltools.mmap.ast import SlaveRegisterField, RegisterProperty
-from hdltools.util import clog2
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
