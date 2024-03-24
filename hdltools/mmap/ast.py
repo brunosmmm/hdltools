@@ -75,9 +75,9 @@ class TemplateRegister(ScoffASTObject):
 class SlaveRegister(ScoffASTObject):
     """SlaveRegister AST."""
 
-    __slots__ = ("name", "address", "properties", "scope", "_fields")
+    __slots__ = ("name", "address", "properties", "scope", "template", "_fields")
 
-    def __init__(self, parent, name, address, properties=None, scope=None, **kwargs):
+    def __init__(self, parent, name, address, properties=None, scope=None, template=None, **kwargs):
         """Initialize."""
         super().__init__(
             parent=parent,
@@ -85,6 +85,7 @@ class SlaveRegister(ScoffASTObject):
             address=address,
             properties=properties,
             scope=scope,
+            template=template,
             **kwargs
         )
         self._fields = []

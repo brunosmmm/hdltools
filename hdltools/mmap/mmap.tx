@@ -20,7 +20,7 @@ RegisterScope:
     '{' statements*=RegisterScopeStatement '}';
 SlaveRegister:
   /register\s+/ name=TemplatedNameSubst ('at' address=PositiveIntegerValue )?
-  properties*=RegisterProperty scope=RegisterScope?;
+  properties*=RegisterProperty scope=RegisterScope? ('using' template=ID)?;
 TemplatedNameSubst[noskipws]:
   fragments += TemplatedNameSubstFragment;
 TemplatedNameSubstFragment:
@@ -72,9 +72,9 @@ SourceDestField:
 FieldBitAccessor:
     register=ID '.' bit=ID;
 MainScopeGenerateStatement:
-    'for' var=ID 'in' range=Range 'generate' gen_scope+=MainScopeStatement 'end';
+    'for' var=ID 'in' range=Range 'generate' '{' gen_scope+=MainScopeStatement '}';
 RegisterScopeGenerateStatement:
-    'for' var=ID 'in' range=Range 'generate' gen_scope+=RegisterScopeStatement 'end';
+    'for' var=ID 'in' range=Range 'generate' '{' gen_scope+=RegisterScopeStatement '}';
 Range:
     '<' left=StaticValue ',' right=StaticValue '>';
 RegisterProperty:

@@ -15,10 +15,12 @@ from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
-from hdltools.mmap.ast import TemplateRegister
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
+
+class MMBuilderSemanticError(Exception):
+    """Semantic error."""
 
 
 class MMBuilder(SyntaxChecker):
@@ -209,46 +211,33 @@ class MMBuilder(SyntaxChecker):
         else:
             reg_addr = self._next_available_address()
 
-        if isinstance(node.name, str):
+        if node.template is not None and node.template:
+            # using template
+            if node.template not in self._templates:
+                raise MMBuilderSemanticError(
+                    f"unknown template '{node.template}'"
+                )
+            template = self._templates[node.template]
+            register = copy.deepcopy(template)
+            register.name = node.name
+            register.addr = reg_addr
+        elif isinstance(node.name, str):
             register = HDLRegister(
                 node.name, size=self._reg_size, addr=reg_addr
             )
-            # add properties
-            for prop in node.properties:
-                register.add_properties(**{prop.name: prop.value})
+        # add properties
+        for prop in node.properties:
+            register.add_properties(**{prop.name: prop.value})
 
-            if register.name in self._registers:
-                # warning, re-defining!
-                pass
-            # add fields
-            for field in node.get_fields():
-                register.add_fields(field)
-            # add register
-            DEFAULT_LOGGER.debug(f"adding register '{register.name}'")
-            self._registers[register.name] = register
-        else:
-            (fragment,) = node.name.fragments
-            (template,) = fragment.templates
-            try:
-                start, end = template.arg.split("-")
-                _addr = reg_addr
-                for reg in range(int(start), int(end) + 1):
-                    reg_name = fragment.fragment + str(reg)
-                    register = HDLRegister(
-                        reg_name, size=self._reg_size, addr=_addr
-                    )
-                    for prop in node.properties:
-                        register.add_properties(
-                            **{prop.name: prop.value.format(str(reg))}
-                        )
-                    if register.name in self._registers:
-                        # warning: re-defining!
-                        pass
-                    # add register
-                    self._registers[register.name] = register
-                    _addr = self._next_available_address()
-            except:
-                raise RuntimeError("error in template rule")
+        if register.name in self._registers:
+            # warning, re-defining!
+            pass
+        # add fields
+        for field in node.get_fields():
+            register.add_fields(field)
+        # add register
+        DEFAULT_LOGGER.debug(f"adding register '{register.name}'")
+        self._registers[register.name] = register
 
 
     def visit_TemplateRegister(self, node):
@@ -416,10 +405,10 @@ class MMBuilder(SyntaxChecker):
         if isinstance(node.name, str):
             # simple declaration
             if src_reg not in self._registers:
-                raise KeyError("invalid register: {}".format(src_reg))
+                raise MMBuilderSemanticError(f"invalid register: {src_reg}")
             src_reg = self._registers[src_reg]
             if src_bit is not None and src_reg.has_field(src_bit) is False:
-                raise KeyError("invalid field: {}".format(src_bit))
+                raise MMBuilderSemanticError(f"invalid field: {src_bit}")
             port = FlagPort(src_reg, src_bit, direction, node.name, is_trigger)
             if port.name in self._ports:
                 # warning, re-define
@@ -437,11 +426,11 @@ class MMBuilder(SyntaxChecker):
                 )
                 _reg = src_reg.fragments[0].fragment + fmt_str.format(port)
                 if _reg not in self._registers:
-                    raise KeyError('invalid register: "{}"'.format(_reg))
+                    raise MMBuilderSemanticError(f'invalid register: "{_reg}"')
 
                 _reg = self._registers[_reg]
                 if src_bit is not None and _reg.has_field(src_bit) is False:
-                    raise KeyError('invalid field: "{}"'.format(src_bit))
+                    raise MMBuilderSemanticError(f'invalid field: "{src_bit}"')
 
                 port = FlagPort(
                     _reg,
