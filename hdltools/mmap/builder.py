@@ -53,12 +53,12 @@ class MMBuilder(SyntaxChecker):
 
     def _parse_properties(self, properties, node):
         """Parse properties."""
-        reset_value = properties.get("reset_value", None)
+        reset_value = properties.get("default", None)
         if reset_value is not None:
             if isinstance(reset_value, str):
                 try:
                     int_val = int(reset_value, 16)
-                    properties["reset_value"] = int_val
+                    properties["default"] = int_val
                 except ValueError:
                     raise MMBuilderSemanticError(
                         f"invalid reset value: '{reset_value}'"
@@ -71,11 +71,11 @@ class MMBuilder(SyntaxChecker):
                     self.bitfield_pos_to_slice(node.position.position)
                 )
                 if field_size < HDLIntegerConstant.minimum_value_size(
-                    properties["reset_value"]
+                    properties["default"]
                 ):
-                    reset_value = properties["reset_value"]
+                    reset_value = properties["default"]
                     raise MMBuilderSemanticError(
-                        f"reset value {hex(reset_value)} does not fit in field with size {field_size}"
+                        f"default value {hex(reset_value)} does not fit in field with size {field_size}"
                     )
         return properties
 
