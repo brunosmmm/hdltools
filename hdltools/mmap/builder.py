@@ -15,9 +15,7 @@ from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
-from hdltools.mmap.ast import (
-    SlaveRegisterField,
-)
+from hdltools.mmap.ast import SlaveRegisterField, RegisterProperty
 from hdltools.util import clog2
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
@@ -52,12 +50,18 @@ class MMBuilder(SyntaxChecker):
 
     def _parse_properties(self, properties, node):
         """Parse properties."""
-        reset_value = properties.get("default", None)
+        # return properties
+        description = properties.get("description", None)
+        if description is not None:
+            properties["description"] = description.value
+        return properties
+
+    def _parse_default_value(self, node, reset_value=None):
         if reset_value is not None:
             if isinstance(reset_value, str):
                 try:
                     int_val = int(reset_value, 16)
-                    properties["default"] = int_val
+                    reset_value = int_val
                 except ValueError:
                     raise MMBuilderSemanticError(
                         f"invalid reset value: '{reset_value}'"
@@ -67,13 +71,12 @@ class MMBuilder(SyntaxChecker):
                     self.bitfield_pos_to_slice(node.position.position)
                 )
                 if field_size < HDLIntegerConstant.minimum_value_size(
-                    properties["default"]
+                    reset_value
                 ):
-                    reset_value = properties["default"]
                     raise MMBuilderSemanticError(
                         f"default value {hex(reset_value)} does not fit in field with size {field_size}"
                     )
-        return properties
+        return reset_value
 
     @staticmethod
     def slice_size(slic):
@@ -255,15 +258,18 @@ class MMBuilder(SyntaxChecker):
             register = copy.deepcopy(template)
             register.name = node.name
             register.addr = reg_addr
+            register.add_properties(**{"from_template": node.template})
         elif isinstance(node.name, str):
             register = HDLRegister(
                 node.name, size=self._reg_size, addr=reg_addr
             )
         # add properties
-        for prop in node.properties:
-            register.add_properties(
-                **self._parse_properties({prop.name: prop.value}, node)
-            )
+        if node.scope is not None:
+            for stmt in node.scope.statements:
+                if isinstance(stmt, RegisterProperty):
+                    register.add_properties(
+                        **self._parse_properties({stmt.name: stmt.value}, node)
+                    )
 
         if register.name in self._registers:
             # warning, re-defining!
@@ -281,10 +287,12 @@ class MMBuilder(SyntaxChecker):
             raise RuntimeError(f"re-defining template '{node.name}'")
         register = HDLRegister(node.name, size=self._reg_size, addr=None)
         # add properties
-        for prop in node.properties:
-            register.add_properties(
-                **self._parse_properties({prop.name: prop.value}, node)
-            )
+        if node.scope is not None:
+            for stmt in node.scope.statements:
+                if isinstance(stmt, RegisterProperty):
+                    register.add_properties(
+                        **self._parse_properties({stmt.name: stmt.value}, node)
+                    )
         # add fields
         for field in node.get_fields():
             register.add_fields(field)
@@ -296,36 +304,8 @@ class MMBuilder(SyntaxChecker):
         """Visit register field."""
         src_reg = node.parent.parent
         src_field = node.source
-        ssize = self.slice_size(
-            self.bitfield_pos_to_slice(node.position.position)
-        )
         if node.default is not None:
-            if isinstance(node.default.default, str):
-                try:
-                    int_val = int(node.default.default)
-                    node.default.default = int_val
-                except ValueError:
-                    pass
-            if isinstance(node.default.default, int):
-                param_size = HDLIntegerConstant.minimum_value_size(
-                    node.default.default
-                )
-                defval = node.default.default
-            else:
-                if node.default.default.strip() in self._parameters:
-                    param_size = 0
-                    defval = HDLExpression(
-                        node.default.default.strip(), size=ssize
-                    )
-                else:
-                    raise RuntimeError(
-                        "unknown identifier: {}".format(
-                            node.default.default.strip()
-                        )
-                    )
-
-            if ssize < param_size:
-                raise RuntimeError("value does not fit in field")
+            defval = self._parse_default_value(node, node.default.default)
         else:
             defval = 0
 
@@ -336,10 +316,12 @@ class MMBuilder(SyntaxChecker):
             default_value=defval,
         )
 
-        for prop in node.properties:
-            reg_field.add_properties(
-                **self._parse_properties({prop.name: prop.value}, node)
-            )
+        if node.scope is not None:
+            for stmt in node.scope.statements:
+                if isinstance(stmt, RegisterProperty):
+                    reg_field.add_properties(
+                        **self._parse_properties({stmt.name: stmt.value}, node)
+                    )
         for qualifier in node.qualifiers:
             reg_field.add_properties(**{qualifier: True})
         src_reg.add_fields(reg_field)

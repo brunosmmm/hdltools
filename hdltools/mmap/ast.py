@@ -14,7 +14,7 @@ class AXIDescription(ScoffASTObject):
         static_declarations=None,
         params=None,
         statements=None,
-        **kwargs
+        **kwargs,
     ):
         """Initialize."""
         super().__init__(
@@ -22,7 +22,7 @@ class AXIDescription(ScoffASTObject):
             static_declarations=static_declarations,
             params=params,
             statements=statements,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -59,16 +59,15 @@ class FnCall(ScoffASTObject):
 class TemplateRegister(ScoffASTObject):
     """TemplateRegister AST."""
 
-    __slots__ = ("name", "properties", "scope", "_fields")
+    __slots__ = ("name", "scope", "_fields")
 
-    def __init__(self, parent, name, properties=None, scope=None, **kwargs):
+    def __init__(self, parent, name, scope=None, **kwargs):
         """Initialize."""
         super().__init__(
             parent=parent,
             name=name,
-            properties=properties,
             scope=scope,
-            **kwargs
+            **kwargs,
         )
         self._fields = []
 
@@ -87,7 +86,6 @@ class SlaveRegister(ScoffASTObject):
     __slots__ = (
         "name",
         "address",
-        "properties",
         "scope",
         "template",
         "_fields",
@@ -98,20 +96,18 @@ class SlaveRegister(ScoffASTObject):
         parent,
         name,
         address,
-        properties=None,
         scope=None,
         template=None,
-        **kwargs
+        **kwargs,
     ):
         """Initialize."""
         super().__init__(
             parent=parent,
             name=name,
             address=address,
-            properties=properties,
             scope=scope,
             template=template,
-            **kwargs
+            **kwargs,
         )
         self._fields = []
 
@@ -164,8 +160,8 @@ class SlaveRegisterField(ScoffASTObject):
         "position",
         "access",
         "default",
-        "properties",
         "qualifiers",
+        "scope",
     )
 
     def __init__(
@@ -175,9 +171,9 @@ class SlaveRegisterField(ScoffASTObject):
         position=None,
         access=None,
         default=None,
-        properties=None,
         qualifiers=None,
-        **kwargs
+        scope=None,
+        **kwargs,
     ):
         """Initialize."""
         super().__init__(
@@ -186,9 +182,9 @@ class SlaveRegisterField(ScoffASTObject):
             position=position,
             access=access,
             default=default,
-            properties=properties,
             qualifiers=qualifiers,
-            **kwargs
+            scope=scope,
+            **kwargs,
         )
 
 
@@ -306,26 +302,6 @@ class Range(ScoffASTObject):
         super().__init__(parent=parent, left=left, right=right, **kwargs)
 
 
-class IntProperty(ScoffASTObject):
-    """IntProperty AST."""
-
-    __slots__ = ("name", "value")
-
-    def __init__(self, parent, name, value, **kwargs):
-        """Initialize."""
-        super().__init__(parent=parent, name=name, value=value, **kwargs)
-
-
-class StrProperty(ScoffASTObject):
-    """StrProperty AST."""
-
-    __slots__ = ("name", "value")
-
-    def __init__(self, parent, name, value, **kwargs):
-        """Initialize."""
-        super().__init__(parent=parent, name=name, value=value, **kwargs)
-
-
 class PositiveIntegerValue(ScoffASTObject):
     """PositiveIntegerValue AST."""
 
@@ -382,6 +358,16 @@ class RegisterFieldDefault(ScoffASTObject):
         super().__init__(parent=parent, default=default, **kwargs)
 
 
+class RegisterFieldDescription(ScoffASTObject):
+    """Field description AST."""
+
+    __slots__ = ("desc",)
+
+    def __init__(self, parent, desc: str, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, desc=desc, **kwargs)
+
+
 class RegisterScope(ScoffASTObject):
     """RegisterScope AST."""
 
@@ -403,7 +389,7 @@ class EnumStatement(ScoffASTObject):
             parent=parent,
             enum_type=enum_type,
             enum_fields=enum_fields,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -413,6 +399,31 @@ class EnumField(ScoffASTObject):
     __slots__ = ("name", "value")
 
     def __init__(self, parent, name, value, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, name=name, value=value, **kwargs)
+
+
+class StrProperty(ScoffASTObject):
+    """StrProperty AST."""
+
+    __slots__ = "value"
+
+    def __init__(self, parent, value, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, value=value, **kwargs)
+
+
+RegisterPropertyValueType = StrProperty | PositiveIntegerValue | EnumField
+
+
+class RegisterProperty(ScoffASTObject):
+    """Register property AST."""
+
+    __slots__ = ("name", "value")
+
+    def __init__(
+        self, parent, name: str, value: RegisterPropertyValueType, **kwargs
+    ):
         """Initialize."""
         super().__init__(parent=parent, name=name, value=value, **kwargs)
 
@@ -438,8 +449,6 @@ MMAP_AST_CLASSES = (
     MainScopeGenerateStatement,
     RegisterScopeGenerateStatement,
     Range,
-    IntProperty,
-    StrProperty,
     PositiveIntegerValue,
     BitField,
     RegisterFieldPosition,
@@ -449,4 +458,7 @@ MMAP_AST_CLASSES = (
     RegisterScope,
     EnumStatement,
     EnumField,
+    RegisterFieldDescription,
+    StrProperty,
+    RegisterProperty,
 )

@@ -99,7 +99,7 @@ def main():
         )
         for field in reg.fields:
             descr = field.properties.get("description", "---")
-            reset_val = field.properties.get("default", None)
+            reset_val = field.default_value
             reset_val = hex(reset_val) if reset_val is not None else "?"
             reg_fields.add_line(
                 field.dumps_slice(),

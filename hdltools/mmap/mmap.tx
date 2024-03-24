@@ -13,14 +13,14 @@ FnArgument:
 MainScopeStatement:
   (SlaveRegister | SlavePort | MainScopeGenerateStatement | TemplateRegister | EnumStatement);
 RegisterScopeStatement:
-  SlaveRegisterField | RegisterScopeGenerateStatement;
+  SlaveRegisterField | RegisterScopeGenerateStatement | RegisterProperty;
 TemplateRegister:
-    /template\s+/ /register\s+/ name=ID properties*=RegisterProperty scope=RegisterScope?;
+    /template\s+/ /register\s+/ name=ID scope=RegisterScope?;
 RegisterScope:
     '{' statements*=RegisterScopeStatement '}';
 SlaveRegister:
   /register\s+/ name=TemplatedNameSubst ('at' address=PositiveIntegerValue )?
-    properties*=RegisterProperty ('using' template=ID)? scope=RegisterScope?;
+    ('using' template=ID)? scope=RegisterScope?;
 TemplatedNameSubst[noskipws]:
   fragments += TemplatedNameSubstFragment;
 TemplatedNameSubstFragment:
@@ -31,7 +31,13 @@ TemplatedNameSubstFmt:
 SlaveRegisterField:
     /field\s+/ source=ID
     (position=RegisterFieldPosition access=RegisterFieldPermission default=RegisterFieldDefault?
-    properties*=RegisterProperty qualifiers*=RegisterFieldQualifier)#;
+    qualifiers*=RegisterFieldQualifier)# scope=FieldScope?;
+
+FieldScope:
+    '{' statements*=FieldScopeStatement '}';
+
+FieldScopeStatement:
+    RegisterProperty;
 
 RegisterFieldPosition:
     'position' '=' position=BitField;
@@ -39,6 +45,8 @@ RegisterFieldPermission:
     'access' '=' access=AccessPermission;
 RegisterFieldDefault:
     'default' '=' default=DefaultValue;
+RegisterFieldDescription:
+    'description' '=' '"' desc=/[^"]+/ '"';
 RegisterFieldQualifier:
     'autoclear';
 DefaultValue:
@@ -77,11 +85,12 @@ RegisterScopeGenerateStatement:
 Range:
     '<' left=StaticValue ',' right=StaticValue '>';
 RegisterProperty:
-    StrProperty | IntProperty;
-IntProperty:
-    name=ID '=' value=PositiveIntegerValue;
+    /property\s+/ name=ID '=' value=RegisterPropertyValue;
+
+RegisterPropertyValue:
+    PositiveIntegerValue | StrProperty;
 StrProperty:
-    name=ID '=' '"' value=/[^"]+/ '"';
+    '"' value=/[^"]+/ '"';
 StaticValue:
   ID | PositiveIntegerValue;
 PositiveIntegerValue:
