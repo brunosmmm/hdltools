@@ -19,6 +19,7 @@ from hdltools.mmap import FlagPort
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
 
+
 class MMBuilderSemanticError(Exception):
     """Semantic error."""
 
@@ -243,14 +244,11 @@ class MMBuilder(SyntaxChecker):
         DEFAULT_LOGGER.debug(f"adding register '{register.name}'")
         self._registers[register.name] = register
 
-
     def visit_TemplateRegister(self, node):
         """Visit register template."""
         if node.name in self._templates:
             raise RuntimeError(f"re-defining template '{node.name}'")
-        register = HDLRegister(
-            node.name, size=self._reg_size, addr=None
-        )
+        register = HDLRegister(node.name, size=self._reg_size, addr=None)
         # add properties
         for prop in node.properties:
             register.add_properties(**{prop.name: prop.value})
@@ -463,8 +461,10 @@ class MMBuilder(SyntaxChecker):
 
     def visit_StrProperty(self, node):
         """Visit register property."""
+
         def _replace_template(value):
             return str(self._templated_name_subst(value.group(1)))
+
         # find and replace templates.
         templated_str = TEMPLATE_REGEX.sub(_replace_template, node.value)
 
