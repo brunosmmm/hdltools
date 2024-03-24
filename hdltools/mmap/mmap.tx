@@ -11,7 +11,7 @@ FnCall:
 FnArgument:
     ID | INT;
 MainScopeStatement:
-  (SlaveRegister | SlavePort | MainScopeGenerateStatement | TemplateRegister);
+  (SlaveRegister | SlavePort | MainScopeGenerateStatement | TemplateRegister | EnumStatement);
 RegisterScopeStatement:
   SlaveRegisterField | RegisterScopeGenerateStatement;
 TemplateRegister:
@@ -28,7 +28,6 @@ TemplatedNameSubstFragment:
 TemplatedNameSubstFmt:
   '{' arg=/[0-9a-zA-Z_\-\+\*\/]+/ '}';
 
-    // TODO: transition below to register field in scope only
 SlaveRegisterField:
     SlaveRegisterFieldImplicit | SlaveRegisterFieldExplicit;
 
@@ -50,6 +49,12 @@ RegisterFieldQualifier:
     'autoclear';
 DefaultValue:
     StaticValue | TemplatedNameSubst;
+
+EnumStatement:
+    /enum\s+/ enum_type=ID '{' enum_fields+=EnumField[','] '}';
+
+EnumField:
+    name=ID '=' value=PositiveIntegerValue;
 
 SlavePort:
   SlaveOutput | SlaveInput;

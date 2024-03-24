@@ -55,13 +55,21 @@ class FnCall(ScoffASTObject):
         """Initialize."""
         super().__init__(parent=parent, fn=fn, args=args, **kwargs)
 
+
 class TemplateRegister(ScoffASTObject):
     """TemplateRegister AST."""
+
     __slots__ = ("name", "properties", "scope", "_fields")
 
     def __init__(self, parent, name, properties=None, scope=None, **kwargs):
         """Initialize."""
-        super().__init__(parent=parent, name=name, properties=properties, scope=scope, **kwargs)
+        super().__init__(
+            parent=parent,
+            name=name,
+            properties=properties,
+            scope=scope,
+            **kwargs
+        )
         self._fields = []
 
     def add_fields(self, *args):
@@ -72,12 +80,29 @@ class TemplateRegister(ScoffASTObject):
         """Get fields."""
         return self._fields
 
+
 class SlaveRegister(ScoffASTObject):
     """SlaveRegister AST."""
 
-    __slots__ = ("name", "address", "properties", "scope", "template", "_fields")
+    __slots__ = (
+        "name",
+        "address",
+        "properties",
+        "scope",
+        "template",
+        "_fields",
+    )
 
-    def __init__(self, parent, name, address, properties=None, scope=None, template=None, **kwargs):
+    def __init__(
+        self,
+        parent,
+        name,
+        address,
+        properties=None,
+        scope=None,
+        template=None,
+        **kwargs
+    ):
         """Initialize."""
         super().__init__(
             parent=parent,
@@ -267,6 +292,7 @@ class MainScopeGenerateStatement(ScoffASTObject):
             parent=parent, var=var, range=range, gen_scope=gen_scope, **kwargs
         )
 
+
 class RegisterScopeGenerateStatement(ScoffASTObject):
     """MainScopeGenerateStatement AST."""
 
@@ -298,6 +324,7 @@ class IntProperty(ScoffASTObject):
         """Initialize."""
         super().__init__(parent=parent, name=name, value=value, **kwargs)
 
+
 class StrProperty(ScoffASTObject):
     """StrProperty AST."""
 
@@ -315,7 +342,9 @@ class PositiveIntegerValue(ScoffASTObject):
 
     def __init__(self, parent, hex, posint, bin, **kwargs):
         """Initialize."""
-        super().__init__(parent=parent, hex=hex, posint=posint, bin=bin, **kwargs)
+        super().__init__(
+            parent=parent, hex=hex, posint=posint, bin=bin, **kwargs
+        )
 
 
 class BitField(ScoffASTObject):
@@ -361,6 +390,7 @@ class RegisterFieldDefault(ScoffASTObject):
         """Initialize."""
         super().__init__(parent=parent, default=default, **kwargs)
 
+
 class RegisterScope(ScoffASTObject):
     """RegisterScope AST."""
 
@@ -369,6 +399,31 @@ class RegisterScope(ScoffASTObject):
     def __init__(self, parent, statements, **kwargs):
         """Initialize."""
         super().__init__(parent=parent, statements=statements, **kwargs)
+
+
+class EnumStatement(ScoffASTObject):
+    """EnumStatement AST."""
+
+    __slots__ = ("enum_type", "enum_fields")
+
+    def __init__(self, parent, enum_type, enum_fields, **kwargs):
+        """Initialize."""
+        super().__init__(
+            parent=parent,
+            enum_type=enum_type,
+            enum_fields=enum_fields,
+            **kwargs
+        )
+
+
+class EnumField(ScoffASTObject):
+    """EnumField AST."""
+
+    __slots__ = ("name", "value")
+
+    def __init__(self, parent, name, value, **kwargs):
+        """Initialize."""
+        super().__init__(parent=parent, name=name, value=value, **kwargs)
 
 
 MMAP_AST_CLASSES = (
@@ -401,5 +456,7 @@ MMAP_AST_CLASSES = (
     RegisterFieldPermission,
     RegisterFieldDefault,
     TemplateRegister,
-    RegisterScope
+    RegisterScope,
+    EnumStatement,
+    EnumField,
 )
