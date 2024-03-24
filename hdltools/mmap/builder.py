@@ -494,11 +494,20 @@ class MMBuilder(SyntaxChecker):
             try:
                 if node.hex.startswith("0x"):
                     return int(node.hex[2:], 16)
-                else:
-                    return int(node.hex, 16)
+                return int(node.hex, 16)
             except ValueError:
-                # placeholder for syntax error
-                raise
+                raise MMBuilderSemanticError(
+                    f"invalid hex value: '{node.hex}'"
+                )
+        if node.bin is not None:
+            try:
+                if node.bin.startswith("0b"):
+                    return int(node.bin[2:], 2)
+                return int(node.bin, 2)
+            except ValueError:
+                raise MMBuilderSemanticError(
+                    f"invalid binary value: '{node.bin}'"
+                )
 
     def visit_StrProperty(self, node):
         """Visit register property."""
