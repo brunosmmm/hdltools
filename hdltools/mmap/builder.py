@@ -30,6 +30,7 @@ class MMBuilder(SyntaxChecker):
         """Initialize."""
         super().__init__(*args, **kwargs)
         self._reg_size = None
+        self._reg_addr_mode = None
         self._reg_addr_offset = None
         self._parameters = {}
         self._registers = {}
@@ -49,8 +50,7 @@ class MMBuilder(SyntaxChecker):
         """Get slice size in bits."""
         if len(slic) > 1:
             return slic[0] - slic[1] + 1
-        else:
-            return 1
+        return 1
 
     @staticmethod
     def bitfield_pos_to_slice(pos):
@@ -76,9 +76,8 @@ class MMBuilder(SyntaxChecker):
         for offset in possible_offsets:
             if offset in addr_set:
                 continue
-            else:
-                self._cur_reg_addr = offset
-                return offset
+            self._cur_reg_addr = offset
+            return offset
 
         # must increment
         self._cur_reg_addr = max(addr_set) + self._reg_addr_offset
@@ -100,13 +99,10 @@ class MMBuilder(SyntaxChecker):
                 "word",
             ):
                 raise ValueError("addr_mode can only be 'byte' or 'word'")
-            if self._reg_addr_offset is not None:
+            if self._reg_addr_mode is not None:
                 # warning, re-defining
                 pass
-            if node.value == "byte":
-                self._reg_addr_offset = self._reg_size // 8
-            else:
-                self._reg_addr_offset = 1
+            self._reg_addr_mode = node.value
         else:
             raise RuntimeError("unknown setting: '{}'".format(node.var))
 
@@ -160,6 +156,8 @@ class MMBuilder(SyntaxChecker):
     @no_child_visits
     def visitPre_MainScopeGenerateStatement(self, node):
         """Enter generate statement."""
+        if self.get_flag_state("first_visit"):
+            return
         generated_scope = []
         # visit ahead
         super().visit(node.range)
@@ -203,9 +201,15 @@ class MMBuilder(SyntaxChecker):
         """Visit template substitution."""
         return self._templated_name_subst(node.arg)
 
+    def visitPre_SlaveRegister(self, node):
+        """Enter register declaration."""
+        if self.get_flag_state("first_visit"):
+            self.dont_visit_children()
 
     def visit_SlaveRegister(self, node):
         """Visit register declaration."""
+        if self.get_flag_state("first_visit"):
+            return node
         if node.address is not None:
             reg_addr = node.address
         else:
@@ -378,14 +382,16 @@ class MMBuilder(SyntaxChecker):
 
     def visit_OutputDescriptor(self, node):
         """Visit output descriptor."""
-        self._visit_descriptor(node, "out")
+        return self._visit_descriptor(node, "out")
 
     def visit_InputDescriptor(self, node):
         """Visit input descriptor."""
-        self._visit_descriptor(node, "in")
+        return self._visit_descriptor(node, "in")
 
     def _visit_descriptor(self, node, direction):
         """Visit output/input descriptor."""
+        if self.get_flag_state("first_visit"):
+            return node
         if direction not in ("in", "out"):
             raise RuntimeError("invalid direction")
         if isinstance(node.sig, str):
@@ -477,6 +483,20 @@ class MMBuilder(SyntaxChecker):
             if param_replace is not None
             else {}
         )
+        self.set_flag("first_visit")
+        super().visit(node)
+        self.clear_flag("first_visit")
+        if self._reg_size is None:
+            DEFAULT_LOGGER.warning("register size not defined, using 32 bits")
+            self._reg_size = 32
+        if self._reg_addr_mode is None:
+            DEFAULT_LOGGER.warning("addressing mode not defined, using 'byte'")
+            self._reg_addr_mode = "byte"
+        if self._reg_addr_mode == "byte":
+            self._reg_addr_offset = self._reg_size // 8
+        else:
+            self._reg_addr_offset = 1
+        self.set_flag("second_visit")
         super().visit(node)
         mmap = MemoryMappedInterface(self._reg_size, self._reg_addr_offset)
         for register in self._registers.values():
