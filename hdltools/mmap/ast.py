@@ -311,11 +311,11 @@ class StrProperty(ScoffASTObject):
 class PositiveIntegerValue(ScoffASTObject):
     """PositiveIntegerValue AST."""
 
-    __slots__ = ("hex", "posint")
+    __slots__ = ("hex", "posint", "bin")
 
-    def __init__(self, parent, hex, posint, **kwargs):
+    def __init__(self, parent, hex, posint, bin, **kwargs):
         """Initialize."""
-        super().__init__(parent=parent, hex=hex, posint=posint, **kwargs)
+        super().__init__(parent=parent, hex=hex, posint=posint, bin=bin, **kwargs)
 
 
 class BitField(ScoffASTObject):

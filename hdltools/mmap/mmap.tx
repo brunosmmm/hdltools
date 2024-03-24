@@ -86,13 +86,15 @@ StrProperty:
 StaticValue:
   ID | PositiveIntegerValue;
 PositiveIntegerValue:
-  hex=Hex | posint=PositiveInteger;
+  hex=Hex | posint=PositiveInteger | bin=Binary;
 BitField:
   left=BitFieldValue ('..' right=BitFieldValue)?;
 BitFieldValue:
     PositiveInteger | TemplatedNameSubst;
 Hex:
   '0x' /[0-9a-fA-F]+/;
+Binary:
+  '0b' /[01]+/;
 PositiveInteger:
   /[0-9]+/;
 AccessPermission:
