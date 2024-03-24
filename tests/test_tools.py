@@ -45,11 +45,11 @@ def test_mmap():
     define addr_mode byte
     //registers
     register control {
-      field IRQEN position=0 access=RW description="Enable Interrupts"
-      field STOP_ON_ERROR position=1 access=RW description="Stop on Error"
+      field IRQEN position=0 access=RW { property description="Enable Interrupts" }
+      field STOP_ON_ERROR position=1 access=RW { property  description="Stop on Error" }
     }
     register status {
-      field IRQCLR position=7 access=RW description="Interrupt flag; write 1 to clear"
+      field IRQCLR position=7 access=RW { property description="Interrupt flag; write 1 to clear" }
       field TEST position=2..1 access=R
     }
 

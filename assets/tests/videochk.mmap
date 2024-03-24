@@ -6,17 +6,19 @@ param MAX_HSIZE 2048
 param MAX_VSIZE 2048
 
 //registers
-register CONTROL description="Control Register" {
+register CONTROL {
+  property description="Control Register"
   //control register fields
-  field IRQEN position=0 access=RW description="Enable Interrupt"
-  field FREERUN position=1 access=RW description="Free Running Mode"
-  field IRQFLAG position=2 access=RW description="Interrupt Flag; write 1 to clear"
+  field IRQEN position=0 access=RW { property description="Enable Interrupt" }
+  field FREERUN position=1 access=RW { property description="Free Running Mode" }
+  field IRQFLAG position=2 access=RW { property description="Interrupt Flag; write 1 to clear" }
 }
 
-register FSIZE description="Frame Size Register" {
+register FSIZE {
+  property description="Frame Size Register"
   //frame size register fields
-  field HSIZE position=15..0 access=RW description="Horizontal Size" default=MAX_HSIZE
-  field VSIZE position=31..16 access=RW description="Vertical Size" default=MAX_VSIZE
+  field HSIZE position=15..0 access=RW default={MAX_HSIZE}  { property description="Horizontal Size" }
+  field VSIZE position=31..16 access=RW default={MAX_VSIZE} { property description="Vertical Size" }
 }
 
 
