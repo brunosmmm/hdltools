@@ -17,6 +17,7 @@ from hdltools.tools.common.mmap import (
     MmapError,
 )
 from hdltools.logging import DEFAULT_LOGGER
+
 DEBUG = bool(os.environ.get("DEBUG", False))
 
 
@@ -30,7 +31,9 @@ def main():
 
     arg_parser.add_argument("model", help="Model file")
     arg_parser.add_argument("--output", help="Output file", action="store")
-    arg_parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
+    arg_parser.add_argument(
+        "-v", "--verbose", help="Verbose output", action="store_true"
+    )
     add_param_replace_args(arg_parser)
 
     args = arg_parser.parse_args()
@@ -83,19 +86,27 @@ def main():
     doc.append(reg_table)
 
     for name, reg in mmap.registers.items():
+        if not reg.fields:
+            # no fields, skip
+            continue
         doc.append(
             MarkDownHeader("{} register details".format(name), level=2),
             newline=True,
         )
 
-        reg_fields = GHMarkDownTable(["Bits", "Name", "Access", "Description"])
+        reg_fields = GHMarkDownTable(
+            ["Bits", "Name", "Access", "Description", "Reset Value"]
+        )
         for field in reg.fields:
-            if "description" in field.properties:
-                descr = field.properties["description"]
-            else:
-                descr = "---"
+            descr = field.properties.get("description", "---")
+            reset_val = field.properties.get("reset_value", None)
+            reset_val = hex(reset_val) if reset_val is not None else "?"
             reg_fields.add_line(
-                field.dumps_slice(), field.name, field.permissions, descr
+                field.dumps_slice(),
+                field.name,
+                field.permissions,
+                descr,
+                reset_val,
             )
         doc.append(reg_fields)
 

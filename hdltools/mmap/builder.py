@@ -46,6 +46,20 @@ class MMBuilder(SyntaxChecker):
             return self._replacement_values[param_name]
         return self._parameters[param_name]
 
+    def _parse_properties(self, properties):
+        """Parse properties."""
+        reset_value = properties.get("reset_value", None)
+        if reset_value is not None:
+            if isinstance(reset_value, str):
+                try:
+                    int_val = int(reset_value, 16)
+                    properties["reset_value"] = int_val
+                except ValueError:
+                    raise MMBuilderSemanticError(
+                        f"invalid reset value: '{reset_value}'"
+                    )
+        return properties
+
     @staticmethod
     def slice_size(slic):
         """Get slice size in bits."""
@@ -232,7 +246,9 @@ class MMBuilder(SyntaxChecker):
             )
         # add properties
         for prop in node.properties:
-            register.add_properties(**{prop.name: prop.value})
+            register.add_properties(
+                **self._parse_properties({prop.name: prop.value})
+            )
 
         if register.name in self._registers:
             # warning, re-defining!
@@ -251,7 +267,9 @@ class MMBuilder(SyntaxChecker):
         register = HDLRegister(node.name, size=self._reg_size, addr=None)
         # add properties
         for prop in node.properties:
-            register.add_properties(**{prop.name: prop.value})
+            register.add_properties(
+                **self._parse_properties({prop.name: prop.value})
+            )
         # add fields
         for field in node.get_fields():
             register.add_fields(field)
@@ -292,7 +310,9 @@ class MMBuilder(SyntaxChecker):
         )
 
         for prop in node.properties:
-            reg_field.add_properties(**{prop.name: prop.value})
+            reg_field.add_properties(
+                **self._parse_properties({prop.name: prop.value})
+            )
         src_reg.add_fields(reg_field)
 
     def visit_SlaveRegisterFieldExplicit(self, node):
@@ -340,7 +360,9 @@ class MMBuilder(SyntaxChecker):
         )
 
         for prop in node.properties:
-            reg_field.add_properties(**{prop.name: prop.value})
+            reg_field.add_properties(
+                **self._parse_properties({prop.name: prop.value})
+            )
         for qualifier in node.qualifiers:
             reg_field.add_properties(**{qualifier: True})
         src_reg.add_fields(reg_field)
