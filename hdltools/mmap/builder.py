@@ -15,6 +15,11 @@ from hdltools.abshdl.module import HDLModuleParameter
 from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
+from hdltools.mmap.ast import (
+    SlaveRegisterFieldExplicit,
+    SlaveRegisterFieldImplicit,
+)
+from hdltools.util import clog2
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
@@ -46,7 +51,7 @@ class MMBuilder(SyntaxChecker):
             return self._replacement_values[param_name]
         return self._parameters[param_name]
 
-    def _parse_properties(self, properties):
+    def _parse_properties(self, properties, node):
         """Parse properties."""
         reset_value = properties.get("reset_value", None)
         if reset_value is not None:
@@ -57,6 +62,20 @@ class MMBuilder(SyntaxChecker):
                 except ValueError:
                     raise MMBuilderSemanticError(
                         f"invalid reset value: '{reset_value}'"
+                    )
+            if isinstance(
+                node,
+                (SlaveRegisterFieldExplicit, SlaveRegisterFieldImplicit),
+            ):
+                field_size = self.slice_size(
+                    self.bitfield_pos_to_slice(node.position.position)
+                )
+                if field_size < HDLIntegerConstant.minimum_value_size(
+                    properties["reset_value"]
+                ):
+                    reset_value = properties["reset_value"]
+                    raise MMBuilderSemanticError(
+                        f"reset value {hex(reset_value)} does not fit in field with size {field_size}"
                     )
         return properties
 
@@ -247,7 +266,7 @@ class MMBuilder(SyntaxChecker):
         # add properties
         for prop in node.properties:
             register.add_properties(
-                **self._parse_properties({prop.name: prop.value})
+                **self._parse_properties({prop.name: prop.value}, node)
             )
 
         if register.name in self._registers:
@@ -268,7 +287,7 @@ class MMBuilder(SyntaxChecker):
         # add properties
         for prop in node.properties:
             register.add_properties(
-                **self._parse_properties({prop.name: prop.value})
+                **self._parse_properties({prop.name: prop.value}, node)
             )
         # add fields
         for field in node.get_fields():
@@ -311,7 +330,7 @@ class MMBuilder(SyntaxChecker):
 
         for prop in node.properties:
             reg_field.add_properties(
-                **self._parse_properties({prop.name: prop.value})
+                **self._parse_properties({prop.name: prop.value}, node)
             )
         src_reg.add_fields(reg_field)
 
@@ -361,7 +380,7 @@ class MMBuilder(SyntaxChecker):
 
         for prop in node.properties:
             reg_field.add_properties(
-                **self._parse_properties({prop.name: prop.value})
+                **self._parse_properties({prop.name: prop.value}, node)
             )
         for qualifier in node.qualifiers:
             reg_field.add_properties(**{qualifier: True})
