@@ -5,12 +5,12 @@ description = ""
 authors = ["Bruno <brunosmmm@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-textX = "3.1.0"
+python = "^3.10"
+textX = "^4.2.2"
 dictator = {git = "https://github.com/brunosmmm/dictator", rev = "master"}
 colorama = "0.4.4"
 astunparse = "^1.6.3"
-scoff = {git = "https://github.com/brunosmmm/scoff", rev = "5388cf76dd069838f03041422476b39e904d8117"}
+scoff = {git = "https://github.com/brunosmmm/scoff", rev = "7c909278a864e48be34c9eefd4eafdbf111ba5c9"}
 rich = "^13.7.1"
 
 [tool.poetry.dev-dependencies]
