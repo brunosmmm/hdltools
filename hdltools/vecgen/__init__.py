@@ -1,12 +1,10 @@
 """Testbench vector generation."""
 
-import pkg_resources
+from importlib.resources import files
 from textx.metamodel import metamodel_from_file
 from hdltools.vecgen.generate import VecgenPass
 
-METAMODEL_FILE = pkg_resources.resource_filename(
-    "hdltools", "vecgen/vecgrammar.tx"
-)
+METAMODEL_FILE = str(files("hdltools") / "vecgen" / "vecgrammar.tx")
 VECGEN_METAMODEL = metamodel_from_file(METAMODEL_FILE)
 
 

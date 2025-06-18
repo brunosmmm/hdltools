@@ -1,14 +1,12 @@
 """Trigger condition mini-language."""
 
 import re
-import pkg_resources
+from importlib.resources import files
 from textx.metamodel import metamodel_from_file
 from scoff.ast.visits import ASTVisitor, VisitError
 from hdltools.vcd.trigger import VCDTriggerDescriptor
 
-METAMODEL_FILE = pkg_resources.resource_filename(
-    "hdltools", "vcd/trigger/trigcond.tx"
-)
+METAMODEL_FILE = str(files("hdltools") / "vcd" / "trigger" / "trigcond.tx")
 OBJDUMP_METAMODEL = metamodel_from_file(METAMODEL_FILE)
 
 

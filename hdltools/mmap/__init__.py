@@ -1,13 +1,11 @@
 """Memory mapped interface description parser."""
 
-import pkg_resources
+from importlib.resources import files
 from textx.metamodel import metamodel_from_file
 from hdltools.abshdl.port import HDLModulePort
 from hdltools.mmap.ast import MMAP_AST_CLASSES
 
-MMAP_COMPILER_GRAMMAR = pkg_resources.resource_filename(
-    "hdltools", "mmap/mmap.tx"
-)
+MMAP_COMPILER_GRAMMAR = str(files("hdltools") / "mmap" / "mmap.tx")
 
 MMAP_METAMODEL = metamodel_from_file(
     MMAP_COMPILER_GRAMMAR, classes=MMAP_AST_CLASSES

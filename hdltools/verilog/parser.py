@@ -2,7 +2,7 @@
 import ast
 import re
 
-import pkg_resources
+from importlib.resources import files
 from hdltools.abshdl.expr import HDLExpression
 from hdltools.abshdl.module import HDLModule, HDLModuleParameter
 from hdltools.abshdl.port import HDLModulePort
@@ -64,9 +64,7 @@ class VerilogModuleParser(object):
     def _parse_file(self):
         """Parse file."""
         meta_model = metamodel_from_file(
-            pkg_resources.resource_filename(
-                "hdltools", "verilog/module_grammar.tx"
-            )
+            str(files("hdltools") / "verilog" / "module_grammar.tx")
         )
 
         module_decl = meta_model.model_from_file(self.mod_file)

@@ -1,11 +1,9 @@
 """Binary analysis utilities."""
 
-import pkg_resources
+from importlib.resources import files
 from textx.metamodel import metamodel_from_file
 
-METAMODEL_FILE = pkg_resources.resource_filename(
-    "hdltools", "binutils/objdump.tx"
-)
+METAMODEL_FILE = str(files("hdltools") / "binutils" / "objdump.tx")
 OBJDUMP_METAMODEL = metamodel_from_file(METAMODEL_FILE)
 
 
