@@ -219,6 +219,10 @@ def main():
     biggest_addr = clog2(max([reg.addr for reg in mmap.registers.values()]))
     addr_width = max(biggest_addr, default_addr_width)
 
+    # Update OPT_MEM_ADDR_BITS with the correctly calculated address width
+    opt_mem_addr_bits = slave_signals["OPT_MEM_ADDR_BITS"]
+    opt_mem_addr_bits.default_val = HDLIntegerConstant(int(addr_width - lsb_bits))
+
     wr_if = wr_switch.get_parent().get_parent().get_parent()
     for name, reg in mmap.registers.items():
         reg_sig = slave_signals["REG_" + name]
