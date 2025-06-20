@@ -5,6 +5,7 @@ from hdltools.sim import HDLSimulationObject
 from hdltools.sim.simulation import HDLSimulation
 from hdltools.sim.primitives import ClockGenerator, OneshotSignal
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.vhdl.codegen import VHDLCodeGenerator
 from hdltools.vcd.dump import VCDDump
 from hdltools.vcd.generator import VCDGenerator
 
@@ -54,16 +55,35 @@ if __name__ == "__main__":
 
     logic = Multiplexer("mux")
     sched = HDLSimulationObjectScheduler(logic)
-    gen = VerilogCodeGenerator(indent=True)
+    verilog_gen = VerilogCodeGenerator(indent=True)
+    vhdl_gen = VHDLCodeGenerator()
 
-    # verilog code
+    # Multiplexer code comparison
+    mux_module = sched.schedule()[0]
+    print("=" * 60)
     print("*Multiplexer Verilog Code*")
-    print(gen.dump_element(sched.schedule()[0]))
+    print("=" * 60)
+    print(verilog_gen.dump_element(mux_module))
+    print()
+    print("=" * 60)
+    print("*Multiplexer VHDL Code*")
+    print("=" * 60)
+    print(vhdl_gen.dump_element(mux_module))
+    print()
 
     lfsr = LFSR("lfsr")
     sched = HDLSimulationObjectScheduler(lfsr)
+    lfsr_module = sched.schedule()[0]
+    print("=" * 60)
     print("*LFSR Verilog Code*")
-    print(gen.dump_element(sched.schedule()[0]))
+    print("=" * 60)
+    print(verilog_gen.dump_element(lfsr_module))
+    print()
+    print("=" * 60)
+    print("*LFSR VHDL Code*")
+    print("=" * 60)
+    print(vhdl_gen.dump_element(lfsr_module))
+    print()
 
     ckgen = ClockGenerator("clk")
     reset = OneshotSignal("rst", 10, initial_value=True)

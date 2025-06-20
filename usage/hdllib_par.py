@@ -6,6 +6,7 @@ from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.ifelse import HDLIfElse
 from hdltools.abshdl.concat import HDLConcatenation
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.vhdl.codegen import VHDLCodeGenerator
 from hdltools.abshdl.highlvl import HDLBlock
 
 if __name__ == "__main__":
@@ -49,8 +50,12 @@ if __name__ == "__main__":
     print(my_par(feedback, out).dumps())
 
     print("*Verilog Output*")
-    gen = VerilogCodeGenerator(indent=True)
-    print(gen.dump_element(my_par(feedback, out)))
+    verilog_gen = VerilogCodeGenerator(indent=True)
+    vhdl_gen = VHDLCodeGenerator()
+    print(verilog_gen.dump_element(my_par(feedback, out)))
+    print()
+    print("*VHDL Output*")
+    print(vhdl_gen.dump_element(my_par(feedback, out)))
 
     # try with python syntax
     @HDLBlock(**locals())
@@ -72,4 +77,7 @@ if __name__ == "__main__":
     print(block.dumps())
 
     print("*Verilog Output*")
-    print(gen.dump_element(block))
+    print(verilog_gen.dump_element(block))
+    print()
+    print("*VHDL Output*")
+    print(vhdl_gen.dump_element(block))

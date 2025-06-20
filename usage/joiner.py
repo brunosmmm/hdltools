@@ -9,6 +9,7 @@ from hdltools.hdllib.patterns import (
 from hdltools.abshdl.highlvl import HDLBlock
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.vhdl.codegen import VHDLCodeGenerator
 from hdltools.abshdl.generator import HDLEntityGenerator
 from hdltools.util import clog2
 
@@ -75,5 +76,15 @@ class JoinerGenerator(HDLEntityGenerator):
 if __name__ == "__main__":
     # test
     joiner = JoinerGenerator.parse_and_generate()
-    gen = VerilogCodeGenerator(indent=True)
-    print(gen.dump_element(joiner))
+    verilog_gen = VerilogCodeGenerator(indent=True)
+    vhdl_gen = VHDLCodeGenerator()
+    
+    print("=" * 60)
+    print("*Joiner Verilog Code*")
+    print("=" * 60)
+    print(verilog_gen.dump_element(joiner))
+    print()
+    print("=" * 60)
+    print("*Joiner VHDL Code*")
+    print("=" * 60)
+    print(vhdl_gen.dump_element(joiner))

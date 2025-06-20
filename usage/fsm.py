@@ -6,6 +6,7 @@ from hdltools.hdllib.fsm import FSM
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.highlvl import HDLBlock
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.vhdl.codegen import VHDLCodeGenerator
 
 
 class TestFSM(FSM):
@@ -77,8 +78,16 @@ if __name__ == "__main__":
 
     print(fsm.dumps())
 
-    print("* Verilog *")
-
-    # generate verilog code
-    gen = VerilogCodeGenerator(indent=True)
-    print(gen.dump_element(fsm))
+    # generate code
+    verilog_gen = VerilogCodeGenerator(indent=True)
+    vhdl_gen = VHDLCodeGenerator()
+    
+    print("=" * 60)
+    print("*FSM Verilog Code*")
+    print("=" * 60)
+    print(verilog_gen.dump_element(fsm))
+    print()
+    print("=" * 60)
+    print("*FSM VHDL Code*")
+    print("=" * 60)
+    print(vhdl_gen.dump_element(fsm))

@@ -5,6 +5,7 @@ from hdltools.hdllib.patterns import ParallelBlock, ClockedBlock
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.abshdl.highlvl import HDLBlock
 from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.vhdl.codegen import VHDLCodeGenerator
 
 
 if __name__ == "__main__":
@@ -65,6 +66,16 @@ if __name__ == "__main__":
 
     print(lfsr.dumps())
 
-    # generate verilog code
-    gen = VerilogCodeGenerator(indent=True)
-    print(gen.dump_element(lfsr))
+    # generate code
+    verilog_gen = VerilogCodeGenerator(indent=True)
+    vhdl_gen = VHDLCodeGenerator()
+    
+    print("=" * 60)
+    print("*LFSR Verilog Code*")
+    print("=" * 60)
+    print(verilog_gen.dump_element(lfsr))
+    print()
+    print("=" * 60)
+    print("*LFSR VHDL Code*")
+    print("=" * 60)
+    print(vhdl_gen.dump_element(lfsr))
