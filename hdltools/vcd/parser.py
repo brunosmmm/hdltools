@@ -18,6 +18,7 @@ from hdltools.vcd.tokens import (
     SIM_TIME,
     SIG_VALUE,
     BINARY_NUMBER,
+    REAL_NUMBER,
     EXTENTS,
 )
 from hdltools.vcd.variable import VCDVariable
@@ -79,6 +80,12 @@ VECTOR_VALUE_CHANGE_PARSER = LineMatcher(
     SimpleTokenField("var", VAR_ID),
 )
 
+REAL_VALUE_CHANGE_PARSER = LineMatcher(
+    SimpleTokenField("value", REAL_NUMBER),
+    SEP_OPT,
+    SimpleTokenField("var", VAR_ID),
+)
+
 SIM_TIME_PARSER = LineMatcher(SimpleTokenField("time", SIM_TIME))
 
 DUMPVARS_PARSER = LineMatcher(rb"\$dumpvars", push_state="initial")
@@ -95,6 +102,7 @@ VCD_DEFINITION_LINES = [
 VCD_VAR_LINES = [
     SCALAR_VALUE_CHANGE_PARSER,
     VECTOR_VALUE_CHANGE_PARSER,
+    REAL_VALUE_CHANGE_PARSER,
     SIM_TIME_PARSER,
     DUMPVARS_PARSER,
 ]
@@ -103,9 +111,9 @@ VCD_VAR_LINES = [
 class BaseVCDParser(DataParser):
     """Simple VCD parser."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__("header", consume_spaces=True, **kwargs)
+        super().__init__("header", consume_spaces=True)
         if "debug" in kwargs:
             self._debug = kwargs["debug"]
         else:
