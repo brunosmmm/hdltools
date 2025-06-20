@@ -28,7 +28,7 @@ class VCDParserError(Exception):
 
 
 SCOPE_PARSER = LineMatcher(
-    b"\$scope",
+    rb"\$scope",
     SEP,
     SimpleTokenField("stype", SCOPE_TYPE),
     SEP,
@@ -37,10 +37,10 @@ SCOPE_PARSER = LineMatcher(
     DIRECTIVE_TERM,
 )
 
-UPSCOPE_PARSER = LineMatcher(b"\$upscope", SEP, DIRECTIVE_TERM)
+UPSCOPE_PARSER = LineMatcher(rb"\$upscope", SEP, DIRECTIVE_TERM)
 
 VAR_PARSER = LineMatcher(
-    b"\$var",
+    rb"\$var",
     SEP,
     SimpleTokenField("vtype", VAR_TYPE),
     SEP,
@@ -56,11 +56,11 @@ VAR_PARSER = LineMatcher(
 )
 
 END_DEFS_PARSER = LineMatcher(
-    b"\$enddefinitions", SEP, DIRECTIVE_TERM, change_state="dump"
+    rb"\$enddefinitions", SEP, DIRECTIVE_TERM, change_state="dump"
 )
 
 GENERIC_PARSER = LineMatcher(
-    SimpleTokenField("dtype", b"\$(\w+)"),
+    SimpleTokenField("dtype", rb"\$(\w+)"),
     SEP,
     SimpleTokenField("body", STRING),
     SEP,
@@ -81,8 +81,8 @@ VECTOR_VALUE_CHANGE_PARSER = LineMatcher(
 
 SIM_TIME_PARSER = LineMatcher(SimpleTokenField("time", SIM_TIME))
 
-DUMPVARS_PARSER = LineMatcher(b"\$dumpvars", push_state="initial")
-END_PARSER = LineMatcher(b"\$end", pop_state=1)
+DUMPVARS_PARSER = LineMatcher(rb"\$dumpvars", push_state="initial")
+END_PARSER = LineMatcher(rb"\$end", pop_state=1)
 
 VCD_DEFINITION_LINES = [
     SCOPE_PARSER,

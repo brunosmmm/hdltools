@@ -20,7 +20,10 @@ class VecgenPass(SyntaxChecker):
         "absolute time is in the past",
         "absolute time is in the past, current time is {cur}, requested is {req}",
     )
-    _SYNTAX_ERRORS = {"t001": _SYNTAX_ERR_TIME_PAST}
+    _SYNTAX_ERRORS = {
+        "t001": _SYNTAX_ERR_TIME_PAST,
+        "v002": _SYNTAX_ERR_INVALID_NAME,
+    }
 
     def __init__(self, *args, **kwargs):
         """Initialize."""
@@ -53,34 +56,78 @@ class VecgenPass(SyntaxChecker):
 
     def visit_InitialElement(self, node):
         """Visit initial element."""
-        if isinstance(node.val, str):
+        # Handle different value types
+        if hasattr(node.val, '__class__') and hasattr(node.val, '_tx_class_name'):
+            # This is a parsed object, get its value using the specific visitor
+            class_name = node.val._tx_class_name
+            if class_name == 'HexValue':
+                val = self.visit_HexValue(node.val)
+            elif class_name == 'BinValue':
+                val = self.visit_BinValue(node.val)
+            elif class_name == 'BooleanExpr':
+                val = self.visit_BooleanExpr(node.val)
+            else:
+                # ID or other string value
+                val = node.val
+        else:
+            val = node.val
+        
+        if isinstance(val, str):
             # symbol lookup
-            if node.val not in self._definitions:
-                raise self.get_error_from_code(node, "v002", name=node.val)
+            if val not in self._definitions:
+                raise self.get_error_from_code(node, "v002", name=val)
 
-            node.val = self._definitions[node.val]
+            val = self._definitions[val]
 
         self._current_time += 1
-        return {"event": "initial", "value": node.val}
+        return {"event": "initial", "value": val}
 
     def visit_SequenceElement(self, node):
         """Visit sequence element."""
-        if isinstance(node.mask, str):
+        # Handle different mask types
+        if hasattr(node.mask, '__class__') and hasattr(node.mask, '_tx_class_name'):
+            # This is a parsed object, get its value using the specific visitor
+            class_name = node.mask._tx_class_name
+            if class_name == 'HexValue':
+                mask = self.visit_HexValue(node.mask)
+            elif class_name == 'BinValue':
+                mask = self.visit_BinValue(node.mask)
+            elif class_name == 'BooleanExpr':
+                mask = self.visit_BooleanExpr(node.mask)
+            else:
+                # ID or other string value
+                mask = node.mask
+        else:
+            mask = node.mask
+        
+        if isinstance(mask, str):
             # symbol lookup
-            if node.mask not in self._definitions:
-                raise self.get_error_from_code(node, "v002", name=node.mask)
+            if mask not in self._definitions:
+                raise self.get_error_from_code(node, "v002", name=mask)
 
-            node.mask = self._definitions[node.mask]
+            mask = self._definitions[mask]
 
         if node.time is None:
             self._current_time += 1
             # insert relative time
             time = {"mode": "rel", "delta": 1}
         else:
-            if node.time["mode"] == "rel":
-                self._current_time += node.time["delta"]
+            # Handle time object
+            if hasattr(node.time, '_tx_class_name'):
+                class_name = node.time._tx_class_name
+                if class_name == 'RelTimeValue':
+                    time = self.visit_RelTimeValue(node.time)
+                elif class_name == 'AbsTimeValue':
+                    time = self.visit_AbsTimeValue(node.time)
+                else:
+                    time = node.time
             else:
-                abs_time = node.time["time"]
+                time = node.time
+                
+            if time["mode"] == "rel":
+                self._current_time += time["delta"]
+            else:
+                abs_time = time["time"]
                 if abs_time < self._current_time:
                     # time is in the past, cannot be
                     raise self.get_error_from_code(
@@ -88,9 +135,8 @@ class VecgenPass(SyntaxChecker):
                     )
 
                 self._current_time = abs_time
-            time = node.time
 
-        return {"event": node.event, "mask": node.mask, "time": time}
+        return {"event": node.event, "mask": mask, "time": time}
 
     def visit_HexValue(self, node):
         """Visit hexadecimal value."""
@@ -123,6 +169,7 @@ class VecgenPass(SyntaxChecker):
             raise self._SYNTAX_ERR_INVALID_VAL
 
         return {"mode": "rel", "delta": node.time}
+
 
     def visit_VectorDescription(self, node):
         """Visit AST root."""

@@ -6,13 +6,13 @@ ConfigurationDirective:
     '#' directive=ID value=VectorValue;
 
 ValueDefinition:
-    /define\s+/ name=ID value=SequenceValue;
+    "define" name=ID value=SequenceValue;
 
 InitialElement:
-    /initial\s+/ val=SequenceValue;
+    "initial" val=SequenceValue;
 
 SequenceElement:
-    event=SequenceEvent mask=SequenceValue (/at\s+/ time=TimeValue)?;
+    event=SequenceEvent mask=SequenceValue ("at" time=TimeValue)?;
 
 SequenceValue:
     ID | VectorValue | BooleanExpr;
@@ -27,13 +27,13 @@ RelTimeValue:
     "+" time=INT;
 
 VectorValue:
-    INT | HexValue | BinValue;
+    HexValue | BinValue | INT;
 
 HexValue:
-    "0x"? val=/[0-9a-fA-F]+/;
+    "0x" val=/[0-9a-fA-F]+/;
 
 BinValue:
-    "0b"? val=/[0-1]+/;
+    "0b" val=/[0-1]+/;
 
 SequenceEvent:
     "set" | "clear" | "toggle";
@@ -53,5 +53,3 @@ BitwiseNegate:
 BitwiseOperator:
     "<<" | ">>" | "&" | "^" | "|";
 
-Comment:
-    /\/\/.*$/;
