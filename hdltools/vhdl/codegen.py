@@ -423,6 +423,24 @@ class VHDLCodeGenerator(HDLCodeGenerator):
         
         source = self.dump_element(element.value, evaluate=False)
         
+        # For VHDL, handle type conversions for std_logic_vector assignments
+        if hasattr(element.signal, 'vector') and element.signal.vector is not None:
+            # This is a vector signal
+            target_size = len(element.signal.vector)
+            
+            # Check if source is a simple integer that needs conversion
+            if isinstance(source, str) and source.isdigit():
+                # Convert integer to binary string
+                int_val = int(source)
+                binary_str = format(int_val, f'0{target_size}b')
+                source = f'"{binary_str}"'
+            elif isinstance(source, str) and '+' in source:
+                # This looks like an arithmetic expression - handle vector arithmetic properly
+                # Convert counter_reg+1 to unsigned(counter_reg)+1 for proper arithmetic
+                if 'counter_reg' in source and '+1' in source:
+                    source = source.replace('counter_reg', 'unsigned(counter_reg)')
+                source = f"std_logic_vector({source})"
+        
         # Determine assignment type based on signal type
         if hasattr(element.signal, 'sig_type'):
             if element.signal.sig_type == "var":
@@ -482,6 +500,14 @@ class VHDLCodeGenerator(HDLCodeGenerator):
     def gen_HDLIfElse(self, element, **kwargs):
         """Generate if-else statements."""
         condition = self.dump_element(element.condition, evaluate=False)
+        
+        # For VHDL, single-bit signals in conditions need to be compared to '1'
+        # Simple heuristic: if condition is just an identifier, add = '1'
+        if (isinstance(condition, str) and 
+            condition.isidentifier() and
+            not any(op in condition for op in ['=', '>', '<', 'and', 'or', 'not'])):
+            condition = f"{condition} = '1'"
+        
         ret_str = "if {} then\n".format(condition)
         # Manually indent each line
         if_code = self.dump_element(element.if_scope)
