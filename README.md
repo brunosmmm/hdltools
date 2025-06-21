@@ -47,11 +47,3 @@ The library includes 8 command-line tools for various HDL and verification tasks
 6. **`vcdevts`** - Event counting and analysis from VCD files
 7. **`inputgen`** - Test vector generation from JSON configurations
 8. **`fnboundary`** - Function boundary detection from assembly dumps
-
-## Status & Quality
-
-* **Test Coverage**: 79/79 tests passing (100% pass rate)
-* **Python Support**: 3.10+ with modern dependency management
-* **Dependencies**: Updated to latest versions (textX 4.2.2, removed deprecated pkg_resources)
-* **Validation**: Comprehensive functional equivalence testing between generated Verilog and VHDL
-* **Production Use**: Core HDL generation and VCD analysis components are stable and validated
