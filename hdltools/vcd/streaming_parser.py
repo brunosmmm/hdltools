@@ -424,6 +424,7 @@ class StreamingVCDParser:
             if len(parts) >= 2:
                 value = parts[0]  # Keep full value with prefix for efficient storage
                 var_id = parts[1]
+        
                 
         if var_id:
             # Update efficient storage if enabled and variable exists
@@ -436,7 +437,12 @@ class StreamingVCDParser:
                     self._variables_compat[var_id]._sync_from_efficient()
             
             # Always update legacy tracking for compatibility
-            if var_id in self._variables:
+            # Check both _variables and _vars (if using mixin)
+            var_dict = self._variables
+            if hasattr(self, '_vars') and self._vars is not self._variables:
+                var_dict = self._vars
+                
+            if var_id in var_dict:
                 # Convert vector values for legacy storage
                 if isinstance(value, str) and value.startswith(('b', 'r')):
                     legacy_value = value[1:]  # Remove prefix for legacy
@@ -448,9 +454,10 @@ class StreamingVCDParser:
                 self._variable_values[var_id] = legacy_value
                 
                 # Update variable object
-                var = self._variables[var_id]
+                var = var_dict[var_id]
                 var.value = legacy_value
                 var.last_changed = self._ticks
+                
                 
                 # Call handler
                 fields = {'var': var_id, 'value': legacy_value}
@@ -458,6 +465,9 @@ class StreamingVCDParser:
                     self.initial_value_handler(line, fields)
                 else:
                     self.value_change_handler(line, fields)
+            else:
+                # Variable not found - this shouldn't happen if parsing is correct
+                pass
                 
     def _parse_statement_fields(self, line: str) -> Dict[str, Any]:
         """Parse statement into fields (for compatibility)."""
@@ -573,6 +583,9 @@ class StreamingVCDParser:
                     results.append(self._variables_compat[eff_var.id])
                 elif eff_var.id in self._variables:
                     results.append(self._variables[eff_var.id])
+                elif hasattr(self, '_vars') and eff_var.id in self._vars:
+                    # Support for hierarchy mixin
+                    results.append(self._vars[eff_var.id])
             return results
         else:
             # Fall back to legacy search

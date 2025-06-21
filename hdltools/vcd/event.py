@@ -389,9 +389,8 @@ def get_tracker_class(parser_class: Type) -> Type:
 
         def value_change_handler(self, stmt, fields):
             """Handle value change."""
-            var = self.variables[fields["var"]]
-            var.value = fields["value"]
-            var.last_changed = self.current_time
+            # StreamingVCDParser already updates var.value and var.last_changed correctly
+            # We only need to check timing validity for event processing
             if (
                 self.time_valid is False
                 or self.waiting_precondition

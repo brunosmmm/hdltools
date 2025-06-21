@@ -52,6 +52,9 @@ class Pattern:
 
     def match(self, value: Union[str, bytes]) -> bool:
         """Match against value."""
+        if value is None:
+            # Handle None values (uninitialized signals) as no match
+            return False
         if not isinstance(value, (str, bytes)):
             raise TypeError(
                 f"value must be string or bytes, got {type(value)}"
