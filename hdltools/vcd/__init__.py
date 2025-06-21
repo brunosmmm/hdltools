@@ -1,5 +1,7 @@
 """Value change dump stuff."""
 
+from .compare import VCDComparator, VCDComparisonResult, VCDStreamingComparator, compare_vcd_files
+
 
 class VCDObject:
     """Abstract VCD object class."""
