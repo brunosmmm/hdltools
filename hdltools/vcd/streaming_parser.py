@@ -383,11 +383,14 @@ class StreamingVCDParser:
         parts = line.split()
         if len(parts) >= 3:
             scope_name = parts[2]
-            self._scope_stack.append(scope_name)
+            # Only manage scope stack if no hierarchy mixin is present
+            if not hasattr(self, '_scope_map'):
+                self._scope_stack.append(scope_name)
             
     def _parse_scope_end(self):
         """Parse $upscope statement."""
-        if self._scope_stack:
+        # Only manage scope stack if no hierarchy mixin is present
+        if not hasattr(self, '_scope_map') and self._scope_stack:
             self._scope_stack.pop()
             
     def _parse_timescale(self, line: str):
