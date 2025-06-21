@@ -2,12 +2,13 @@
 
 from typing import Dict
 from hdltools.patterns.matcher import PatternMatcher
-from hdltools.vcd.parser import BaseVCDParser, VAR_PARSER
+from hdltools.vcd.streaming_parser import StreamingVCDParser
+from hdltools.vcd.parser import VAR_PARSER
 from hdltools.vcd.variable import VCDVariable
 
 
 # TODO: extract pattern matching logic and abstract to generic data source
-class VCDPatternMatcher(BaseVCDParser):
+class VCDPatternMatcher(StreamingVCDParser):
     """VCD pattern matcher."""
 
     def __init__(

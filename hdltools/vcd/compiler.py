@@ -3,7 +3,7 @@
 # import struct
 import pickle
 from hdltools.vcd import VCDObject
-from hdltools.vcd.parser import BaseVCDParser
+from hdltools.vcd.streaming_parser import StreamingVCDParser
 from hdltools.vcd.mixins.hierarchy import VCDHierarchyAnalysisMixin
 
 
@@ -51,7 +51,7 @@ class VCDTimeSnapshot(VCDObject):
 
 
 # FIXME: this breaks with variables that are not initialized properly
-class VCDCompiler(BaseVCDParser, VCDHierarchyAnalysisMixin):
+class VCDCompiler(StreamingVCDParser, VCDHierarchyAnalysisMixin):
     """VCD compiler."""
 
     def __init__(self, delta_evts: bool = True, **kwargs):

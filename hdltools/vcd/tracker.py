@@ -3,7 +3,8 @@
 import re
 from typing import Tuple, Optional, Union
 from hdltools.vcd import VCDScope
-from hdltools.vcd.parser import BaseVCDParser, VCDParserError
+from hdltools.vcd.streaming_parser import StreamingVCDParser
+from hdltools.vcd.parser import VCDParserError
 from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
 from hdltools.patterns import Pattern
@@ -13,7 +14,7 @@ from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
 # TODO: multi value tracker
 # FIXME: avoid expensive duplications of data
 class VCDValueTracker(
-    BaseVCDParser, VCDConditionMixin, VCDTimeRestrictionMixin
+    StreamingVCDParser, VCDConditionMixin, VCDTimeRestrictionMixin
 ):
     """VCD Value tracker.
 

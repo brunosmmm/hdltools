@@ -5,11 +5,11 @@ import re
 from typing import Optional, Tuple
 from argparse import ArgumentParser
 from hdltools.vcd.mixins.hierarchy import VCDHierarchyAnalysisMixin
-from hdltools.vcd.parser import BaseVCDParser
+from hdltools.vcd.streaming_parser import StreamingVCDParser
 from hdltools.vcd import VCDScope
 
 
-class VCDHierarchyExplorer(BaseVCDParser, VCDHierarchyAnalysisMixin):
+class VCDHierarchyExplorer(StreamingVCDParser, VCDHierarchyAnalysisMixin):
     """Hierarchy explorer."""
 
     def __init__(

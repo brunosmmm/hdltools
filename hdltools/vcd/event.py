@@ -8,7 +8,8 @@ from colorama import Back, Fore, init
 from hdltools.vcd import VCDObject
 from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
-from hdltools.vcd.parser import BaseVCDParser, CompiledVCDParser
+from hdltools.vcd.streaming_parser import StreamingVCDParser
+from hdltools.vcd.parser import CompiledVCDParser
 from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.trigger.condtable import ConditionTableTrigger
 from hdltools.vcd.trigger.fsm import SimpleTrigger
@@ -369,5 +370,5 @@ def get_tracker_class(parser_class: Type) -> Type:
     return VCDEventTracker
 
 
-VCDEventTrackerLegacy = get_tracker_class(BaseVCDParser)
+VCDEventTrackerLegacy = get_tracker_class(StreamingVCDParser)
 VCDEventTrackerCompiled = get_tracker_class(CompiledVCDParser)

@@ -108,86 +108,8 @@ VCD_VAR_LINES = [
 ]
 
 
-class BaseVCDParser(DataParser):
-    """Simple VCD parser."""
-
-    def __init__(self, **kwargs):
-        """Initialize."""
-        super().__init__("header", consume_spaces=True)
-        if "debug" in kwargs:
-            self._debug = kwargs["debug"]
-        else:
-            self._debug = False
-        self._ticks = 0
-        self._old_ticks = 0
-
-    @property
-    def current_time(self):
-        """Get current time."""
-        return self._ticks
-
-    @property
-    def last_cycle_time(self):
-        """Get last simulation cycle time."""
-        return self._old_ticks
-
-    def header_statement_handler(self, stmt, fields):
-        """Handle header statement."""
-
-    def initial_value_handler(self, stmt, fields):
-        """Handle initial value assignment."""
-
-    def value_change_handler(self, stmt, fields):
-        """Handle value change."""
-
-    def clock_change_handler(self, time):
-        """Handle clock change."""
-
-    def _advance_clock(self, ticks):
-        """Advance wall clock."""
-        self.clock_change_handler(ticks)
-        self._old_ticks = self._ticks
-        self._ticks = ticks
-
-    def _state_header(self, position):
-        """Parse."""
-        try:
-            size, stmt, fields, text, consumed = self._try_parse(
-                VCD_DEFINITION_LINES, position
-            )
-        except ParserError:
-            if self._debug is False:
-                raise
-
-            print(
-                "DEBUG: parsing failed at line {}, offending line next".format(
-                    self.current_line
-                )
-            )
-            print(self._data[position:].split(b"\n")[0].decode())
-            print("DEBUG: aborting")
-            exit(1)
-
-        self.header_statement_handler(stmt, fields)
-        return (size, stmt, fields, text, consumed)
-
-    def _state_initial(self, position):
-        size, stmt, fields, text, consumed = self._try_parse(
-            VCD_VAR_LINES + [END_PARSER], position
-        )
-        if stmt != END_PARSER:
-            self.initial_value_handler(stmt, fields)
-        return (size, stmt, fields, text, consumed)
-
-    def _state_dump(self, position):
-        size, stmt, fields, text, consumed = self._try_parse(
-            VCD_VAR_LINES, position
-        )
-        if stmt == SIM_TIME_PARSER:
-            self._advance_clock(int(fields["time"]))
-        elif stmt != DUMPVARS_PARSER:
-            self.value_change_handler(stmt, fields)
-        return (size, stmt, fields, text, consumed)
+# Legacy BaseVCDParser has been replaced by StreamingVCDParser
+# Backward compatibility is provided by the lazy loader below
 
 
 class CompiledVCDParser:
@@ -293,3 +215,23 @@ class CompiledVCDParser:
                     break
                 else:
                     raise RuntimeError("unknown value in dump")
+
+# Backward compatibility - simple lazy import to avoid circular imports
+# BaseVCDParser is now just an alias that's set at first access
+
+_streaming_parser_class = None
+
+def _get_streaming_parser_class():
+    """Get the StreamingVCDParser class, cached."""
+    global _streaming_parser_class
+    if _streaming_parser_class is None:
+        from .streaming_parser import StreamingVCDParser
+        _streaming_parser_class = StreamingVCDParser
+    return _streaming_parser_class
+
+# Simple module-level __getattr__ for lazy loading
+def __getattr__(name):
+    """Module-level getattr for lazy loading of BaseVCDParser."""
+    if name == 'BaseVCDParser':
+        return _get_streaming_parser_class()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
