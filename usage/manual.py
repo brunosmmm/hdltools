@@ -1,10 +1,9 @@
 """Build structural modules manually."""
 
 from hdltools.abshdl.module import HDLModule, HDLModuleTypedPort
-from hdltools.abshdl.assign import HDLAssignment
 from hdltools.abshdl.signal import HDLSignal
-from hdltools.abshdl.expr import HDLExpression
-from hdltools.specc.codegen import SpecCCodeGenerator
+from hdltools.verilog.codegen import VerilogCodeGenerator
+from hdltools.vhdl.codegen import VHDLCodeGenerator
 
 
 if __name__ == "__main__":
@@ -18,5 +17,11 @@ if __name__ == "__main__":
     # test_mod.add(HDLAssignment(-mod_ports[2],
     #                           HDLExpression('operandA')*HDLExpression('operandB')))
 
-    gen = SpecCCodeGenerator(indent=True)
-    print(gen.dump_element(test_mod))
+    verilog_gen = VerilogCodeGenerator(indent=True)
+    vhdl_gen = VHDLCodeGenerator()
+    
+    print("Verilog Code:")
+    print(verilog_gen.dump_element(test_mod))
+    print()
+    print("VHDL Code:")
+    print(vhdl_gen.dump_element(test_mod))
