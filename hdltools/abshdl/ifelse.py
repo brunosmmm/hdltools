@@ -33,7 +33,7 @@ class HDLIfElse(HDLStatement):
                 self.add_to_if_scope(if_scope)
         if else_scope is not None:
             if isinstance(else_scope, (tuple, list)):
-                self.add_toelse_scope(*else_scope)
+                self.add_to_else_scope(*else_scope)
             else:
                 self.add_to_else_scope(else_scope)
 
