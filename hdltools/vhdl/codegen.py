@@ -112,10 +112,19 @@ class VHDLCodeGenerator(HDLCodeGenerator):
         return ret_str
 
     def gen_HDLModule(self, element, **kwargs):
-        """Generate module."""
+        """Generate module with automatic library headers."""
         ret_str = ""
+        
+        # Analyze and generate required library headers
+        required_libraries = self._analyze_required_libraries(element)
+        library_headers = self._generate_library_headers(required_libraries)
+        ret_str += library_headers
+        
+        # Generate constants
         for constant in element.constants:
             ret_str += self.dump_element(constant) + "\n"
+        
+        # Generate entity declaration
         ret_str += "entity {} is\n".format(element.name)
         if len(element.params) > 0:
             ret_str += "generic("
@@ -163,6 +172,135 @@ class VHDLCodeGenerator(HDLCodeGenerator):
                     if hasattr(stmt, 'else_scope') and stmt.else_scope is not None:
                         signals.extend(self._collect_signals(stmt.else_scope))
         return signals
+
+    def _analyze_required_libraries(self, element):
+        """Analyze HDL module to determine required VHDL libraries."""
+        libraries = set()
+        
+        # Always include std_logic_1164 for basic digital types
+        if self._uses_std_logic_types(element):
+            libraries.add('std_logic_1164')
+        
+        # Check for numeric operations requiring numeric_std
+        if self._uses_numeric_operations(element):
+            libraries.add('numeric_std')
+        
+        # Check for math functions
+        if self._uses_math_functions(element):
+            libraries.add('math_real')
+            
+        # Check for file I/O operations
+        if self._uses_file_operations(element):
+            libraries.add('textio')
+        
+        return libraries
+    
+    def _uses_std_logic_types(self, element):
+        """Check if module uses std_logic or std_logic_vector types."""
+        # Check ports
+        for port in element.ports:
+            if hasattr(port, 'direction'):  # It's a port
+                return True
+        
+        # Check signals in scope
+        signals = self._collect_signals(element.scope)
+        if signals:
+            return True
+            
+        return False
+    
+    def _uses_numeric_operations(self, element):
+        """Check if module uses numeric operations requiring numeric_std."""
+        # Look for arithmetic operations in scope
+        return self._scan_scope_for_numeric(element.scope)
+    
+    def _scan_scope_for_numeric(self, scope):
+        """Recursively scan scope for numeric operations."""
+        if hasattr(scope, 'statements'):
+            for stmt in scope.statements:
+                # Check assignments for arithmetic that requires numeric_std
+                if hasattr(stmt, 'value') and hasattr(stmt.value, 'dumps'):
+                    expr_str = stmt.value.dumps()
+                    # Look for operations that specifically need numeric_std
+                    numeric_ops = ['unsigned', 'signed', 'to_integer', 'to_unsigned', 'to_signed']
+                    if any(op in expr_str for op in numeric_ops):
+                        return True
+                    # Simple arithmetic might not need numeric_std if it's just integer literals
+                    
+                # Check if we have vector arithmetic (which needs numeric_std)
+                if hasattr(stmt, 'signal') and hasattr(stmt.signal, 'vector'):
+                    if hasattr(stmt, 'value') and hasattr(stmt.value, 'dumps'):
+                        expr_str = stmt.value.dumps()
+                        if any(op in expr_str for op in ['+', '-']):  # Vector arithmetic
+                            return True
+                
+                # Recursively check nested scopes
+                if hasattr(stmt, 'scope'):
+                    if self._scan_scope_for_numeric(stmt.scope):
+                        return True
+                if hasattr(stmt, 'if_scope'):
+                    if self._scan_scope_for_numeric(stmt.if_scope):
+                        return True
+                if hasattr(stmt, 'else_scope') and stmt.else_scope:
+                    if self._scan_scope_for_numeric(stmt.else_scope):
+                        return True
+        return False
+    
+    def _uses_math_functions(self, element):
+        """Check if module uses math functions requiring math_real."""
+        # Look for math functions like sin, cos, sqrt, etc.
+        return self._scan_scope_for_math(element.scope)
+    
+    def _scan_scope_for_math(self, scope):
+        """Recursively scan scope for math functions."""
+        if hasattr(scope, 'statements'):
+            for stmt in scope.statements:
+                if hasattr(stmt, 'value') and hasattr(stmt.value, 'dumps'):
+                    expr_str = stmt.value.dumps()
+                    math_funcs = ['sin', 'cos', 'tan', 'sqrt', 'log', 'exp', 'abs', 'ceil', 'floor']
+                    if any(func in expr_str for func in math_funcs):
+                        return True
+        return False
+    
+    def _uses_file_operations(self, element):
+        """Check if module uses file I/O operations."""
+        # For now, return False as file I/O is rare in synthesizable code
+        # Could be extended to detect file operations in testbenches
+        return False
+    
+    def _generate_library_headers(self, libraries):
+        """Generate VHDL library and use statements."""
+        header_str = ""
+        
+        if not libraries:
+            return header_str
+        
+        # IEEE library declaration (only if we need IEEE packages)
+        ieee_packages = ['std_logic_1164', 'numeric_std', 'math_real']
+        if any(lib in libraries for lib in ieee_packages):
+            header_str += "library ieee;\n"
+        
+        # Standard library packages
+        if 'std_logic_1164' in libraries:
+            header_str += "use ieee.std_logic_1164.all;\n"
+        
+        if 'numeric_std' in libraries:
+            header_str += "use ieee.numeric_std.all;\n"
+        
+        if 'math_real' in libraries:
+            header_str += "use ieee.math_real.all;\n"
+        
+        # Standard textio library
+        if 'textio' in libraries:
+            header_str += "library std;\n"
+            header_str += "use std.textio.all;\n"
+            header_str += "use ieee.std_logic_textio.all;\n"
+        
+        # Add blank line after headers if any were generated
+        if header_str:
+            header_str += "\n"
+        
+        return header_str
 
     def gen_HDLComment(self, element, **kwargs):
         """Generate comment."""
