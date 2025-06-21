@@ -1,0 +1,59 @@
+$date
+   Test VCD with real numbers
+$end
+$version
+   Test VCD Generator
+$end
+$timescale 1ns $end
+
+$scope module test $end
+$var real 64 ! temperature $end
+$var real 64 " voltage $end
+$var real 64 # current $end
+$var real 64 $ power $end
+$upscope $end
+
+$enddefinitions $end
+
+$dumpvars
+r0.0 !
+r3.3 "
+r0.001 #
+r0.0033 $
+$end
+
+#0
+r25.5 !
+r3.3 "
+r0.001 #
+r0.0033 $
+
+#10
+r25.6 !
+r3.29 "
+r0.0011 #
+r0.003619 $
+
+#20
+r25.7 !
+r3.28 "
+r0.0012 #
+r0.003936 $
+
+#30
+r-5.0 !
+r0.0 "
+r0.0 #
+r0.0 $
+
+#40
+r1.23e-6 !
+r4.56e2 "
+r-7.89e-3 #
+r9.99e10 $
+
+#50
+r1.0e+3 !
+r-2.5e-4 "
+r6.7e+8 #
+r-1.1e-12 $
