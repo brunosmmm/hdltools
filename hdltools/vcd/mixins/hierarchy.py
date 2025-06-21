@@ -79,7 +79,26 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
     def variable_search(
         self, var_name, scope: Optional[VCDScope] = None, aliases: bool = False
     ) -> Set[VCDVariable]:
-        """Search for variable."""
+        """Search for variable with efficient indexing when available."""
+        
+        # Try to use efficient storage if available
+        if hasattr(self, '_use_efficient') and self._use_efficient:
+            # Use efficient indexed search
+            scope_str = str(scope) if scope is not None else None
+            
+            # Try efficient search first
+            try:
+                efficient_results = self.find_variables_efficient(
+                    name=var_name, 
+                    scope=scope_str
+                )
+                # Convert back to set of VCDVariable objects
+                return set(efficient_results)
+            except (AttributeError, KeyError):
+                # Fall back to legacy search if efficient storage not available
+                pass
+        
+        # Legacy linear search implementation
         candidates = set()
         for var in self._vars.values():
             if aliases:

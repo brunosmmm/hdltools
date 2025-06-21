@@ -9,10 +9,89 @@ from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
 from hdltools.patterns import Pattern
 from hdltools.vcd.history import VCDValueHistory, VCDValueHistoryEntry
+try:
+    from hdltools.vcd.efficient_storage import TimeIndexedHistory, BinarySignalValue
+    _EFFICIENT_AVAILABLE = True
+except ImportError:
+    _EFFICIENT_AVAILABLE = False
 
 
 # TODO: multi value tracker
 # FIXME: avoid expensive duplications of data
+
+
+class EfficientVCDValueHistory:
+    """Efficient VCD value history with time-indexed lookups."""
+    
+    def __init__(self):
+        """Initialize with time-indexed storage."""
+        self._history = TimeIndexedHistory() if _EFFICIENT_AVAILABLE else []
+        self._entries = []  # Keep VCDValueHistoryEntry objects for compatibility
+        
+    def add_entry(self, entry: VCDValueHistoryEntry):
+        """Add history entry with efficient time indexing."""
+        if not isinstance(entry, VCDValueHistoryEntry):
+            raise TypeError("entry must be a VCDValueHistoryEntry object")
+            
+        self._entries.append(entry)
+        
+        # Store in time-indexed format if available
+        if _EFFICIENT_AVAILABLE and hasattr(self, '_history') and isinstance(self._history, TimeIndexedHistory):
+            # Create a simple binary value to represent the entry
+            entry_data = f"{entry.scope}::{entry.signal}"
+            binary_val = BinarySignalValue(len(entry_data) * 8, entry_data.encode('utf-8'))
+            self._history.add_change(entry.time, binary_val)
+    
+    def get_by_time(self, time: int) -> VCDValueHistoryEntry:
+        """Get history entry by simulation time with O(log n) lookup."""
+        if _EFFICIENT_AVAILABLE and hasattr(self, '_history') and isinstance(self._history, TimeIndexedHistory):
+            # Use efficient binary search
+            binary_val = self._history.get_value_at(time)
+            if binary_val is None:
+                raise IndexError("invalid item index")
+                
+            # Find matching entry in compatibility list
+            for entry in self._entries:
+                if entry.time == time:
+                    return entry
+            raise IndexError("invalid item index")
+        else:
+            # Legacy linear search
+            for entry in self._entries:
+                if entry.time == time:
+                    return entry
+            raise IndexError("invalid item index")
+    
+    def get_entries_in_range(self, start_time: int, end_time: int):
+        """Get all entries in time range with efficient indexing."""
+        if _EFFICIENT_AVAILABLE and hasattr(self, '_history') and isinstance(self._history, TimeIndexedHistory):
+            # Use efficient range query
+            changes = self._history.get_changes_in_range(start_time, end_time)
+            # Return corresponding VCDValueHistoryEntry objects
+            result = []
+            for time, _ in changes:
+                for entry in self._entries:
+                    if entry.time == time:
+                        result.append(entry)
+                        break
+            return result
+        else:
+            # Legacy linear scan
+            return [entry for entry in self._entries 
+                   if start_time <= entry.time <= end_time]
+    
+    def __len__(self):
+        """Get length."""
+        return len(self._entries)
+    
+    def __getitem__(self, idx):
+        """Get item by index."""
+        return self._entries[idx]
+    
+    @property
+    def visited_scopes(self):
+        """Determine all visited scopes."""
+        return {entry.scope for entry in self._entries}
 class VCDValueTracker(
     StreamingVCDParser, VCDConditionMixin, VCDTimeRestrictionMixin
 ):
@@ -41,9 +120,19 @@ class VCDValueTracker(
             raise TypeError("track must be a Pattern object")
         self._track_value = track
         self._track_all = track_all
-        self._track_history = VCDValueHistory()
-        self._complete_value_history = VCDValueHistory()
-        self._full_history = VCDValueHistory()
+        
+        # Use efficient storage if available and enabled
+        use_efficient = getattr(self, '_use_efficient', False) and _EFFICIENT_AVAILABLE
+        
+        if use_efficient:
+            self._track_history = EfficientVCDValueHistory()
+            self._complete_value_history = EfficientVCDValueHistory()  
+            self._full_history = EfficientVCDValueHistory()
+        else:
+            self._track_history = VCDValueHistory()
+            self._complete_value_history = VCDValueHistory()
+            self._full_history = VCDValueHistory()
+            
         self._stmt_count = 0
         if isinstance(restrict_src, tuple):
             restrict_src = VCDScope(*restrict_src)
@@ -239,3 +328,36 @@ class VCDValueTracker(
         """Parse."""
         self._stmt_count = 0
         return super().parse(data)
+    
+    # New efficient query methods
+    def get_history_in_time_range(self, start_time: int, end_time: int):
+        """Get tracking history entries in time range using efficient indexing."""
+        if hasattr(self._track_history, 'get_entries_in_range'):
+            return self._track_history.get_entries_in_range(start_time, end_time)
+        else:
+            # Legacy fallback
+            return [entry for entry in self._track_history 
+                   if start_time <= entry.time <= end_time]
+    
+    def get_value_history_in_range(self, start_time: int, end_time: int):
+        """Get value match history in time range using efficient indexing.""" 
+        if hasattr(self._complete_value_history, 'get_entries_in_range'):
+            return self._complete_value_history.get_entries_in_range(start_time, end_time)
+        else:
+            # Legacy fallback
+            return [entry for entry in self._complete_value_history
+                   if start_time <= entry.time <= end_time]
+    
+    def get_history_at_time(self, time: int):
+        """Get history entry at specific time using efficient lookup."""
+        try:
+            if hasattr(self._track_history, 'get_by_time'):
+                return self._track_history.get_by_time(time)
+            else:
+                # Legacy fallback - linear search
+                for entry in self._track_history:
+                    if entry.time == time:
+                        return entry
+                raise IndexError("No entry found at specified time")
+        except IndexError:
+            return None

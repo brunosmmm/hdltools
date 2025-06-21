@@ -54,11 +54,66 @@ class VCDHierarchyExplorer(StreamingVCDParser, VCDHierarchyAnalysisMixin):
         self._abort_parser()
 
     def parse(self, data):
-        """Parse."""
+        """Parse with efficient filtering when available."""
         super().parse(data)
 
+        # Use efficient search if available, otherwise fall back to legacy
+        if hasattr(self, '_use_efficient') and self._use_efficient:
+            self._selected_vars = self._efficient_filtering()
+        else:
+            self._selected_vars = self._legacy_filtering()
+
+    def _efficient_filtering(self):
+        """Use efficient indexed searches for filtering."""
+        selected_vars = {}
+        
+        try:
+            # If no filters, get all variables efficiently  
+            if self._allowed_scopes is None and self._signal_regexes is None:
+                efficient_vars = self.find_variables_efficient()
+                return {var.get_first_identifier(): var for var in efficient_vars}
+            
+            # Apply scope filtering using indexed lookups
+            candidate_vars = []
+            
+            if self._allowed_scopes is not None:
+                # Use indexed scope searches
+                for scope, inclusive in self._allowed_scopes:
+                    scope_str = str(scope)
+                    if inclusive:
+                        # Find all variables in scope and subscopes (pattern search)
+                        pattern = f"{scope_str}.*" if scope_str else "*"
+                        vars_in_scope = self.find_variables_efficient(pattern=pattern)
+                    else:
+                        # Find variables in exact scope only
+                        vars_in_scope = self.find_variables_efficient(scope=scope_str)
+                    
+                    candidate_vars.extend(vars_in_scope)
+            else:
+                # No scope filter - get all variables
+                candidate_vars = self.find_variables_efficient()
+            
+            # Apply name filtering
+            if self._signal_regexes is not None:
+                # Filter candidates by name regex
+                for var in candidate_vars:
+                    if self._filter_signal_by_name(var.name):
+                        selected_vars[var.get_first_identifier()] = var
+            else:
+                # No name filter - use all scope-filtered candidates
+                for var in candidate_vars:
+                    selected_vars[var.get_first_identifier()] = var
+                    
+            return selected_vars
+            
+        except (AttributeError, KeyError):
+            # Fall back to legacy filtering if efficient storage not available
+            return self._legacy_filtering()
+    
+    def _legacy_filtering(self):
+        """Legacy O(n) filtering implementation."""
         # filter by scope
-        self._selected_vars = {
+        selected_vars = {
             var_id: var
             for var_id, var in self._vars.items()
             if self._allowed_scopes is None
@@ -66,12 +121,14 @@ class VCDHierarchyExplorer(StreamingVCDParser, VCDHierarchyAnalysisMixin):
         }
 
         # filter by name
-        self._selected_vars = {
+        selected_vars = {
             var_id: var
-            for var_id, var in self._selected_vars.items()
+            for var_id, var in selected_vars.items()
             if self._signal_regexes is None
             or self._filter_signal_by_name(var.name)
         }
+        
+        return selected_vars
 
     @property
     def selected_vars(self):

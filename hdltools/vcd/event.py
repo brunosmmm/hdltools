@@ -10,6 +10,11 @@ from hdltools.vcd.mixins.conditions import VCDConditionMixin
 from hdltools.vcd.mixins.time import VCDTimeRestrictionMixin
 from hdltools.vcd.streaming_parser import StreamingVCDParser
 from hdltools.vcd.parser import CompiledVCDParser
+try:
+    from hdltools.vcd.efficient_storage import BinarySignalValue
+    _EFFICIENT_AVAILABLE = True
+except ImportError:
+    _EFFICIENT_AVAILABLE = False
 from hdltools.vcd.trigger import VCDTriggerDescriptor
 from hdltools.vcd.trigger.condtable import ConditionTableTrigger
 from hdltools.vcd.trigger.fsm import SimpleTrigger
@@ -292,26 +297,41 @@ def get_tracker_class(parser_class: Type) -> Type:
                 )
 
         def _state_change_handler(self, old_state, new_state):
-            """Detect state transition."""
+            """Detect state transition with efficient variable lookups."""
             super()._state_change_handler(old_state, new_state)
             # when header state finishes, we have list of variables
             if old_state == "header":
                 # add VCD variable identifiers to condition table elements
                 for _, (condtable, _) in self._evt_triggers.items():
                     for cond in condtable.global_sensitivity_list:
-                        # post-process now
-                        candidates = self.variable_search(
-                            cond.name, cond.scope, True
-                        )
+                        # Use efficient search if available
+                        candidates = self._find_variables_for_condition(cond)
                         if not candidates:
                             raise RuntimeError("cannot locate VCD variable")
                         # associate with first candidate
                         cond.vcd_var = list(candidates)[0].identifiers[0]
                 if self._debug:
                     print("DEBUG: header parsing completed")
+        
+        def _find_variables_for_condition(self, cond):
+            """Find variables for condition using efficient search when available."""
+            # Try efficient search first if available
+            if hasattr(self, 'find_variables_efficient'):
+                try:
+                    scope_str = str(cond.scope) if cond.scope else None
+                    efficient_vars = self.find_variables_efficient(
+                        name=cond.name, scope=scope_str
+                    )
+                    if efficient_vars:
+                        return set(efficient_vars)
+                except (AttributeError, KeyError):
+                    pass
+            
+            # Fall back to legacy search
+            return self.variable_search(cond.name, cond.scope, True)
 
         def clock_change_handler(self, time):
-            """Handle time."""
+            """Handle time with optimized variable access."""
             if time == 0:
                 return
             for condtable, _ in self._evt_triggers.values():
@@ -319,14 +339,16 @@ def get_tracker_class(parser_class: Type) -> Type:
                 if condtable.trigger_armed is False:
                     condtable.arm_trigger()
             for condtable, _ in self._evt_triggers.values():
-                # update consolidated values
+                # update consolidated values with optimized access
                 changed = []
                 for cond in condtable.sensitivity_list:
-                    # pick variables directly for speed
-                    var = self.variables[cond.vcd_var]
-                    if var.last_changed == self.last_cycle_time:
+                    # Optimized variable access
+                    var = self._get_variable_optimized(cond.vcd_var)
+                    if var and var.last_changed == self.last_cycle_time:
+                        # Use efficient value operations if available
+                        value = self._get_variable_value_optimized(var)
                         _changed, state, stop = condtable.advance(
-                            cond, var.value, self.last_cycle_time
+                            cond, value, self.last_cycle_time
                         )
                         if _changed:
                             changed.append((cond, state))
@@ -348,6 +370,17 @@ def get_tracker_class(parser_class: Type) -> Type:
 
                 # check and fire trigger. NOTE: potentially much slower in here
                 condtable.check_and_fire(self.last_cycle_time)
+        
+        def _get_variable_optimized(self, var_id):
+            """Get variable with optimized access patterns."""
+            # Direct access is fastest
+            return self.variables.get(var_id)
+        
+        def _get_variable_value_optimized(self, var):
+            """Get variable value with potential binary optimization."""
+            # For now, return string value for compatibility
+            # Future enhancement: use binary operations for pattern matching
+            return var.value
 
         def initial_value_handler(self, stmt, fields):
             """Handle initial value assignment."""
@@ -366,6 +399,35 @@ def get_tracker_class(parser_class: Type) -> Type:
             ):
                 return
             # update local variable value
+        
+        # Efficient query methods for event analysis
+        def get_events_in_time_range(self, start_time: int, end_time: int):
+            """Get events that occurred in specified time range."""
+            return [evt for evt in self._event_history 
+                   if start_time <= evt.time <= end_time]
+        
+        def get_events_by_type(self, evt_type: str):
+            """Get all events of specific type."""
+            return [evt for evt in self._event_history if evt.evt_type == evt_type]
+        
+        def get_event_statistics_efficient(self):
+            """Get comprehensive event statistics with efficient calculations."""
+            stats = {
+                'total_events': len(self._event_history),
+                'events_by_type': self.event_counts.copy(),
+                'total_cycles_by_type': self.event_cycles.copy(),
+                'average_duration_by_type': {}
+            }
+            
+            # Calculate average durations efficiently
+            for evt_type, total_cycles in stats['total_cycles_by_type'].items():
+                event_count = stats['events_by_type'].get(evt_type, 0)
+                if event_count > 0:
+                    stats['average_duration_by_type'][evt_type] = total_cycles / event_count
+                else:
+                    stats['average_duration_by_type'][evt_type] = 0
+            
+            return stats
 
     return VCDEventTracker
 
