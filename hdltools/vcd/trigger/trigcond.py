@@ -35,8 +35,18 @@ class TriggerConditionVisitor(ASTVisitor):
 
     def visit_TriggerCondition(self, node):
         """Visit trigger condition."""
-        name = node.sig.name.split("::")[-1]
-        scope = "::".join(node.sig.name.split("::")[:-1])
+        parts = node.sig.name.split("::")
+        if len(parts) < 2:
+            raise RuntimeError(f"Invalid signal path '{node.sig.name}': must use format 'scope::signal_name'")
+        
+        name = parts[-1]
+        scope = "::".join(parts[:-1])
+        
+        # Validate scope and signal name are not empty
+        if not scope.strip():
+            raise RuntimeError(f"Empty scope in signal path '{node.sig.name}': scope::signal_name format required")
+        if not name.strip():
+            raise RuntimeError(f"Empty signal name in signal path '{node.sig.name}': scope::signal_name format required")
         if hasattr(node.sig, "slice") and node.sig.slice is not None:
             # create pattern with many don't cares
             m = re.match(r"[01xX]+", node.value)
@@ -89,10 +99,18 @@ class TriggerConditionVisitor(ASTVisitor):
         else:
             pattern = node.value
 
-        cond = VCDTriggerDescriptor(
-            scope, name, pattern, negate=node.op == "!="
-        )
-        self._conditions.append(cond)
+        try:
+            cond = VCDTriggerDescriptor(
+                scope, name, pattern, negate=node.op == "!="
+            )
+            self._conditions.append(cond)
+        except Exception as e:
+            # Provide context about which condition failed
+            condition_str = f"{scope}::{name}{node.op}{node.value}"
+            raise RuntimeError(
+                f"Error parsing trigger condition '{condition_str}': {e}\n"
+                f"Hint: Check that the pattern value is in correct format."
+            ) from e
 
     def visit_SignalDescriptor(self, node):
         """Visit signal descriptor."""
@@ -157,7 +175,43 @@ def parse_trigcond(text):
 
 def build_descriptors_from_str(cond):
     """Build list of trigger descriptors from string."""
-    ast = parse_trigcond(cond)
-    visitor = TriggerConditionVisitor()
-    visitor.visit(ast)
-    return (visitor.get_conditions(), visitor.get_mode())
+    try:
+        ast = parse_trigcond(cond)
+        visitor = TriggerConditionVisitor()
+        visitor.visit(ast)
+        return (visitor.get_conditions(), visitor.get_mode())
+    except Exception as e:
+        # Provide comprehensive error information
+        error_msg = f"Failed to parse trigger condition: '{cond}'\n"
+        
+        # Check for common syntax errors
+        if '==' not in cond and '!=' not in cond:
+            error_msg += "Error: Missing comparison operator. Use '==' or '!=' to compare values.\n"
+            error_msg += "Example: 'cpu::state==0011' or 'reset!=1'\n"
+        elif '::' not in cond:
+            error_msg += "Error: Missing scope separator. Use '::' to separate scope and signal name.\n"
+            error_msg += "Example: 'module_name::signal_name==value'\n"
+        else:
+            # Extract the pattern value to provide specific feedback
+            parts = cond.split('==') if '==' in cond else cond.split('!=')
+            if len(parts) == 2:
+                pattern_value = parts[1].strip()
+                error_msg += f"Error: Invalid pattern value '{pattern_value}'\n"
+                
+                # Check if it's a decimal number that should be binary
+                if pattern_value.isdigit():
+                    decimal_val = int(pattern_value)
+                    binary_suggestion = bin(decimal_val)[2:]
+                    error_msg += f"Hint: '{pattern_value}' appears to be decimal. Try '{binary_suggestion}' (binary)\n"
+                elif any(c in pattern_value for c in '23456789'):
+                    error_msg += "Hint: VCD patterns must be binary (0,1,x,X) or hex with 'h' suffix\n"
+            
+            error_msg += f"Original error: {e}\n"
+        
+        error_msg += "\nValid condition formats:\n"
+        error_msg += "  • scope::signal==binary_pattern (e.g., 'cpu::state==0011')\n"
+        error_msg += "  • scope::signal==hex_pattern (e.g., 'bus::addr==A000h')\n"
+        error_msg += "  • scope::signal!=pattern (for negated conditions)\n"
+        error_msg += "  • Multiple conditions with && or =>\n"
+        
+        raise RuntimeError(error_msg) from e

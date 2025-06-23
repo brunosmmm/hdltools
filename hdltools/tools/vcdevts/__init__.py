@@ -215,8 +215,16 @@ def main():
     events = {}
     for event in parsed_cfg["events"]:
         name = event.pop("name")
-        cond = build_descriptors_from_str(event.pop("conds"))
-        events[name] = (cond, event)
+        cond_str = event.pop("conds")
+        try:
+            cond = build_descriptors_from_str(cond_str)
+            events[name] = (cond, event)
+        except Exception as e:
+            print(f"Error in event '{name}':")
+            print(f"Condition: '{cond_str}'")
+            print(f"{e}")
+            print()
+            exit(1)
 
     evt_tracker = tracker_class(
         events=events,

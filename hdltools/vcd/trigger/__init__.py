@@ -25,6 +25,7 @@ class VCDTriggerDescriptor(VCDObject):
         value: Union[Pattern, str],
         vcd_var: Optional[str] = None,
         negate: bool = False,
+        signal_width: Optional[int] = None,
     ):
         """Initialize."""
         super().__init__()
@@ -35,14 +36,58 @@ class VCDTriggerDescriptor(VCDObject):
         else:
             raise TypeError("scope must be either string or VCDScope object")
         self._name = name
+        
+        # Create pattern and validate width if signal width is known
         if isinstance(value, Pattern):
             self._value = value
-        elif isinstance(value, (str, bytes)):
+        elif isinstance(value, (str, bytes, int)):
             self._value = Pattern(value)
         else:
-            raise TypeError("value must be Pattern object or str or bytes")
+            raise TypeError("value must be Pattern object, str, bytes, or int")
+            
+        # Validate pattern width against signal width
+        if signal_width is not None:
+            self._validate_pattern_width(signal_width, value)
+            
         self._vcd_var = vcd_var
         self._negate = negate
+        self._signal_width = signal_width
+    
+    def _validate_pattern_width(self, signal_width: int, original_value):
+        """Validate that pattern width matches signal width."""
+        pattern_width = len(self._value.pattern)
+        
+        if pattern_width != signal_width:
+            # Provide helpful warning/error based on the mismatch
+            scope_signal = f"{self._scope}::{self._name}"
+            
+            if pattern_width < signal_width:
+                # Pattern is too narrow - could auto-pad with warnings
+                padding_needed = signal_width - pattern_width
+                suggested_pattern = '0' * padding_needed + self._value.pattern
+                
+                import warnings
+                warnings.warn(
+                    f"Pattern width mismatch for '{scope_signal}':\n"
+                    f"  Signal width: {signal_width} bits\n"
+                    f"  Pattern width: {pattern_width} bits ('{self._value.pattern}')\n"
+                    f"  Pattern is too narrow by {padding_needed} bits.\n"
+                    f"  Suggestion: Use '{suggested_pattern}' (zero-padded) or 'x{self._value.pattern}' (don't care padded)\n"
+                    f"  Original value: '{original_value}'",
+                    UserWarning,
+                    stacklevel=4
+                )
+            else:
+                # Pattern is too wide - this is an error
+                excess_bits = pattern_width - signal_width
+                raise ValueError(
+                    f"Pattern width mismatch for '{scope_signal}':\n"
+                    f"  Signal width: {signal_width} bits\n"
+                    f"  Pattern width: {pattern_width} bits ('{self._value.pattern}')\n"
+                    f"  Pattern is too wide by {excess_bits} bits.\n"
+                    f"  The pattern '{original_value}' cannot fit in a {signal_width}-bit signal.\n"
+                    f"  Consider using a smaller value or check the signal definition."
+                )
 
     @property
     def inverted(self):

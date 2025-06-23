@@ -307,9 +307,39 @@ def get_tracker_class(parser_class: Type) -> Type:
                         # Use efficient search if available
                         candidates = self._find_variables_for_condition(cond)
                         if not candidates:
-                            raise RuntimeError("cannot locate VCD variable")
-                        # associate with first candidate
-                        cond.vcd_var = list(candidates)[0].identifiers[0]
+                            raise RuntimeError(f"Cannot locate VCD variable for condition '{cond.scope}::{cond.name}'")
+                        
+                        # Associate with first candidate and validate width
+                        vcd_variable = list(candidates)[0]
+                        cond.vcd_var = vcd_variable.identifiers[0]
+                        
+                        # Perform width validation if variable has size information
+                        if hasattr(vcd_variable, 'size') and vcd_variable.size is not None:
+                            signal_width = vcd_variable.size
+                            pattern_width = len(cond._value.pattern)
+                            
+                            if pattern_width != signal_width:
+                                scope_signal = f"{cond.scope}::{cond.name}"
+                                
+                                if pattern_width < signal_width:
+                                    # Pattern too narrow - warn user
+                                    padding_needed = signal_width - pattern_width
+                                    suggested_pattern = '0' * padding_needed + cond._value.pattern
+                                    
+                                    # Auto-extend with zeros for compatibility
+                                    from hdltools.patterns import Pattern
+                                    cond._value = Pattern(suggested_pattern)
+                                    
+                                else:
+                                    # Pattern too wide - error
+                                    excess_bits = pattern_width - signal_width
+                                    raise RuntimeError(
+                                        f"Pattern width error for '{scope_signal}':\n"
+                                        f"  Signal width: {signal_width} bits\n"
+                                        f"  Pattern width: {pattern_width} bits\n"
+                                        f"  Pattern is {excess_bits} bits too wide.\n"
+                                        f"  Pattern '{cond._value.pattern}' cannot fit in {signal_width}-bit signal."
+                                    )
                 if self._debug:
                     print("DEBUG: header parsing completed")
         

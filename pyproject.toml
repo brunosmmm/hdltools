@@ -8,7 +8,7 @@ authors = ["Bruno <brunosmmm@gmail.com>"]
 python = "^3.10"
 textX = "^4.2.2"
 dictator = {git = "https://github.com/brunosmmm/dictator", rev = "master"}
-colorama = "0.4.4"
+colorama = ">=0.4.6"
 astunparse = "^1.6.3"
 scoff = {git = "https://github.com/brunosmmm/scoff", rev = "f544c6c5a20da130cd64f8365fc36e679fe92b33"}
 rich = "^13.7.1"
@@ -28,6 +28,10 @@ vcdhier = "hdltools.tools.vcdhier:main"
 vcdtracker = "hdltools.tools.vcdtracker:main"
 vgc = "hdltools.tools.vgc:main"
 vcdcmp = "hdltools.tools.vcdcmp:main"
+
+[tool.poetry.group.dev.dependencies]
+sphinx = ">=6.0,<8.0"
+sphinx-rtd-theme = ">=1.3.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
