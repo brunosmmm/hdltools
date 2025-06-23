@@ -385,15 +385,22 @@ def get_tracker_class(parser_class: Type) -> Type:
                 # re-arm
                 if condtable.trigger_armed is False:
                     condtable.arm_trigger()
+            
+            # First pass: collect all variables that changed this cycle
+            changed_vars = {}
             for condtable, _ in self._evt_triggers.values():
-                # update consolidated values with optimized access
-                changed = []
                 for cond in condtable.sensitivity_list:
-                    # Optimized variable access
                     var = self._get_variable_optimized(cond.vcd_var)
                     if var and var.last_changed == self.last_cycle_time:
-                        # Use efficient value operations if available
-                        value = self._get_variable_value_optimized(var)
+                        if cond.vcd_var not in changed_vars:
+                            changed_vars[cond.vcd_var] = (var, self._get_variable_value_optimized(var))
+            
+            # Second pass: update all condition tables with consistent variable states
+            for condtable, _ in self._evt_triggers.values():
+                changed = []
+                for cond in condtable.sensitivity_list:
+                    if cond.vcd_var in changed_vars:
+                        var, value = changed_vars[cond.vcd_var]
                         _changed, state, stop = condtable.advance(
                             cond, value, self.last_cycle_time
                         )
