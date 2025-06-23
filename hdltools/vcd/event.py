@@ -314,9 +314,18 @@ def get_tracker_class(parser_class: Type) -> Type:
                         # Associate with first candidate and validate width
                         # Sort candidates for deterministic selection when multiple matches
                         # This ensures consistent behavior when signals exist at multiple hierarchy levels
-                        sorted_candidates = sorted(candidates, key=lambda v: (str(v.scope), v.name, v.identifiers[0] if v.identifiers else ''))
+                        def get_variable_id(v):
+                            # Support both old (identifiers[0]) and new (id) variable formats
+                            if hasattr(v, 'identifiers') and v.identifiers:
+                                return v.identifiers[0]
+                            elif hasattr(v, 'id'):
+                                return v.id
+                            else:
+                                return ''
+                        
+                        sorted_candidates = sorted(candidates, key=lambda v: (str(getattr(v, 'scope', '')), getattr(v, 'name', ''), get_variable_id(v)))
                         vcd_variable = sorted_candidates[0]
-                        cond.vcd_var = vcd_variable.identifiers[0]
+                        cond.vcd_var = get_variable_id(vcd_variable)
                         
                         # Perform width validation if variable has size information
                         if hasattr(vcd_variable, 'size') and vcd_variable.size is not None:
@@ -334,9 +343,10 @@ def get_tracker_class(parser_class: Type) -> Type:
                                     # Auto-extend with zeros for compatibility
                                     from hdltools.patterns import Pattern
                                     # Create new descriptor to avoid changing dictionary key
+                                    # Use '0b' prefix to ensure binary interpretation
                                     new_cond = VCDTriggerDescriptor(
-                                        cond.scope, cond.name, Pattern(suggested_pattern), 
-                                        cond.vcd_var, cond.inverted, signal_width
+                                        cond.scope, cond.name, Pattern('0b' + suggested_pattern), 
+                                        vcd_var=cond.vcd_var, operator=cond.operator, signal_width=signal_width
                                     )
                                     # Update condition table to use new descriptor
                                     # Temporarily disarm to allow modifications

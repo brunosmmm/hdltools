@@ -151,7 +151,13 @@ class ConditionTableTrigger(VCDTriggerFSM):
             return
         updated_values = {}
         for cond, state in self._condtable.items():
-            if cond.match_var(var.scope, var.name, var.identifiers[0]):
+            # Support both old (identifiers[0]) and new (id) variable formats
+            var_id = var.identifiers[0] if hasattr(var, 'identifiers') and var.identifiers else getattr(var, 'id', None)
+            var_scope = getattr(var, 'scope', None)  # Old format
+            var_name = getattr(var, 'name', '')
+            
+            # For efficient storage, scope info might be in reference, but we rely on var_id matching
+            if cond.match_var(var_scope, var_name, var_id):
                 # condition in table
                 # Strip 'b' prefix from VCD binary values
                 clean_value = value.lstrip('b') if isinstance(value, str) and value.startswith('b') else value
