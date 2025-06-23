@@ -92,14 +92,27 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
                     name=var_name, 
                     scope=scope_str
                 )
-                # Convert back to set of VCDVariable objects
-                return set(efficient_results)
+                # Only return efficient results if non-empty
+                if efficient_results:
+                    return set(efficient_results)
+                    
+                # If no results and var_name doesn't have bus width, try with wildcard
+                if '[' not in var_name:
+                    wildcard_name = f"{var_name}[*"
+                    efficient_results = self.find_variables_efficient(
+                        pattern=f"{scope_str}::{wildcard_name}" if scope_str else wildcard_name
+                    )
+                    if efficient_results:
+                        return set(efficient_results)
+                        
+                # If empty results, fall through to legacy search
             except (AttributeError, KeyError):
                 # Fall back to legacy search if efficient storage not available
                 pass
         
         # Legacy linear search implementation
         candidates = set()
+        
         for var in self._vars.values():
             if aliases:
                 for alias_scope, alias_name in var.aliases:
@@ -109,10 +122,18 @@ class VCDHierarchyAnalysisMixin(VCDParserMixin):
                     if alias_name == var_name:
                         candidates |= {var}
                         break
+                        
             if scope is not None:
                 if var.scope != scope:
                     continue
+                    
             if var.name == var_name:
                 candidates |= {var}
+            # Also check if var_name matches the base signal name without bus width
+            elif '[' in var.name and '[' not in var_name:
+                # Extract base name from var.name (e.g., "inst_addr[15:0]" -> "inst_addr")
+                base_name = var.name.split('[')[0]
+                if base_name == var_name:
+                    candidates |= {var}
 
         return candidates

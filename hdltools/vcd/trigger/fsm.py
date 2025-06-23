@@ -150,7 +150,9 @@ class SimpleTrigger(VCDTriggerFSM):
             return (False, None, False)
         if self._check_timeout(time):
             return (True, False, True)
-        if cond.match_value(value):
+        # Strip 'b' prefix from VCD binary values
+        clean_value = value.lstrip('b') if isinstance(value, str) and value.startswith('b') else value
+        if cond.match_value(clean_value):
             self._current_level += 1
             self._last_change = time
             return (True, True, True)

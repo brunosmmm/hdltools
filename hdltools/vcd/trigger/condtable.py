@@ -153,12 +153,12 @@ class ConditionTableTrigger(VCDTriggerFSM):
         for cond, state in self._condtable.items():
             if cond.match_var(var.scope, var.name, var.identifiers[0]):
                 # condition in table
-                if cond.match_value(value):
+                # Strip 'b' prefix from VCD binary values
+                clean_value = value.lstrip('b') if isinstance(value, str) and value.startswith('b') else value
+                if cond.match_value(clean_value):
                     updated_values[cond] = True
-                    print(f"DEBUG: cond {cond} -> TRUE")
                 else:
                     updated_values[cond] = False
-                    print(f"DEBUG: cond {cond} -> FALSE")
 
         # save updated values
         self._condtable.update(updated_values)

@@ -303,7 +303,9 @@ def get_tracker_class(parser_class: Type) -> Type:
             if old_state == "header":
                 # add VCD variable identifiers to condition table elements
                 for _, (condtable, _) in self._evt_triggers.items():
-                    for cond in condtable.global_sensitivity_list:
+                    # Collect all conditions first to avoid modifying dict during iteration
+                    conditions_to_process = list(condtable.global_sensitivity_list)
+                    for cond in conditions_to_process:
                         # Use efficient search if available
                         candidates = self._find_variables_for_condition(cond)
                         if not candidates:
@@ -328,7 +330,20 @@ def get_tracker_class(parser_class: Type) -> Type:
                                     
                                     # Auto-extend with zeros for compatibility
                                     from hdltools.patterns import Pattern
-                                    cond._value = Pattern(suggested_pattern)
+                                    # Create new descriptor to avoid changing dictionary key
+                                    new_cond = VCDTriggerDescriptor(
+                                        cond.scope, cond.name, Pattern(suggested_pattern), 
+                                        cond.vcd_var, cond.inverted, signal_width
+                                    )
+                                    # Update condition table to use new descriptor
+                                    # Temporarily disarm to allow modifications
+                                    was_armed = condtable.trigger_armed
+                                    if was_armed:
+                                        condtable.disarm_trigger()
+                                    condtable.remove_condition(cond)
+                                    condtable.add_condition(new_cond)
+                                    if was_armed:
+                                        condtable.arm_trigger()
                                     
                                 else:
                                     # Pattern too wide - error
@@ -352,8 +367,10 @@ def get_tracker_class(parser_class: Type) -> Type:
                     efficient_vars = self.find_variables_efficient(
                         name=cond.name, scope=scope_str
                     )
+                    # Only return efficient results if non-empty
                     if efficient_vars:
                         return set(efficient_vars)
+                    # If empty results, fall through to legacy search
                 except (AttributeError, KeyError):
                     pass
             

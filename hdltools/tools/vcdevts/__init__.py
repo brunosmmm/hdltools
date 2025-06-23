@@ -13,7 +13,20 @@ from dictator.validators.lists import SubListValidator
 from dictator.validators.integer import validate_positive_integer
 from dictator.validators.maps import SubDictValidator
 
-from hdltools.vcd.event import VCDEventTrackerLegacy, VCDEventTrackerCompiled
+from hdltools.vcd.event import VCDEventTrackerLegacy, VCDEventTrackerCompiled, get_tracker_class
+from hdltools.vcd.streaming_parser import StreamingVCDParser
+from hdltools.vcd.mixins.hierarchy import VCDHierarchyAnalysisMixin
+
+# Create hierarchy-enabled VCD event tracker for handling scoped signals
+class VCDParserWithHierarchy(StreamingVCDParser, VCDHierarchyAnalysisMixin):
+    """VCD parser with hierarchy support for scoped signal resolution."""
+    
+    def variable_search(self, name: str, scope=None, aliases: bool = True):
+        """Use hierarchy mixin's variable search instead of StreamingVCDParser's."""
+        # Delegate to hierarchy mixin which handles VCDScope objects properly
+        return VCDHierarchyAnalysisMixin.variable_search(self, name, scope, aliases)
+
+VCDEventTrackerWithHierarchy = get_tracker_class(VCDParserWithHierarchy)
 from hdltools.vcd.trigger.trigcond import build_descriptors_from_str
 from hdltools.binutils.tools.boundary import fn_boundary
 from hdltools.vcd.trigger import VCDTriggerDescriptor
@@ -150,7 +163,7 @@ def main():
             maybe_vcd = True
 
     if maybe_vcd:
-        tracker_class = VCDEventTrackerLegacy
+        tracker_class = VCDEventTrackerWithHierarchy
         with open(args.vcd, "r") as data:
             vcddata = data.read()
 

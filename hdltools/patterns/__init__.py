@@ -71,8 +71,8 @@ class Pattern:
             # Binary with 0b prefix
             return pattern[2:]
             
-        elif self.PATTERN_REGEX.match(pattern) and all(c in '01xX' for c in pattern):
-            # Valid binary format - check for binary-only characters first
+        elif all(c in '01xX' for c in pattern):
+            # Binary format - contains only binary digits and don't care bits
             return pattern
             
         elif all(c in '0123456789ABCDEFabcdef' for c in pattern):

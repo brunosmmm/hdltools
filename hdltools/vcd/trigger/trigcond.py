@@ -33,21 +33,39 @@ class TriggerConditionVisitor(ASTVisitor):
             return abs(node.left - node.right.val) + 1
         return node.left
 
+    def visit_VCDSignalName(self, node):
+        """Visit VCD signal name (includes array notation like signal[15:0])."""
+        return node
+    
+    def visit_RuntimeSlicedSignal(self, node):
+        """Visit runtime sliced signal (legacy slicing syntax)."""
+        return node
+    
     def visit_TriggerCondition(self, node):
         """Visit trigger condition."""
-        parts = node.sig.name.split("::")
+        # Get signal name from either VCDSignalName or RuntimeSlicedSignal
+        if hasattr(node.sig, 'name'):
+            signal_full_name = node.sig.name
+        else:
+            # Should not happen with new grammar, but handle legacy case
+            signal_full_name = str(node.sig)
+        
+        parts = signal_full_name.split("::")
         if len(parts) < 2:
-            raise RuntimeError(f"Invalid signal path '{node.sig.name}': must use format 'scope::signal_name'")
+            raise RuntimeError(f"Invalid signal path '{signal_full_name}': must use format 'scope::signal_name'")
         
         name = parts[-1]
         scope = "::".join(parts[:-1])
         
         # Validate scope and signal name are not empty
         if not scope.strip():
-            raise RuntimeError(f"Empty scope in signal path '{node.sig.name}': scope::signal_name format required")
+            raise RuntimeError(f"Empty scope in signal path '{signal_full_name}': scope::signal_name format required")
         if not name.strip():
-            raise RuntimeError(f"Empty signal name in signal path '{node.sig.name}': scope::signal_name format required")
-        if hasattr(node.sig, "slice") and node.sig.slice is not None:
+            raise RuntimeError(f"Empty signal name in signal path '{signal_full_name}': scope::signal_name format required")
+        # Check if this is a RuntimeSlicedSignal (has explicit slicing)
+        is_runtime_sliced = hasattr(node.sig, "slice") and node.sig.slice is not None
+        
+        if is_runtime_sliced:
             # create pattern with many don't cares
             m = re.match(r"[01xX]+", node.value)
             if m is None:
@@ -113,29 +131,9 @@ class TriggerConditionVisitor(ASTVisitor):
             ) from e
 
     def visit_SignalDescriptor(self, node):
-        """Visit signal descriptor."""
-        if hasattr(node, "slice") and node.slice is not None:
-            if not hasattr(node, "size") or node.size is None:
-                raise RuntimeError(
-                    "signal with slice must have size descriptor"
-                )
-        else:
-            return node
-
-        if hasattr(node.slice, "right") and node.slice.right is not None:
-            slice_size = abs(node.slice.left - node.slice.right.val) + 1
-            if node.slice.right.val < node.size.right.val:
-                raise RuntimeError("slicing error")
-        else:
-            slice_size = 1
-        if node.slice.left > node.size.left:
-            raise RuntimeError("slicing error")
-        if hasattr(node.size, "right") and node.size.right is not None:
-            sig_size = abs(node.size.left - node.size.right.val) + 1
-        else:
-            sig_size = node.size.left
-        if slice_size > sig_size:
-            raise RuntimeError("slice is wider than signal width")
+        """Visit signal descriptor - delegates to VCDSignalName or RuntimeSlicedSignal."""
+        # The grammar now handles VCDSignalName and RuntimeSlicedSignal separately
+        # This method should not be called with the new grammar
         return node
 
     def visit_ConditionRight(self, node):
