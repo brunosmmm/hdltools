@@ -312,7 +312,10 @@ def get_tracker_class(parser_class: Type) -> Type:
                             raise RuntimeError(f"Cannot locate VCD variable for condition '{cond.scope}::{cond.name}'")
                         
                         # Associate with first candidate and validate width
-                        vcd_variable = list(candidates)[0]
+                        # Sort candidates for deterministic selection when multiple matches
+                        # This ensures consistent behavior when signals exist at multiple hierarchy levels
+                        sorted_candidates = sorted(candidates, key=lambda v: (str(v.scope), v.name, v.identifiers[0] if v.identifiers else ''))
+                        vcd_variable = sorted_candidates[0]
                         cond.vcd_var = vcd_variable.identifiers[0]
                         
                         # Perform width validation if variable has size information

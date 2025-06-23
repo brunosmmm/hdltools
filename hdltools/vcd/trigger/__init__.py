@@ -25,6 +25,7 @@ class VCDTriggerDescriptor(VCDObject):
         value: Union[Pattern, str],
         vcd_var: Optional[str] = None,
         negate: bool = False,
+        operator: Optional[str] = None,
         signal_width: Optional[int] = None,
     ):
         """Initialize."""
@@ -50,7 +51,19 @@ class VCDTriggerDescriptor(VCDObject):
             self._validate_pattern_width(signal_width, value)
             
         self._vcd_var = vcd_var
-        self._negate = negate
+        
+        # Handle operator parameter (new) vs negate parameter (backward compatibility)
+        if operator is not None:
+            self._operator = operator
+        elif negate:
+            self._operator = "!="
+        else:
+            self._operator = "=="
+            
+        # Validate operator with pattern for comparison operators
+        if self._operator in ('>', '<', '>=', '<=') and not self._value.is_numeric():
+            raise ValueError(f"Operator '{self._operator}' requires numeric pattern without don't care bits")
+            
         self._signal_width = signal_width
     
     def _validate_pattern_width(self, signal_width: int, original_value):
@@ -92,7 +105,12 @@ class VCDTriggerDescriptor(VCDObject):
     @property
     def inverted(self):
         """Get if logic is inverted."""
-        return self._negate
+        return self._operator == "!="
+    
+    @property
+    def operator(self):
+        """Get comparison operator."""
+        return self._operator
 
     @property
     def scope(self):
@@ -136,9 +154,8 @@ class VCDTriggerDescriptor(VCDObject):
 
     def __repr__(self):
         """Get representation."""
-        op = "==" if not self._negate else "!="
         return "{{{}::{}{}{}}}".format(
-            str(self.scope), self.name, op, self.value
+            str(self.scope), self.name, self._operator, self.value
         )
 
     def match_var(
@@ -159,10 +176,7 @@ class VCDTriggerDescriptor(VCDObject):
 
     def match_value(self, value: str) -> bool:
         """Match value."""
-        if self._negate:
-            return not self.value.match(value)
-
-        return self.value.match(value)
+        return self.value.compare(value, self._operator)
 
     def match(
         self,

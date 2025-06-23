@@ -36,66 +36,83 @@ class Pattern:
             
             # Try to detect and convert different formats
             try:
-                pattern = self._detect_and_convert_format(pattern)
+                converted_pattern = self._detect_and_convert_format(pattern)
             except Exception as e:
                 error_msg = self._generate_helpful_error_message(original_pattern, str(e))
                 raise PatternError(error_msg) from e
 
-            m = self.PATTERN_REGEX.fullmatch(pattern)  # Use fullmatch to ensure entire pattern is valid
+            # Validate the converted pattern
+            m = self.PATTERN_REGEX.fullmatch(converted_pattern)  # Use fullmatch to ensure entire pattern is valid
+            if m is None:
+                error_msg = self._generate_helpful_error_message(original_pattern)
+                raise PatternError(error_msg)
+                
+            self._pattern = converted_pattern
         else:
             # bytes input
             m = self.PATTERN_REGEX_BYTES.fullmatch(pattern)  # Use fullmatch to ensure entire pattern is valid
-            
-        if m is None:
-            error_msg = self._generate_helpful_error_message(original_pattern)
-            raise PatternError(error_msg)
-
-        self._pattern = pattern
+            if m is None:
+                error_msg = self._generate_helpful_error_message(original_pattern)
+                raise PatternError(error_msg)
+            self._pattern = pattern
     
     def _detect_and_convert_format(self, pattern: str) -> str:
         """Detect format and convert to binary representation."""
         original = pattern
         
         # Remove common prefixes/suffixes and detect format
-        if pattern.endswith("h") or pattern.endswith("H"):
-            # Hexadecimal with suffix
-            hex_str = pattern[:-1]
-            return self._hex_to_bin(hex_str)
-            
-        elif pattern.startswith("0x") or pattern.startswith("0X"):
-            # Hexadecimal with 0x prefix
+        if pattern.startswith("0x") or pattern.startswith("0X"):
+            # Hexadecimal with 0x prefix (REQUIRED for hex)
             hex_str = pattern[2:]
+            if not hex_str:
+                raise ValueError(f"Incomplete hexadecimal pattern '{pattern}' - missing digits after '0x'")
             return self._hex_to_bin(hex_str)
             
         elif pattern.startswith("0b") or pattern.startswith("0B"):
-            # Binary with 0b prefix
-            return pattern[2:]
+            # Binary with 0b prefix (REQUIRED for binary)
+            binary_str = pattern[2:]
+            if not binary_str:
+                raise ValueError(f"Incomplete binary pattern '{pattern}' - missing digits after '0b'")
+            # Normalize by removing leading zeros (but keep at least one digit)
+            return binary_str.lstrip('0') or '0'
             
-        elif all(c in '01xX' for c in pattern):
-            # Binary format - contains only binary digits and don't care bits
-            return pattern
+        elif pattern.endswith("h") or pattern.endswith("H"):
+            # Hexadecimal with h suffix (legacy support, but discouraged)
+            # Check this BEFORE the 'b' prefix to avoid conflict with "B9h" etc.
+            hex_str = pattern[:-1]
+            return self._hex_to_bin(hex_str)
             
-        elif all(c in '0123456789ABCDEFabcdef' for c in pattern):
-            # Could be hex or decimal - check for hex characteristics
-            if any(c in 'ABCDEFabcdef' for c in pattern):
-                # Contains hex letters - definitely hex
-                return self._hex_to_bin(pattern)
-            elif len(pattern) == 4 and any(c in '23456789' for c in pattern):
-                # Length 4 with higher digits (common hex pattern like 1234, 8000)
-                return self._hex_to_bin(pattern)
-            else:
-                # Pure digits - treat as decimal
-                decimal_val = int(pattern)
-                return bin(decimal_val)[2:]
-                
+        elif pattern.startswith("b") or pattern.startswith("B"):
+            # Binary with b prefix (alternative binary format)
+            binary_str = pattern[1:]
+            if not binary_str:
+                raise ValueError(f"Incomplete binary pattern '{pattern}' - missing digits after 'b'")
+            # Normalize by removing leading zeros (but keep at least one digit)
+            return binary_str.lstrip('0') or '0'
+            
         elif pattern.isdigit():
-            # Pure decimal number
+            # Pure decimal number (no ambiguity - only digits 0-9)
             decimal_val = int(pattern)
             return bin(decimal_val)[2:]  # Remove '0b' prefix
             
+        elif all(c in 'xX' for c in pattern):
+            # Pure don't care patterns (contains only x, X)
+            # This is allowed without prefix (e.g., "xxxx")
+            return pattern
+            
         else:
-            # Mixed or invalid characters
-            raise ValueError(f"Cannot determine format of pattern '{pattern}'")
+            # Invalid or ambiguous pattern
+            # Generate helpful error message
+            if any(c in 'ABCDEFabcdef' for c in pattern.replace('x', '').replace('X', '')):
+                raise ValueError(f"Hexadecimal patterns must use '0x' prefix. Use '0x{pattern}' instead of '{pattern}'")
+            elif any(c in '23456789' for c in pattern) and any(c in '01' for c in pattern):
+                # Mixed digits that could be binary or decimal
+                if len(pattern) > 1 and all(c in '01' for c in pattern):
+                    raise ValueError(f"Binary patterns must use '0b' or 'b' prefix. Use '0b{pattern}' instead of '{pattern}'")
+                else:
+                    raise ValueError(f"Ambiguous pattern '{pattern}'. Use explicit format: '0x' for hex, '0b' for binary, or digits only for decimal")
+            else:
+                raise ValueError(f"Invalid pattern '{pattern}'. Use '0x' for hex, '0b' for binary, digits for decimal, or '01xX' for binary with don't care")
     
     def _hex_to_bin(self, hex_str: str) -> str:
         """Convert hexadecimal string to binary representation."""
@@ -111,10 +128,7 @@ class Pattern:
             decimal_val = int(hex_str, 16)
             binary_str = bin(decimal_val)[2:]  # Remove '0b' prefix
             
-            # Pad to multiple of 4 bits for hex alignment
-            while len(binary_str) % 4 != 0:
-                binary_str = '0' + binary_str
-                
+            # Don't pad - let the result be minimal like decimal conversion
             return binary_str
             
         except ValueError as e:
@@ -185,6 +199,60 @@ class Pattern:
                 return False
 
         return True
+
+    def is_numeric(self) -> bool:
+        """Check if pattern represents a pure numeric value (no don't care bits)."""
+        return all(c in '01' for c in self._pattern)
+
+    def to_integer(self) -> int:
+        """Convert pattern to integer value."""
+        if not self.is_numeric():
+            raise ValueError(f"Cannot convert pattern '{self._pattern}' with don't care bits to integer")
+        return int(self._pattern, 2)  # Convert binary string to int
+
+    def _clean_vcd_value(self, value: Union[str, bytes]) -> Union[str, bytes]:
+        """Clean VCD value by removing common prefixes like 'b' and '0b'."""
+        if isinstance(value, str):
+            if value.startswith('0b') or value.startswith('0B'):
+                return value[2:]
+            elif value.startswith('b') or value.startswith('B'):
+                return value[1:]
+        return value
+    
+    def compare(self, value: Union[str, bytes], operator: str) -> bool:
+        """Compare pattern against value using specified operator."""
+        if operator in ('==', '!='):
+            # Handle VCD prefixes for equality comparison
+            clean_value = self._clean_vcd_value(value)
+            result = self.match(clean_value)
+            return result if operator == '==' else not result
+        
+        # Numerical comparison operators
+        if not self.is_numeric():
+            raise ValueError(f"Cannot use operator '{operator}' with pattern containing don't care bits")
+        
+        # Convert VCD value to integer (handle 'b' and '0b' prefixes)
+        clean_value = self._clean_vcd_value(value)
+            
+        if not clean_value or not all(c in '01' for c in clean_value):
+            raise ValueError(f"Cannot compare non-binary value '{value}' numerically")
+        
+        pattern_int = self.to_integer()
+        try:
+            value_int = int(clean_value, 2)
+        except ValueError:
+            raise ValueError(f"Cannot compare non-binary value '{value}' numerically")
+        
+        if operator == '>':
+            return value_int > pattern_int
+        elif operator == '<':
+            return value_int < pattern_int
+        elif operator == '>=':
+            return value_int >= pattern_int
+        elif operator == '<=':
+            return value_int <= pattern_int
+        else:
+            raise ValueError(f"Unsupported operator: {operator}")
 
     @staticmethod
     def hex_to_bin(hexstr):

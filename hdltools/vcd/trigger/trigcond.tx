@@ -17,7 +17,7 @@ BinaryOp:
     "||" | "&&" | '=>';
 
 ComparisonOp:
-    "==" | "!=";
+    ">=" | "<=" | "==" | "!=" | ">" | "<";
 
 SignalDescriptor:
     VCDSignalName | RuntimeSlicedSignal;
@@ -38,4 +38,4 @@ SliceRight:
     ':' val=INT;
 
 Pattern:
-    /(0[xX][0-9A-Fa-f]+|0[bB][01xX]+|[0-9A-Fa-f]+[hH]|[0-9]+|[01xX]+)/;
+    /(0[xX][0-9A-Fa-f]+|0[bB][01xX]+|[bB][01xX]+|[0-9A-Fa-f]+[hH]|[0-9]+|[xX]+)/;

@@ -119,7 +119,7 @@ class TriggerConditionVisitor(ASTVisitor):
 
         try:
             cond = VCDTriggerDescriptor(
-                scope, name, pattern, negate=node.op == "!="
+                scope, name, pattern, operator=node.op
             )
             self._conditions.append(cond)
         except Exception as e:
@@ -183,16 +183,22 @@ def build_descriptors_from_str(cond):
         error_msg = f"Failed to parse trigger condition: '{cond}'\n"
         
         # Check for common syntax errors
-        if '==' not in cond and '!=' not in cond:
-            error_msg += "Error: Missing comparison operator. Use '==' or '!=' to compare values.\n"
-            error_msg += "Example: 'cpu::state==0011' or 'reset!=1'\n"
+        comparison_ops = ['>=', '<=', '==', '!=', '>', '<']
+        has_operator = any(op in cond for op in comparison_ops)
+        if not has_operator:
+            error_msg += "Error: Missing comparison operator. Use comparison operators to compare values.\n"
+            error_msg += "Examples: 'cpu::state==0011', 'counter>10', 'addr>=0x1000'\n"
         elif '::' not in cond:
             error_msg += "Error: Missing scope separator. Use '::' to separate scope and signal name.\n"
             error_msg += "Example: 'module_name::signal_name==value'\n"
         else:
             # Extract the pattern value to provide specific feedback
-            parts = cond.split('==') if '==' in cond else cond.split('!=')
-            if len(parts) == 2:
+            parts = None
+            for op in ['>=', '<=', '==', '!=', '>', '<']:
+                if op in cond:
+                    parts = cond.split(op)
+                    break
+            if parts is not None and len(parts) == 2:
                 pattern_value = parts[1].strip()
                 error_msg += f"Error: Invalid pattern value '{pattern_value}'\n"
                 
@@ -207,9 +213,12 @@ def build_descriptors_from_str(cond):
             error_msg += f"Original error: {e}\n"
         
         error_msg += "\nValid condition formats:\n"
-        error_msg += "  • scope::signal==binary_pattern (e.g., 'cpu::state==0011')\n"
-        error_msg += "  • scope::signal==hex_pattern (e.g., 'bus::addr==A000h')\n"
-        error_msg += "  • scope::signal!=pattern (for negated conditions)\n"
+        error_msg += "  • scope::signal==pattern (equality: 'cpu::state==0b01')\n"
+        error_msg += "  • scope::signal!=pattern (inequality: 'reset!=0b1')\n"
+        error_msg += "  • scope::signal>pattern (greater than: 'counter>10')\n"
+        error_msg += "  • scope::signal>=pattern (greater/equal: 'addr>=0x1000')\n"
+        error_msg += "  • scope::signal<pattern (less than: 'value<0xFF')\n"
+        error_msg += "  • scope::signal<=pattern (less/equal: 'index<=15')\n"
         error_msg += "  • Multiple conditions with && or =>\n"
         
         raise RuntimeError(error_msg) from e
