@@ -120,16 +120,32 @@ class Pattern:
             # Handle both upper and lower case
             hex_str = hex_str.upper()
             
-            # Validate hex characters
-            if not all(c in '0123456789ABCDEF' for c in hex_str):
+            # Validate hex characters (now including X for don't care)
+            if not all(c in '0123456789ABCDEFX' for c in hex_str):
                 raise ValueError(f"Invalid hexadecimal characters in '{hex_str}'")
             
-            # Convert to integer then to binary
-            decimal_val = int(hex_str, 16)
-            binary_str = bin(decimal_val)[2:]  # Remove '0b' prefix
-            
-            # Don't pad - let the result be minimal like decimal conversion
-            return binary_str
+            # Handle don't care (X) characters
+            if 'X' in hex_str:
+                # Convert hex to binary with don't care bits
+                binary_str = ""
+                for hex_char in hex_str:
+                    if hex_char == 'X':
+                        # Each hex X becomes 4 binary X's (XXXX)
+                        binary_str += "XXXX"
+                    else:
+                        # Convert single hex digit to 4-bit binary
+                        digit_val = int(hex_char, 16)
+                        digit_bin = format(digit_val, '04b')  # 4-bit binary with leading zeros
+                        binary_str += digit_bin
+                
+                # Remove leading zeros but keep at least one digit (or don't care pattern)
+                binary_str = binary_str.lstrip('0') or '0'
+                return binary_str
+            else:
+                # Standard hex conversion without don't care
+                decimal_val = int(hex_str, 16)
+                binary_str = bin(decimal_val)[2:]  # Remove '0b' prefix
+                return binary_str
             
         except ValueError as e:
             raise ValueError(f"Invalid hexadecimal pattern '{hex_str}': {e}") from e

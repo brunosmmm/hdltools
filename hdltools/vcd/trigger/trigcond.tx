@@ -23,7 +23,7 @@ SignalDescriptor:
     VCDSignalName | RuntimeSlicedSignal;
 
 VCDSignalName:
-    name=/[a-zA-Z_0-9:]+(\[[0-9]+:[0-9]+\])?/;
+    name=/[a-zA-Z_0-9:()]+(\[[0-9]+:[0-9]+\])?/;
 
 RuntimeSlicedSignal:
     name=/[a-zA-Z_0-9:]+/ size=SignalSize? slice=SignalSlice;
@@ -38,4 +38,4 @@ SliceRight:
     ':' val=INT;
 
 Pattern:
-    /(0[xX][0-9A-Fa-f]+|0[bB][01xX]+|[bB][01xX]+|[0-9A-Fa-f]+[hH]|[0-9]+|[xX]+)/;
+    /(0[xX][0-9A-Fa-fxX]+|0[bB][01xX]+|[bB][01xX]+|[0-9A-Fa-fxX]+[hH]|[0-9]+|[xX]+)/;
