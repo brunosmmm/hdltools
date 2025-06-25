@@ -132,14 +132,15 @@ def get_tracker_class(parser_class: Type) -> Type:
             """Build trigger array."""
             for evt_name, ((cond, mode), opts) in events.items():
                 if mode == "&&":
-                    self._evt_triggers[evt_name] = [
-                        ConditionTableTrigger(
-                            conditions=cond, evt_name=evt_name, oneshot=False
-                        ),
-                        None,
-                    ]
+                    trigger = ConditionTableTrigger(
+                        conditions=cond, evt_name=evt_name, oneshot=False
+                    )
+                    self._evt_triggers[evt_name] = [trigger, None]
                 elif mode == "=>":
-                    trigger = SimpleTrigger(levels=cond, evt_name=evt_name)
+                    # Create SimpleTrigger and add each condition as a separate level
+                    trigger = SimpleTrigger(evt_name=evt_name)
+                    for i, condition in enumerate(cond):
+                        trigger.add_trigger_level(condition)
                     trigger.state_timeout = opts.get("timeout")
                     self._evt_triggers[evt_name] = [trigger, None]
                 else:
@@ -305,7 +306,7 @@ def get_tracker_class(parser_class: Type) -> Type:
                 for _, (condtable, _) in self._evt_triggers.items():
                     # Collect all conditions first to avoid modifying dict during iteration
                     conditions_to_process = list(condtable.global_sensitivity_list)
-                    for cond in conditions_to_process:
+                    for i, cond in enumerate(conditions_to_process):
                         # Use efficient search if available
                         candidates = self._find_variables_for_condition(cond)
                         if not candidates:
@@ -325,7 +326,8 @@ def get_tracker_class(parser_class: Type) -> Type:
                         
                         sorted_candidates = sorted(candidates, key=lambda v: (str(getattr(v, 'scope', '')), getattr(v, 'name', ''), get_variable_id(v)))
                         vcd_variable = sorted_candidates[0]
-                        cond.vcd_var = get_variable_id(vcd_variable)
+                        var_id = get_variable_id(vcd_variable)
+                        cond.vcd_var = var_id
                         
                         # Perform width validation if variable has size information
                         if hasattr(vcd_variable, 'size') and vcd_variable.size is not None:
@@ -349,14 +351,20 @@ def get_tracker_class(parser_class: Type) -> Type:
                                         vcd_var=cond.vcd_var, operator=cond.operator, signal_width=signal_width
                                     )
                                     # Update condition table to use new descriptor
-                                    # Temporarily disarm to allow modifications
-                                    was_armed = condtable.trigger_armed
-                                    if was_armed:
-                                        condtable.disarm_trigger()
-                                    condtable.remove_condition(cond)
-                                    condtable.add_condition(new_cond)
-                                    if was_armed:
-                                        condtable.arm_trigger()
+                                    # Handle different trigger types
+                                    if hasattr(condtable, 'remove_condition'):
+                                        # ConditionTableTrigger
+                                        was_armed = condtable.trigger_armed
+                                        if was_armed:
+                                            condtable.disarm_trigger()
+                                        condtable.remove_condition(cond)
+                                        condtable.add_condition(new_cond)
+                                        if was_armed:
+                                            condtable.arm_trigger()
+                                    else:
+                                        # SimpleTrigger - update condition in-place
+                                        # For SimpleTrigger, we can directly update the pattern
+                                        cond._value._pattern = suggested_pattern
                                     
                                 else:
                                     # Pattern too wide - error
@@ -368,6 +376,7 @@ def get_tracker_class(parser_class: Type) -> Type:
                                         f"  Pattern is {excess_bits} bits too wide.\n"
                                         f"  Pattern '{cond._value.pattern}' cannot fit in {signal_width}-bit signal."
                                     )
+                    
                 if self._debug:
                     print("DEBUG: header parsing completed")
         
@@ -464,7 +473,14 @@ def get_tracker_class(parser_class: Type) -> Type:
                 and self.current_time > 0
             ):
                 return
-            # update local variable value
+            
+            # Call dump state hooks for value changes
+            for hook in self._state_hooks.get("dump", []):
+                try:
+                    hook("dump", stmt, fields)
+                except Exception as e:
+                    if hasattr(self, '_debug') and self._debug:
+                        print(f"DEBUG: Dump hook error: {e}")
         
         # Efficient query methods for event analysis
         def get_events_in_time_range(self, start_time: int, end_time: int):

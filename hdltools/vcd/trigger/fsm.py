@@ -89,16 +89,20 @@ class SimpleTrigger(VCDTriggerFSM):
     @VCDTriggerFSM.sensitivity_list.getter
     def sensitivity_list(self):
         """Get current sensitivity list."""
+        # If trigger completed, return empty list to avoid index error
+        if self._current_level >= len(self._levels):
+            return []
         return self._levels[self._current_level]
 
     @VCDTriggerFSM.global_sensitivity_list.getter
     def global_sensitivity_list(self):
         """Get global sensitivity list."""
-        conds = set()
+        conds = []
         for level in self._levels:
             for cond in level:
-                conds |= {cond}
-        return list(conds)
+                if cond not in conds:  # Avoid true duplicates but preserve different conditions
+                    conds.append(cond)
+        return conds
 
     @VCDTriggerFSM.event_end_cb.setter
     def event_end_cb(self, value):
@@ -175,25 +179,26 @@ class SimpleTrigger(VCDTriggerFSM):
 
         conds = self.current_trigger
         for cond in conds:
-            if (
-                var.scope == cond.scope
-                and var.name == cond.name
-                and cond.value.match(value)
-            ):
-                # is a match
-                if self._debug:
-                    print(
-                        "DEBUG: {} trigger reach_level {} {}".format(
-                            self.current_time,
-                            self._current_level + 1,
-                            self._levels[self._current_level],
+            # Direct string comparison for variable name
+            var_name = getattr(var, 'name', '')
+            if var_name == cond.name:
+                # Strip 'b' prefix from VCD binary values
+                clean_value = value.lstrip('b') if isinstance(value, str) and value.startswith('b') else value
+                if cond.match_value(clean_value):
+                    # is a match
+                    if self._debug:
+                        print(
+                            "DEBUG: {} trigger reach_level {} {}".format(
+                                self.current_time,
+                                self._current_level + 1,
+                                self._levels[self._current_level],
+                            )
                         )
+                    self._trigger_history.append(
+                        VCDTriggerEvent("condition", self.current_time, cond)
                     )
-                self._trigger_history.append(
-                    VCDTriggerEvent("condition", self.current_time, cond)
-                )
-                self._current_level += 1
-                break
+                    self._current_level += 1
+                    break
 
         if self._current_level == self.trigger_levels:
             self._trigger_history.append(

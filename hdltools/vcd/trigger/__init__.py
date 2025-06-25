@@ -75,21 +75,12 @@ class VCDTriggerDescriptor(VCDObject):
             scope_signal = f"{self._scope}::{self._name}"
             
             if pattern_width < signal_width:
-                # Pattern is too narrow - could auto-pad with warnings
+                # Pattern is too narrow - auto-pad with leading zeros
                 padding_needed = signal_width - pattern_width
-                suggested_pattern = '0' * padding_needed + self._value.pattern
-                
-                import warnings
-                warnings.warn(
-                    f"Pattern width mismatch for '{scope_signal}':\n"
-                    f"  Signal width: {signal_width} bits\n"
-                    f"  Pattern width: {pattern_width} bits ('{self._value.pattern}')\n"
-                    f"  Pattern is too narrow by {padding_needed} bits.\n"
-                    f"  Suggestion: Use '{suggested_pattern}' (zero-padded) or 'x{self._value.pattern}' (don't care padded)\n"
-                    f"  Original value: '{original_value}'",
-                    UserWarning,
-                    stacklevel=4
-                )
+                from hdltools.patterns import Pattern
+                padded_pattern = '0' * padding_needed + self._value.pattern
+                # Directly set the pattern to avoid Pattern class normalizing leading zeros
+                self._value._pattern = padded_pattern
             else:
                 # Pattern is too wide - this is an error
                 excess_bits = pattern_width - signal_width
@@ -366,7 +357,7 @@ class VCDTriggerFSM:
 
     def _fire_trigger(self, disarm=True):
         """Fire trigger."""
-        if disarm:
+        if disarm and self._armed:
             self.disarm_trigger()
         self._triggered = True
         if self._current_evt_uuid is None:

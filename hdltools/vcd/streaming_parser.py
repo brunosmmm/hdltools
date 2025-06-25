@@ -251,7 +251,10 @@ class StreamingVCDParser:
                 print(f"DEBUG: Error: {e}")
                 raise
             else:
-                # Continue parsing on errors for robustness
+                # Re-raise critical configuration errors even without debug
+                if "Cannot locate VCD variable" in str(e):
+                    raise
+                # Continue parsing on other errors for robustness
                 pass
                 
     def _process_header_line(self, line: str):
@@ -514,9 +517,13 @@ class StreamingVCDParser:
         # Call state change handler
         self._state_change_handler(old_state, new_state)
         
-        # Call state hooks
+        # Call state hooks for state transitions (no arguments needed)
         for hook in self._state_hooks.get(new_state, []):
             try:
+                # State transition hooks don't get arguments
+                if hasattr(hook, '__name__') and 'dump_hook' in hook.__name__:
+                    # Skip dump hooks here - they're called during value changes
+                    continue
                 hook()
             except Exception as e:
                 if self._debug:
