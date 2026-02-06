@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "low",
+    "tags": [
+      "patterns",
+      "feature",
+      "matcher"
+    ],
+    "text": "Implement multivariable pattern matcher with interdependent states",
+    "type": "idea"
+  },
+  "entity_id": "ann_024304_3e7cky34b64b",
+  "lamport_clock": 19,
+  "operation_id": "op_20260206_024535_788d840a",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:35.997795+00:00"
+}
