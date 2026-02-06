@@ -34,6 +34,7 @@ except ImportError:
     VAR_PARSER = "VAR_PARSER"
     SCOPE_PARSER = "SCOPE_PARSER" 
     UPSCOPE_PARSER = "UPSCOPE_PARSER"
+from hdltools.logging import DEFAULT_LOGGER
 from hdltools.vcd.efficient_storage import (
     EfficientVCDStorage, BinarySignalValue, EfficientVCDVariable
 )
@@ -247,8 +248,8 @@ class StreamingVCDParser:
                 self._process_dump_line(line)
         except Exception as e:
             if self._debug:
-                print(f"DEBUG: Error processing line {self.current_line}: {line}")
-                print(f"DEBUG: Error: {e}")
+                DEFAULT_LOGGER.debug(f"Error processing line {self.current_line}: {line}")
+                DEFAULT_LOGGER.debug(f"Error: {e}")
                 raise
             else:
                 # Continue parsing on errors for robustness
@@ -324,7 +325,7 @@ class StreamingVCDParser:
                 hook("header", stmt_type, fields)
             except Exception as e:
                 if self._debug:
-                    print(f"DEBUG: Hook error: {e}")
+                    DEFAULT_LOGGER.debug(f"Hook error: {e}")
         
     def _parse_variable_declaration(self, line: str):
         """Parse $var statement with efficient storage integration."""
@@ -520,7 +521,7 @@ class StreamingVCDParser:
                 hook()
             except Exception as e:
                 if self._debug:
-                    print(f"DEBUG: State hook error: {e}")
+                    DEFAULT_LOGGER.debug(f"State hook error: {e}")
                     
     # Handler methods (must be overridden by subclasses)
     def header_statement_handler(self, stmt, fields):

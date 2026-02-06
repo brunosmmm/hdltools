@@ -1,6 +1,5 @@
 """VCD to compact representation compiler."""
 
-# import struct
 import pickle
 from hdltools.vcd import VCDObject
 from hdltools.vcd.streaming_parser import StreamingVCDParser
@@ -12,25 +11,8 @@ except ImportError:
     _EFFICIENT_AVAILABLE = False
 
 
-# class PackSnapshot(PackableType):
-#     """Pack snapshot type."""
-
-#     _pack_identifier = "0"
-
-#     @classmethod
-#     def pack(cls, what):
-#         """Pack."""
-#         buffer = bytearray()
-#         struct.pack_into("c", buffer, 0, cls._pack_identifier)
-#         buffer += pack(what.states)
-
-#         return buffer
-
-
 class VCDTimeSnapshot(VCDObject):
     """Time snapshot."""
-
-    # _pack_type = PackSnapshot
 
     def __init__(self, time: int):
         """Initialize."""

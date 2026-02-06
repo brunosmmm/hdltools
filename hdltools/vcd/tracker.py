@@ -92,6 +92,8 @@ class EfficientVCDValueHistory:
     def visited_scopes(self):
         """Determine all visited scopes."""
         return {entry.scope for entry in self._entries}
+
+
 class VCDValueTracker(
     StreamingVCDParser, VCDConditionMixin, VCDTimeRestrictionMixin
 ):

@@ -14,6 +14,7 @@ class BranchingTrigger(VCDTriggerFSM):
 
     def __init__(self, **kwargs):
         """Initialize."""
+        super().__init__(**kwargs)
 
 
 class SimpleTrigger(VCDTriggerFSM):
