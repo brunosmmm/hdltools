@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "scope": "convention",
+    "tags": [
+      "testing",
+      "build",
+      "ci"
+    ],
+    "text": "Testing and build setup:\n\n**Test runner:** tests.sh script activates poetry venv, runs pytest with --cov=hdltools/\n**Test files:** 21 files in tests/ covering all major modules\n**Usage examples:** 9 files in usage/ (fsm, hdllib_mod/par/seq, joiner, manual, sim_stim, sim_tohdl)\n\n**Key test categories:**\n- test_hdl.py: Core IR primitives\n- test_vhdl.py, test_vhdl_integration.py, test_vhdl_library_headers.py: VHDL backend\n- test_vloggen.py, test_vparse.py: Verilog backend\n- test_functional_equivalence.py: Cross-language equivalence (Verilog\u2194VHDL via VCD comparison)\n- test_vcd*.py: VCD parsing, edge cases, comparison integration\n- test_highlvl.py: Python HDL DSL\n- test_simulation.py: Simulation framework\n- test_patterns.py, test_patt.py: Pattern matching\n- test_cli_tools.py: CLI tool integration tests\n\n**Test assets:** assets/tests/ contains videochk.mmap, sample.mm, input1.vg\n**Verilog assets:** assets/verilog/ contains axi_slave.v, tb_template.v, test.v\n\n**No tox.ini/pytest.ini** - configuration is minimal, runs via tests.sh"
+  },
+  "entity_id": "know_013231_3e7ckyde3088",
+  "lamport_clock": 38,
+  "operation_id": "op_20260206_024536_d9ba726c",
+  "operation_type": "knowledge_add",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.297292+00:00"
+}
