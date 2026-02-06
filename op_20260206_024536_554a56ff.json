@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "scope": "api",
+    "tags": [
+      "vhdl",
+      "codegen",
+      "backend"
+    ],
+    "text": "VHDL codegen specifics (hdltools/vhdl/codegen.py - 29KB, largest backend):\n\n**Auto library headers:** _analyze_required_libraries() detects needed IEEE libraries:\n- std_logic types \u2192 library ieee; use ieee.std_logic_1164.all\n- numeric operations \u2192 use ieee.numeric_std.all  \n- math functions \u2192 use ieee.math_real.all\n\n**Type mapping:**\n- Single-bit \u2192 std_logic\n- Multi-bit \u2192 std_logic_vector(N-1 downto 0)\n- Constants \u2192 constant declarations\n- Variables \u2192 variable declarations\n\n**Operator conversion:**\n- && \u2192 and, || \u2192 or, != \u2192 /=, == \u2192 =, ! \u2192 not\n- & \u2192 and, | \u2192 or, ^ \u2192 xor (bitwise)\n\n**Signal collection:** _collect_signals() recursively gathers declarations from nested scopes for architecture signal section.\n\n**Process generation:** gen_HDLSequentialBlock() handles edge detection (rising_edge/falling_edge), sensitivity lists."
+  },
+  "entity_id": "know_013231_3e7cky5e407e",
+  "lamport_clock": 36,
+  "operation_id": "op_20260206_024536_554a56ff",
+  "operation_type": "knowledge_add",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.241410+00:00"
+}
