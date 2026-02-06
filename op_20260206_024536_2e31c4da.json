@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "scope": "pattern",
+    "tags": [
+      "patterns",
+      "design",
+      "conventions"
+    ],
+    "text": "Key design patterns in hdltools:\n\n1. **Visitor pattern for codegen:** HDLCodeGenerator.dump_element() dispatches to gen_<ClassName>() methods. Add new HDL element support by adding gen_ method to each language backend.\n\n2. **AST-based expressions:** HDLExpression wraps Python ast.Expression. Evaluation via evaluate(**kwargs) with symbol scope. Supports builtins: ceil(), log2(), clog2().\n\n3. **Decorator-based DSL:** @HDLBlock(mod) + @ParallelBlock/@ClockedBlock converts Python functions to HDL. AST visitor in highlvl.py transforms Python AST \u2192 HDL IR.\n\n4. **Scope hierarchy:** HDLModule \u2192 HDLScope \u2192 HDLStatement (recursive). Scopes are typed \"seq\"/\"par\" and enforce statement type consistency.\n\n5. **Signal-driven assignment types:** comb/const \u2192 \"block\" (parallel), reg/var \u2192 \"nonblock\" (sequential). Assignment type determined automatically from signal type.\n\n6. **Interface parametrization:** HDLModuleInterface._PORTS dict \u2192 parameterize(**kwargs) \u2192 HDLParameterizedInterface \u2192 instantiate(name). Supports deferred interfaces.\n\n7. **TextX grammars:** Used for Verilog module parsing, memory map DSL, vector generation DSL, objdump parsing, VCD triggers. Grammar files: *.tx extension.\n\n8. **Operator overloading:** HDLSignal/HDLExpression support full arithmetic/bitwise/comparison operators returning new HDLExpression objects for composition."
+  },
+  "entity_id": "know_013231_3e7ckye58a5d",
+  "lamport_clock": 35,
+  "operation_id": "op_20260206_024536_2e31c4da",
+  "operation_type": "knowledge_add",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.212761+00:00"
+}
