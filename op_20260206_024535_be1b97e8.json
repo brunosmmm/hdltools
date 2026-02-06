@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "low",
+    "tags": [
+      "vcd",
+      "patterns",
+      "refactor"
+    ],
+    "text": "Abstract VCD pattern matching logic to work with generic data sources, not just VCD",
+    "type": "idea"
+  },
+  "entity_id": "ann_024241_3e7cky051d61",
+  "lamport_clock": 7,
+  "operation_id": "op_20260206_024535_be1b97e8",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:35.882885+00:00"
+}
