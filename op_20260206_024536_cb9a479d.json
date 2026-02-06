@@ -1,0 +1,18 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "resolution": {
+      "summary": "Implemented Phase 1 critical fixes: replaced eval() with safe_eval_math(), replaced pickle.load() with restricted unpickler, fixed vector.py dumps() bug, fixed deprecated AST attributes (ast.Constant.n\u2192.value, ast.NameConstant guard), replaced all 10 bare except clauses with specific exception types, removed broken setup.py, migrated from Poetry to uv, pinned dictator dependency, fixed .gitignore, added .tx grammar package data. All 122 tests pass.",
+      "type": "fixed"
+    }
+  },
+  "entity_id": "ann_015038_3e7cky5ea459",
+  "lamport_clock": 26,
+  "operation_id": "op_20260206_024536_cb9a479d",
+  "operation_type": "annotation_resolve",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.064391+00:00"
+}
