@@ -8,9 +8,10 @@ from hdltools.abshdl.macro import HDLMacro
 from hdltools.abshdl.port import HDLModulePort, HDLModuleTypedPort
 from hdltools.abshdl.instance import HDLInstance, HDLInstanceStatement
 from hdltools.abshdl.interface import HDLModuleInterface, HDLInterfaceDeferred
+from hdltools import HDLToolsError
 
 
-class HDLModuleError(Exception):
+class HDLModuleError(HDLToolsError):
     """HDL Module error."""
 
 

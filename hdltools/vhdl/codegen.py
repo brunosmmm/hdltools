@@ -675,10 +675,6 @@ class VHDLCodeGenerator(HDLCodeGenerator):
             return element  # Just return the name without quotes
         return '"{}"'.format(element)
 
-    def gen_HDLStringConstant(self, element, **kwargs):
-        """Generate string constants."""
-        return '"{}"'.format(element.value)
-
     # Helper methods for cleaner code generation
     @staticmethod
     def dumps_vector(value, width, base="dec"):

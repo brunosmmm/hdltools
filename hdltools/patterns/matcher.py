@@ -2,9 +2,10 @@
 
 from typing import Callable, Optional
 from hdltools.patterns import Pattern
+from hdltools import HDLToolsError
 
 
-class PatternMatcherError(Exception):
+class PatternMatcherError(HDLToolsError):
     """Pattern matcher error."""
 
 

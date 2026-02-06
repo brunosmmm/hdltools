@@ -16,12 +16,13 @@ from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
 from hdltools.mmap.ast import SlaveRegisterField, RegisterProperty
+from hdltools import HDLToolsError
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
 
 
-class MMBuilderSemanticError(Exception):
+class MMBuilderSemanticError(HDLToolsError):
     """Semantic error."""
 
 

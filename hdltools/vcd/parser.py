@@ -23,9 +23,10 @@ from hdltools.vcd.tokens import (
     EXTENTS,
 )
 from hdltools.vcd.variable import VCDVariable
+from hdltools import HDLToolsError
 
 
-class VCDParserError(Exception):
+class VCDParserError(HDLToolsError):
     """VCD Parser error."""
 
 

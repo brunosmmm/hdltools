@@ -12,13 +12,14 @@ from hdltools.abshdl.ifelse import HDLIfElse
 from hdltools.abshdl.macro import HDLMacro, HDLMacroValue
 from hdltools.abshdl.switch import HDLCase, HDLSwitch
 from hdltools.hdllib.patterns import ClockedBlock
+from hdltools import HDLToolsError
 
 
-class FSMInputError(Exception):
+class FSMInputError(HDLToolsError):
     """FSM Input signal error."""
 
 
-class FSMInvalidStateError(Exception):
+class FSMInvalidStateError(HDLToolsError):
     """Invalid FSM state error."""
 
 

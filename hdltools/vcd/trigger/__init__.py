@@ -5,9 +5,10 @@ from uuid import uuid4
 from typing import Optional, Union
 from hdltools.vcd import VCDObject, VCDScope
 from hdltools.patterns import Pattern
+from hdltools import HDLToolsError
 
 
-class VCDTriggerError(Exception):
+class VCDTriggerError(HDLToolsError):
     """Trigger error."""
 
 

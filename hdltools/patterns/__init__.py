@@ -3,8 +3,10 @@
 import re
 from typing import Union
 
+from hdltools import HDLToolsError
 
-class PatternError(Exception):
+
+class PatternError(HDLToolsError):
     """Pattern error."""
 
 

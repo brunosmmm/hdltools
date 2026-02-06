@@ -7,11 +7,12 @@ from typing import Dict, Tuple, Union
 from hdltools.abshdl import HDLObject
 from hdltools.abshdl.port import HDLModulePort
 from hdltools.util import safe_eval_math
+from hdltools import HDLToolsError
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 
 
-class HDLModuleInterfaceError(Exception):
+class HDLModuleInterfaceError(HDLToolsError):
     """Interface description error."""
 
 

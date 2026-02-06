@@ -10,9 +10,10 @@ from hdltools.abshdl.highlvl import HDLBlock
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.sim import HDLSimulationObject
 from hdltools.sim.util import concat
+from hdltools import HDLToolsError
 
 
-class IllegalCodeError(Exception):
+class IllegalCodeError(HDLToolsError):
     """Illegal code, untranslatable."""
 
 
