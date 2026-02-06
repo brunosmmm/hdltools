@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "low",
+    "tags": [
+      "abshdl",
+      "feature",
+      "signals"
+    ],
+    "text": "Support multi-dimensional signal vectors (currently only 1D [N:0] supported)",
+    "type": "idea"
+  },
+  "entity_id": "ann_024247_3e7cky8d9e27",
+  "lamport_clock": 10,
+  "operation_id": "op_20260206_024535_49ebc207",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:35.906099+00:00"
+}
