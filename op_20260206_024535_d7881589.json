@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "low",
+    "tags": [
+      "tools",
+      "axi",
+      "mmap"
+    ],
+    "text": "AXI slave builder: restrict add_ports to accept only lists, and handle non-zero default register values",
+    "type": "todo"
+  },
+  "entity_id": "ann_024259_3e7ckycaa1e6",
+  "lamport_clock": 16,
+  "operation_id": "op_20260206_024535_d7881589",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:35.963266+00:00"
+}
