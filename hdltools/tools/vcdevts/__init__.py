@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """VCD Event tracker."""
 
-import pickle
 import json
 import re
 import os
@@ -13,7 +12,10 @@ from dictator.validators.lists import SubListValidator
 from dictator.validators.integer import validate_positive_integer
 from dictator.validators.maps import SubDictValidator
 
+import pickle
+
 from hdltools.vcd.event import VCDEventTrackerLegacy, VCDEventTrackerCompiled, get_tracker_class
+from hdltools.vcd.parser import restricted_pickle_load
 from hdltools.vcd.streaming_parser import StreamingVCDParser
 from hdltools.vcd.mixins.hierarchy import VCDHierarchyAnalysisMixin
 
@@ -154,11 +156,11 @@ def main():
     with open(args.vcd, "rb") as data:
         try:
             tracker_class = VCDEventTrackerCompiled
-            header = pickle.load(data)
+            header = restricted_pickle_load(data)
             if header != "DUMP_START":
                 print("ERROR: invalid dump")
                 exit(1)
-        except pickle.UnpicklingError:
+        except (pickle.UnpicklingError, ValueError):
             # maybe is vcd file
             maybe_vcd = True
 

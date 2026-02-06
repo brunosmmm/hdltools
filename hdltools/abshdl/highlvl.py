@@ -146,7 +146,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 decorator_class = getattr(
                     sys.modules[__name__], decorator.func.id
                 )
-            except:
+            except AttributeError:
                 if decorator.func.id not in self._CUSTOM_TYPE_MAPPING:
                     decorator_class = None
                 else:
@@ -581,7 +581,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
     def _get_current_block(self):
         try:
             block, kwargs = self._current_block.pop()
-        except:
+        except IndexError:
             return None
 
         self._current_block.append((block, kwargs))

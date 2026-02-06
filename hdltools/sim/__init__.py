@@ -56,8 +56,8 @@ class HDLSimulationObject(HDLObject):
         if isinstance(value, HDLExpression):
             try:
                 return value.evaluate()
-            except:
-                raise ValueError("can only accept constant expressions.")
+            except (KeyError, TypeError, ValueError) as ex:
+                raise ValueError("can only accept constant expressions.") from ex
         elif isinstance(value, HDLIntegerConstant):
             return value
         elif isinstance(value, int):

@@ -30,7 +30,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             size = None
             try:
                 size = len(element.vector)
-            except:
+            except (TypeError, ValueError):
                 pass
 
             if size == 1:
@@ -91,7 +91,7 @@ class VerilogCodeGenerator(HDLCodeGenerator):
             size = None
             try:
                 size = len(element.vector)
-            except:
+            except (TypeError, ValueError):
                 pass
 
             if size == 1:

@@ -91,7 +91,7 @@ class VCDPatternMatcher(StreamingVCDParser):
                     # For now, still use string value for pattern matching compatibility
                     # Future: extend PatternMatcher to support binary operations
                     processed_value = value
-                except:
+                except (ValueError, TypeError, OverflowError):
                     # Fall back to string if binary conversion fails
                     processed_value = value
             else:

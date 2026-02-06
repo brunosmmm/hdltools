@@ -1,5 +1,6 @@
 """VCD parser."""
 
+import io
 import pickle
 from scoff.parsers.token import SimpleTokenField
 from scoff.parsers.generic import DataParser, ParserError
@@ -112,6 +113,27 @@ VCD_VAR_LINES = [
 # Backward compatibility is provided by the lazy loader below
 
 
+class _RestrictedUnpickler(pickle.Unpickler):
+    """Unpickler that only allows safe built-in types."""
+
+    _SAFE_BUILTINS = frozenset({"str", "int", "float", "dict", "list", "tuple", "bool", "set"})
+
+    def find_class(self, module, name):
+        """Only allow safe builtins."""
+        if module == "builtins" and name in self._SAFE_BUILTINS:
+            return getattr(__builtins__ if isinstance(__builtins__, dict) else type(__builtins__), name, None) or __import__(module).__dict__[name]
+        raise pickle.UnpicklingError(
+            f"forbidden unpickle: {module}.{name}"
+        )
+
+
+def restricted_pickle_load(data):
+    """Load pickle data using restricted unpickler (safe types only)."""
+    if isinstance(data, (bytes, bytearray)):
+        data = io.BytesIO(data)
+    return _RestrictedUnpickler(data).load()
+
+
 class CompiledVCDParser:
     """Compiled vcd parser."""
 
@@ -191,12 +213,12 @@ class CompiledVCDParser:
 
     def parse(self, data):
         """Parse."""
-        header = pickle.load(data)
+        header = restricted_pickle_load(data)
         if header != "DUMP_START":
             raise RuntimeError("invalid dump")
         vars_done = False
         while True:
-            val = pickle.load(data)
+            val = restricted_pickle_load(data)
             if isinstance(val, dict) and vars_done is False:
                 var = VCDVariable.unpack(val)
                 self._vars[var.identifiers[0]] = var
