@@ -1,0 +1,15 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "status": "INPROGRESS"
+  },
+  "entity_id": "ann_022735_3e7cky01b25f",
+  "lamport_clock": 2,
+  "operation_id": "op_20260206_024535_ce3fc1b2",
+  "operation_type": "annotation_update",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:35.844377+00:00"
+}
