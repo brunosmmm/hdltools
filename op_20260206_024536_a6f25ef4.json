@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "medium",
+    "tags": [
+      "audit",
+      "code-quality",
+      "multi-agent"
+    ],
+    "text": "Comprehensive codebase audit with 10 specialized agents covering software architecture, hardware engineering, DSLs, testing, and more - find issues and improvement opportunities",
+    "type": "work"
+  },
+  "entity_id": "ann_013744_3e7cky75e683",
+  "lamport_clock": 23,
+  "operation_id": "op_20260206_024536_a6f25ef4",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.040243+00:00"
+}
