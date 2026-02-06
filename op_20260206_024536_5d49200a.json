@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "branch": "master",
+    "content": "# Exploratory Codebase Analysis - hdltools\n\n## Summary\nCompleted comprehensive exploration of the hdltools codebase and saved 7 project knowledge entries covering all major subsystems.\n\n## Knowledge Captured\n\n### 1. Architecture Overview (know_013231_3e7ckyfd5994)\n- Core HDL IR hierarchy: HDLObject \u2192 HDLValue \u2192 specialized types\n- Code generation via visitor pattern (scoff base)\n- High-level Python DSL with decorators\n\n### 2. File Map (know_013231_3e7ckyf1c0a8)\n- Complete module-by-module breakdown with file sizes\n- Key files identified for each subsystem\n\n### 3. Design Patterns (know_013231_3e7ckye58a5d)\n- 8 key patterns: visitor codegen, AST expressions, decorator DSL, scope hierarchy, signal-driven assignments, interface parametrization, TextX grammars, operator overloading\n\n### 4. VHDL Backend (know_013231_3e7cky5e407e)\n- Auto library headers, type mapping, operator conversion\n- Signal collection and process generation details\n\n### 5. VCD Framework (know_013231_3e7cky0731aa)\n- Largest subsystem: parsing, streaming, comparison, events, triggers\n- Cross-language equivalence checking\n\n### 6. Testing Setup (know_013231_3e7ckyde3088)\n- tests.sh runner, 21 test files, asset locations\n- Functional equivalence testing via VCD comparison\n\n### 7. Memory Map & AXI (know_013231_3e7cky0a3540)\n- TextX grammar \u2192 AST \u2192 MMBuilder \u2192 MemoryMappedInterface pipeline\n- CLI tools for AXI slave generation and documentation\n\n## Key Statistics\n- ~143 Python files, 5 TextX grammars\n- 21 test files, 9 usage examples\n- 9 CLI entry points\n- Dependencies: textX, scoff, dictator, astunparse, rich, colorama\n- Python >=3.10, Poetry packaging",
+    "context": "Initial exploratory analysis of hdltools codebase to capture architecture and patterns for future sessions",
+    "repository_id": "github.com/brunosmmm/hdltools",
+    "session_id": 202602060126549947,
+    "session_type": "Research",
+    "title": "Exploratory Codebase Analysis - hdltools"
+  },
+  "entity_id": "20260206_0133_exploratory-codebase-analysis-complete",
+  "lamport_clock": 40,
+  "operation_id": "op_20260206_024536_5d49200a",
+  "operation_type": "checkpoint_save",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T01:33:29.744540+00:00"
+}
