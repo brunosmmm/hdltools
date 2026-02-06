@@ -1,0 +1,26 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "activity_phase": "implementation",
+    "annotation_id": "ann_021332_3e7cky7aa46a",
+    "complexity_factors": [
+      "multi_file",
+      "scope_keywords",
+      "investigation"
+    ],
+    "confidence": 0.8,
+    "description": "Phase 3 audit remediation: VCD improvements, test gaps, remaining moderate findings",
+    "git_branch": "master",
+    "perceived_complexity": 0.6,
+    "session_id": "20260206_012654_9947"
+  },
+  "entity_id": "task_021336_65b357",
+  "lamport_clock": 60,
+  "operation_id": "op_20260206_024537_0c952ee9",
+  "operation_type": "task_start",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:13:36.779746+00:00"
+}
