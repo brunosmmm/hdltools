@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "scope": "architecture",
+    "tags": [
+      "vcd",
+      "analysis",
+      "comparison",
+      "streaming"
+    ],
+    "text": "VCD analysis framework (hdltools/vcd/ - largest subsystem):\n\n**Parsers:**\n- parser.py: Standard VCD parser\n- streaming_parser.py (27KB): Memory-efficient streaming for large files\n\n**Comparison (compare.py, 28KB):**\n- VCDComparator, VCDStreamingComparator: Cross-language equivalence checking\n- VCDComparisonResult: Detailed diff results\n- Used by test_functional_equivalence.py to verify Verilog\u2194VHDL equivalence\n\n**Event system (event.py, 20KB):**\n- Event representation and tracking\n- Used by vcdevts and vcdtracker CLI tools\n\n**Hierarchy (mixins/hierarchy.py):**\n- VCDScope: Hierarchical scope with containment, parsing, hashing\n- Used by vcdhier CLI tool\n\n**Triggers (trigger/ subdir):**\n- FSM-based triggers, event triggers, branch conditions\n- TextX grammar for trigger specification (trigger/*.tx)\n\n**Pattern matching:** Integrates with hdltools/patterns/ for temporal pattern detection in VCD signals."
+  },
+  "entity_id": "know_013231_3e7cky0731aa",
+  "lamport_clock": 37,
+  "operation_id": "op_20260206_024536_7a25445c",
+  "operation_type": "knowledge_add",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.269147+00:00"
+}
