@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "medium",
+    "tags": [
+      "vcd",
+      "performance",
+      "tracker"
+    ],
+    "text": "Reduce data duplication in VCDValueTracker: tracker stores redundant history copies (_track_history, _complete_value_history, _full_history)",
+    "type": "todo"
+  },
+  "entity_id": "ann_024235_3e7cky76c227",
+  "lamport_clock": 4,
+  "operation_id": "op_20260206_024535_35a3a23a",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:35.859712+00:00"
+}
