@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "medium",
+    "tags": [
+      "exploration",
+      "knowledge-capture"
+    ],
+    "text": "Exploratory analysis of hdltools codebase - understand architecture, key modules, patterns, and save knowledge for future sessions",
+    "type": "work"
+  },
+  "entity_id": "ann_012641_3e7ckyfb76fa",
+  "lamport_clock": 21,
+  "operation_id": "op_20260206_024536_c583bc24",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.021929+00:00"
+}
