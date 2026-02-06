@@ -61,7 +61,6 @@ class VCDTimeSnapshot(VCDObject):
         return {"time": self._time, "states": self._states}
 
 
-# FIXME: this breaks with variables that are not initialized properly
 class VCDCompiler(StreamingVCDParser, VCDHierarchyAnalysisMixin):
     """VCD compiler with efficient storage option."""
 

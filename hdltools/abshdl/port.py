@@ -27,8 +27,6 @@ class HDLAbsModulePort(HDLObject):
         """Alias for __repr__."""
         return self.__repr__(eval_scope)
 
-        # HACKY HACKS!!!!!
-
     def __pos__(self):
         """Access internal signal as an expression."""
         return HDLExpression(self.signal)

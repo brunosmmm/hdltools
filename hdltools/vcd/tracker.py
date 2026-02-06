@@ -172,7 +172,6 @@ class VCDValueTracker(
     def _parse_progress(self):
         """Track parsing progress."""
         self._stmt_count += 1
-        # print("DEBUG: #lines = {}".format(self._current_line))
 
     def header_statement_handler(self, stmt, fields):
         """Handle header statements.
