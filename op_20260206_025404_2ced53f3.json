@@ -1,0 +1,23 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "commit_refs": [
+      {
+        "hash": "d90593f2018a11702f4f51932511bb4f48056641",
+        "hash_short": "d90593f",
+        "linked_at": "2026-02-06T02:54:04.206021+00:00",
+        "message": "chore: remove legacy poetry.lock and setup.py"
+      }
+    ],
+    "last_activity": "2026-02-06T02:54:04.206021+00:00"
+  },
+  "entity_id": "ann_022735_3e7cky01b25f",
+  "lamport_clock": 71,
+  "operation_id": "op_20260206_025404_2ced53f3",
+  "operation_type": "annotation_update",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:54:04.210824+00:00"
+}
