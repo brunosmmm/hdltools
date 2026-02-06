@@ -1,0 +1,22 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "high",
+    "tags": [
+      "audit-remediation",
+      "architecture",
+      "phase2"
+    ],
+    "text": "Phase 2 audit remediation: architecture and quality improvements. Add base exception hierarchy, resolve circular dependencies (abshdl\u2194hdllib), add missing gen_HDLStringConstant to Verilog backend, consolidate duplicated codegen methods.",
+    "type": "work"
+  },
+  "entity_id": "ann_020311_3e7cky9223b2",
+  "lamport_clock": 27,
+  "operation_id": "op_20260206_024536_a3110945",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.083266+00:00"
+}
