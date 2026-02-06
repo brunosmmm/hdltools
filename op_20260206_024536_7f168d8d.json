@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "low",
+    "tags": [
+      "binutils",
+      "refactor"
+    ],
+    "text": "binutils boundary tool: replace hack with proper implementation",
+    "type": "todo"
+  },
+  "entity_id": "ann_024306_3e7ckyb526ad",
+  "lamport_clock": 20,
+  "operation_id": "op_20260206_024536_7f168d8d",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.009337+00:00"
+}
