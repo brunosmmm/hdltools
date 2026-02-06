@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "branch": "master",
+    "content": "# Phase 3 Audit Remediation - Bug Fixes\n\n## Bugs Fixed\n\n### module.py - Wrong variable names and missing validation\n- **Bug**: `add_instances` list path used `instances.name` (the whole list) instead of `instance.name` (the iterator) at lines 215 and 220\n- **Added**: Duplicate port name verification in `add_ports`\n- **Added**: Duplicate parameter name verification in `add_parameters`\n\n### sim/hdl.py - Crash bugs\n- **Bug**: `assigned_globals.append(target, infer_register)` \u2014 `list.append` only takes 1 arg; would crash when `manual_visit=True`\n- **Bug**: `func.id` accessed without type guard after `isinstance(func, ast.Attribute)` check; would crash for non-Name, non-Attribute func types\n\n### vcd/__init__.py - Python convention violation\n- `VCDScope.__eq__` raised `TypeError` for non-VCDScope comparisons; now returns `NotImplemented` per Python data model\n\n### vcd/compiler.py - Uninitialized variables and debug prints\n- `record_state` now handles None, 'x', 'z' values instead of crashing on `int(state, 2)`\n- Removed `print(\"DEBUG: starting\")` and `print(f\"DEBUG: @{time}\")` from production code\n- Removed empty `_item_size` method\n\n### vcd/tracker.py - Anchor validation and logic cleanup\n- Added validation: anchors now require scope restriction to be set\n- Simplified duplicated source-tracking logic into single conditional\n\n### vcd/parser.py - Debug print\n- Removed `print(f\"DEBUG: @{time}\")` from `clock_change_handler`\n\n## Test Results\n122 passed, 3 skipped, 0 failed",
+    "context": "Phase 3 audit remediation - actual bug fixes and code quality improvements",
+    "repository_id": "github.com/brunosmmm/hdltools",
+    "session_id": 202602060126549947,
+    "session_type": "Software Development",
+    "title": "Phase 3 Audit Remediation - Bug Fixes"
+  },
+  "entity_id": "20260206_0220_phase-3-bug-fixes-complete",
+  "lamport_clock": 44,
+  "operation_id": "op_20260206_024536_32f139a1",
+  "operation_type": "checkpoint_save",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:20:20.836360+00:00"
+}
