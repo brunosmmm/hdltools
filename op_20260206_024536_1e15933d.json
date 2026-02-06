@@ -1,0 +1,26 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "activity_phase": "implementation",
+    "annotation_id": "ann_020311_3e7cky9223b2",
+    "complexity_factors": [
+      "multi_file",
+      "architecture",
+      "refactoring"
+    ],
+    "confidence": 0.8,
+    "description": "Phase 2: exception hierarchy, circular deps, missing codegen handler, codegen consolidation",
+    "git_branch": "master",
+    "perceived_complexity": 0.7,
+    "session_id": "20260206_012654_9947"
+  },
+  "entity_id": "task_020315_43e987",
+  "lamport_clock": 55,
+  "operation_id": "op_20260206_024536_1e15933d",
+  "operation_type": "task_start",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:03:15.935412+00:00"
+}
