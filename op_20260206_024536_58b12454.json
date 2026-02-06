@@ -1,0 +1,23 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "priority": "critical",
+    "tags": [
+      "audit-remediation",
+      "security",
+      "correctness",
+      "phase1"
+    ],
+    "text": "Implement Phase 1 critical fixes from 10-agent audit: security (eval/pickle removal), correctness bugs (vector.py dumps, signal.py assignment inversion, deprecated AST attrs), bare except clauses, packaging fixes (remove setup.py, fix .gitignore, add package_data)",
+    "type": "work"
+  },
+  "entity_id": "ann_015038_3e7cky5ea459",
+  "lamport_clock": 25,
+  "operation_id": "op_20260206_024536_58b12454",
+  "operation_type": "annotation_create",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:45:36.059199+00:00"
+}
