@@ -119,9 +119,7 @@ class HDLModule(HDLObject):
         ports: list or HDLModulePort
             List of ports to be added
         """
-        # TODO: duplicate port verification
-        # typed_ports_added = False
-        # untyped_ports_added = False
+        existing_names = {p.name for p in self.ports}
         _ports = []
         if not isinstance(ports, (tuple, list)):
             _ports.append(ports)
@@ -133,24 +131,23 @@ class HDLModule(HDLObject):
                     _ports.append(port)
         for port in _ports:
             if isinstance(port, HDLModuleTypedPort):
-                # FIXME: motivation for this check is now unknown
-                # if untyped_ports_added:
-                #     raise TypeError("cannot mix typed and untyped ports")
+                if port.name in existing_names:
+                    raise HDLModuleError(
+                        f"duplicate port name: '{port.name}'"
+                    )
                 self.ports.append(port)
-                # typed_ports_added = True
+                existing_names.add(port.name)
             elif isinstance(port, HDLModulePort):
-                # if typed_ports_added:
-                #     raise TypeError("cannot mix typed and untyped ports")
+                if port.name in existing_names:
+                    raise HDLModuleError(
+                        f"duplicate port name: '{port.name}'"
+                    )
                 self.ports.append(port)
-                # untyped_ports_added = True
+                existing_names.add(port.name)
             elif isinstance(port, HDLModuleInterface):
-                # interface is intrinsically typed
-                # typed_ports_added = True
                 self.ports.append(port)
             elif isinstance(port, HDLInterfaceDeferred):
-                # in this case, we will parameterize this later with module params
                 self.ports.append(port)
-                # typed_ports_added = True
             else:
                 raise TypeError(
                     "list may only contain HDLModulePort instances, "
@@ -165,15 +162,24 @@ class HDLModule(HDLObject):
         params: list or HDLModuleParameter
             List of parameters to be added.
         """
-        # TODO: duplicate parameter verification
+        existing_names = {p.name for p in self.params}
         if isinstance(params, HDLModuleParameter):
+            if params.name in existing_names:
+                raise HDLModuleError(
+                    f"duplicate parameter name: '{params.name}'"
+                )
             self.params.append(params)
         elif isinstance(params, (tuple, list)):
             for param in params:
                 if not isinstance(param, HDLModuleParameter):
                     raise TypeError(
-                        "list may only contain HDLModuleParameter" " instances"
+                        "list may only contain HDLModuleParameter instances"
                     )
+                if param.name in existing_names:
+                    raise HDLModuleError(
+                        f"duplicate parameter name: '{param.name}'"
+                    )
+                existing_names.add(param.name)
             self.params.extend(params)
         else:
             raise TypeError("params must be a list or HDLModuleParameter")
@@ -212,12 +218,12 @@ class HDLModule(HDLObject):
                     raise TypeError("must be HDLInstance object")
                 if instance.name in self.instances:
                     raise HDLModuleError(
-                        f"instance named '{instances.name} already exists"
+                        f"instance named '{instance.name}' already exists"
                     )
                 self.instances[instance.name] = instance
                 self.scope.add(
                     HDLInstanceStatement(
-                        instance, tag="_inst_" + instances.name
+                        instance, tag="_inst_" + instance.name
                     )
                 )
         elif isinstance(instances, dict):

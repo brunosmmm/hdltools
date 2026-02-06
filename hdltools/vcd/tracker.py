@@ -156,6 +156,10 @@ class VCDValueTracker(
         src_anchor, dest_anchor = (
             anchors if anchors is not None else (None, None)
         )
+        if src_anchor is not None and restrict_src is None:
+            raise ValueError("src anchor requires restrict_src to be set")
+        if dest_anchor is not None and restrict_dest is None:
+            raise ValueError("dest anchor requires restrict_dest to be set")
         self._src_anchor = (
             re.compile(src_anchor) if src_anchor is not None else None
         )
@@ -164,8 +168,6 @@ class VCDValueTracker(
         )
         self._maybe_src = None
         self._maybe_dest = None
-
-    # FIXME: this is a placeholder
 
     def _parse_progress(self):
         """Track parsing progress."""
@@ -243,26 +245,13 @@ class VCDValueTracker(
             idx = self._add_to_tracked_history(
                 var.scope, var.name, self.current_time
             )
-            # FIXME: make sure that anchors are not used without scope restriction
             if in_src_scope:
-                if self._src_anchor is not None and self._maybe_dest is None:
-                    if (
-                        self._src_anchor.match(
-                            self.variables[fields["var"]].name
-                        )
-                        is not None
-                    ):
-                        # new probable source
-                        # FIXME: bad logic
-                        if self._oneshot_src is False:
-                            self._maybe_src = idx
-                        elif self._maybe_src is None:
-                            self._maybe_src = idx
-                elif self._maybe_dest is None:
-                    # anything that appears is probable source
-                    if self._oneshot_src is False:
-                        self._maybe_src = idx
-                    elif self._maybe_src is None:
+                is_anchor_match = (
+                    self._src_anchor is None
+                    or self._src_anchor.match(var.name) is not None
+                )
+                if is_anchor_match and self._maybe_dest is None:
+                    if not self._oneshot_src or self._maybe_src is None:
                         self._maybe_src = idx
 
             if in_dest_scope:

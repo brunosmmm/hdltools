@@ -182,7 +182,6 @@ class CompiledVCDParser:
 
     def clock_change_handler(self, time):
         """Handle clock change."""
-        print(f"DEBUG: @{time}")
 
     # FIXME: hooks do NOT work yet
     def add_state_hook(self, state, hook):

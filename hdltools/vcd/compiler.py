@@ -40,15 +40,21 @@ class VCDTimeSnapshot(VCDObject):
 
     def record_state(self, var, state):
         """Record current state."""
-        self._states[var] = int(state, 2)
+        if state is None:
+            self._states[var] = 0
+            return
+        # Handle 'x' and 'z' values by replacing with '0'
+        clean_state = state.replace("x", "0").replace("X", "0")
+        clean_state = clean_state.replace("z", "0").replace("Z", "0")
+        try:
+            self._states[var] = int(clean_state, 2)
+        except ValueError:
+            self._states[var] = 0
 
     @property
     def states(self):
         """Get states."""
         return self._states
-
-    def _item_size(self):
-        """Calcualte item size."""
 
     def pack(self):
         """Pack."""
@@ -88,7 +94,6 @@ class VCDCompiler(StreamingVCDParser, VCDHierarchyAnalysisMixin):
 
     def parse(self, data, dest):
         """Parse."""
-        print("DEBUG: starting")
         self._dest = dest
         pickle.dump("DUMP_START", dest)
         super().parse(data)
@@ -156,8 +161,6 @@ class VCDCompiler(StreamingVCDParser, VCDHierarchyAnalysisMixin):
         """Handle time."""
         if time == 0:
             return
-        if time % 100 == 0:
-            print(f"DEBUG: @{time}", end="\r")
         self.record_time_slice(time)
         if self._delta is False:
             for var in self.variables.values():
