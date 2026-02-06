@@ -1,0 +1,21 @@
+{
+  "author": {
+    "email": "brunosmmm@gmail.com",
+    "name": "Bruno Morais"
+  },
+  "data": {
+    "branch": "master",
+    "content": "# Phase 2 Audit Remediation Complete\n\n## What Was Done\n\n### Task #8: Exception Hierarchy\n- Created `HDLToolsError` base class in `hdltools/__init__.py`\n- Updated 13 exception classes across 12 files to inherit from `HDLToolsError`\n- All project-specific exceptions now catchable via `except HDLToolsError`\n\n### Task #9: Layering Violation Fix\n- Moved `hdllib.patterns` and `hdllib.fsm` imports in `abshdl/highlvl.py` from module-level to lazy imports inside `visit_FunctionDef`\n- Eliminates architectural layering violation (base layer importing from higher layer)\n\n### Task #10: Missing Codegen Method\n- Added `gen_HDLStringConstant` to Verilog codegen (was only in VHDL)\n\n### Task #11: Codegen Consolidation\n- Moved `gen_HDLStringConstant` implementation to base class `HDLCodeGenerator`\n- Removed duplicate implementations from both Verilog and VHDL backends\n- Analysis showed this was the only truly identical method across backends\n\n## Files Changed (15)\n- `hdltools/__init__.py` - HDLToolsError base class (from Phase 1)\n- `hdltools/abshdl/codegen.py` - gen_HDLStringConstant implementation\n- `hdltools/abshdl/generator.py` - HDLEntityGeneratorError \u2192 HDLToolsError\n- `hdltools/abshdl/highlvl.py` - PatternNotAllowedError + lazy imports\n- `hdltools/abshdl/interface.py` - HDLModuleInterfaceError \u2192 HDLToolsError\n- `hdltools/abshdl/module.py` - HDLModuleError \u2192 HDLToolsError\n- `hdltools/hdllib/fsm.py` - FSMInputError, FSMInvalidStateError \u2192 HDLToolsError\n- `hdltools/mmap/builder.py` - MMBuilderSemanticError \u2192 HDLToolsError\n- `hdltools/patterns/__init__.py` - PatternError \u2192 HDLToolsError\n- `hdltools/patterns/matcher.py` - PatternMatcherError \u2192 HDLToolsError\n- `hdltools/sim/hdl.py` - IllegalCodeError \u2192 HDLToolsError\n- `hdltools/tools/common/mmap.py` - MmapError \u2192 HDLToolsError\n- `hdltools/vcd/parser.py` - VCDParserError \u2192 HDLToolsError\n- `hdltools/vcd/trigger/__init__.py` - VCDTriggerError \u2192 HDLToolsError\n- `hdltools/verilog/codegen.py` - removed duplicate gen_HDLStringConstant\n- `hdltools/vhdl/codegen.py` - removed duplicate gen_HDLStringConstant\n\n## Test Results\n122 passed, 3 skipped, 0 failed",
+    "context": "Completed Phase 2 of audit remediation - architecture and quality improvements",
+    "repository_id": "github.com/brunosmmm/hdltools",
+    "session_id": 202602060126549947,
+    "session_type": "Software Development",
+    "title": "Phase 2 Audit Remediation Complete"
+  },
+  "entity_id": "20260206_0211_phase-2-audit-remediation-complete",
+  "lamport_clock": 43,
+  "operation_id": "op_20260206_024536_093b4443",
+  "operation_type": "checkpoint_save",
+  "parent_operation": null,
+  "timestamp": "2026-02-06T02:11:19.803944+00:00"
+}
