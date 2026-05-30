@@ -3,6 +3,7 @@
 from hdltools.abshdl import HDLObject
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.expr import HDLExpression
+from hdltools.logging import DEFAULT_LOGGER
 from hdltools.sim.ports import HDLSimulationPort
 from hdltools.sim.state import HDLSimulationState
 
@@ -56,8 +57,8 @@ class HDLSimulationObject(HDLObject):
         if isinstance(value, HDLExpression):
             try:
                 return value.evaluate()
-            except:
-                raise ValueError("can only accept constant expressions.")
+            except (KeyError, TypeError, ValueError) as ex:
+                raise ValueError("can only accept constant expressions.") from ex
         elif isinstance(value, HDLIntegerConstant):
             return value
         elif isinstance(value, int):
@@ -187,10 +188,10 @@ class HDLSimulationObject(HDLObject):
                 value = HDLSimulationPort.normalize_list_to_vector(value)
             changed = port._value_change(value)
             if changed:
-                print(f"value change: {self.identifier}.{name} -> {value}")
+                DEFAULT_LOGGER.debug(
+                    f"value change: {self.identifier}.{name} -> {value}"
+                )
             return
-
-        print(f"value change: {self.identifier}.{name} -> {value}")
 
     def __getattr__(self, name):
         """Get an attribute."""

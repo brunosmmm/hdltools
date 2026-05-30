@@ -8,6 +8,7 @@ from scoff.ast.visits.control import no_child_visits
 
 # from scoff.ast.visits.control import SetFlag, ClearFlagAfter
 import hdltools.util
+from hdltools.util import safe_eval_math
 from hdltools.abshdl.const import HDLIntegerConstant
 from hdltools.abshdl.mmap import MemoryMappedInterface
 from hdltools.abshdl.module import HDLModuleParameter
@@ -15,12 +16,13 @@ from hdltools.abshdl.registers import HDLRegister, HDLRegisterField
 from hdltools.logging import DEFAULT_LOGGER
 from hdltools.mmap import FlagPort
 from hdltools.mmap.ast import SlaveRegisterField, RegisterProperty
+from hdltools import HDLToolsError
 
 EXPRESSION_REGEX = re.compile(r"[\+\-\*\/\(\)]+")
 TEMPLATE_REGEX = re.compile(r"\{([_a-zA-Z]\w*)\}")
 
 
-class MMBuilderSemanticError(Exception):
+class MMBuilderSemanticError(HDLToolsError):
     """Semantic error."""
 
 
@@ -221,9 +223,9 @@ class MMBuilder(SyntaxChecker):
                 expr = node.replace(name, str(value))
             expr = expr.replace("/", "//")
             try:
-                expr = eval(expr)
-            except SyntaxError:
-                raise RuntimeError("invalid expression in template")
+                expr = safe_eval_math(expr)
+            except (SyntaxError, ValueError) as ex:
+                raise RuntimeError("invalid expression in template") from ex
             return expr
         # is name
         return _find_name(node)
@@ -401,8 +403,8 @@ class MMBuilder(SyntaxChecker):
             (fragment,) = node.name.fragments
             try:
                 start, end = fragment.templates[0].rule.split("-")
-            except:
-                raise RuntimeError("error in fragment rule")
+            except (ValueError, IndexError, AttributeError) as ex:
+                raise RuntimeError("error in fragment rule") from ex
             for port in range(int(start), int(end) + 1):
                 fmt_str = "{{{}}}".format(
                     src_reg.fragments[0].templates[0].arg

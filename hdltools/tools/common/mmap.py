@@ -2,8 +2,10 @@
 
 from argparse import ArgumentParser
 
+from hdltools import HDLToolsError
 
-class MmapError(Exception):
+
+class MmapError(HDLToolsError):
     """Base class for mmap errors."""
 
 

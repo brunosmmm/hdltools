@@ -177,6 +177,11 @@ class HDLExpression(HDLValue):
                 self._evaluate(node.operand, **kwargs)
             )
         elif isinstance(node, ast.Call):
+            if not isinstance(node.func, ast.Name):
+                raise TypeError(
+                    "only simple function calls supported, "
+                    f"got: {type(node.func).__name__}"
+                )
             if node.func.id in kwargs:
                 # evaluate arguments
                 arg_eval = []
@@ -186,7 +191,7 @@ class HDLExpression(HDLValue):
                 return kwargs[node.func.id].call(*arg_eval, **kwargs)
             else:
                 raise KeyError(
-                    'function "{}" not' " available".format(node.func.id)
+                    'function "{}" not available'.format(node.func.id)
                 )
         elif isinstance(node, ast.Subscript):
             signal_name = self._evaluate(node.value)
@@ -227,13 +232,14 @@ class HDLExpression(HDLValue):
             return str(node.value)
         elif isinstance(node, ast.Name):
             return node.id
-        elif isinstance(node, ast.NameConstant):
+        elif hasattr(ast, "NameConstant") and isinstance(node, ast.NameConstant):
             return node.value
         elif isinstance(node, ast.Call):
             arg_list = []
             for arg in node.args:
                 arg_list.append(self._get_expr(arg))
-            return "{}({})".format(node.func.id, ",".join(arg_list))
+            func_name = node.func.id if isinstance(node.func, ast.Name) else self._get_expr(node.func)
+            return "{}({})".format(func_name, ",".join(arg_list))
         elif isinstance(node, ast.Compare):
             if len(node.ops) > 1:
                 raise ValueError("multiple inline comparison not supported")
@@ -540,19 +546,19 @@ class HDLExpression(HDLValue):
                 prune_right = False
         elif isinstance(binop.op, (ast.Mult, ast.Div)):
             if isinstance(left, ast.Constant):
-                if left.n == 0:
+                if left.value == 0:
                     return ast.Constant(value=0)
                 prune_left = bool(left.value == 1)
             else:
                 prune_left = False
 
             if isinstance(right, ast.Constant):
-                if right.n == 0:
-                    if isinstance(right, ast.Mult):
+                if right.value == 0:
+                    if isinstance(binop.op, ast.Mult):
                         return ast.Constant(value=0)
                     else:
                         raise ValueError("division by zero")
-                prune_right = bool(right.n == 1)
+                prune_right = bool(right.value == 1)
             else:
                 prune_right = False
         else:

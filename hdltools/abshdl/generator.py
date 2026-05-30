@@ -3,8 +3,10 @@
 from typing import Dict, Type, Tuple, Any
 from argparse import ArgumentParser
 
+from hdltools import HDLToolsError
 
-class HDLEntityGeneratorError(Exception):
+
+class HDLEntityGeneratorError(HDLToolsError):
     """Entity generation error."""
 
 

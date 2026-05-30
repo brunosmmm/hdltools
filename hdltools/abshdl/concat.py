@@ -116,7 +116,7 @@ class HDLConcatenation(HDLObject):
         _item = self._check_item(item)
         try:
             item_size = len(_item)
-        except:
+        except (TypeError, ValueError):
             item_size = None
 
         if item_size is None:

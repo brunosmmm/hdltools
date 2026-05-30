@@ -42,7 +42,7 @@ class VCDValueHistoryEntry(VCDObject):
     def __eq__(self, other):
         """Test equality."""
         if not isinstance(other, VCDValueHistoryEntry):
-            raise TypeError("other must be a VCDValueHistoryEntry object")
+            return NotImplemented
         if other.scope != self.scope:
             return False
 
@@ -70,6 +70,10 @@ class VCDValueHistory(VCDObject):
     def __getitem__(self, idx):
         """Get item."""
         return self._history[idx]
+
+    def __iter__(self):
+        """Iterate over history entries."""
+        return iter(self._history)
 
     def get_by_time(self, time: int) -> VCDValueHistoryEntry:
         """Get history entry by simulation time.

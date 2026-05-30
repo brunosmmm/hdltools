@@ -12,19 +12,13 @@ from hdltools.abshdl.signal import HDLSignal, HDLSignalSlice
 from hdltools.abshdl.port import HDLModulePort
 from hdltools.abshdl.assign import HDLAssignment, HDLLazyValue
 from hdltools.abshdl.ifelse import HDLIfElse, HDLIfExp
-from hdltools.hdllib.patterns import (
-    ClockedBlock,
-    ClockedRstBlock,
-    ParallelBlock,
-    SequentialBlock,
-)
-from hdltools.hdllib.fsm import FSM
 from hdltools.abshdl.concat import HDLConcatenation
 from hdltools.abshdl.vector import HDLVectorDescriptor
 from hdltools.abshdl.macro import HDLMacroValue
+from hdltools import HDLToolsError
 
 
-class PatternNotAllowedError(Exception):
+class PatternNotAllowedError(HDLToolsError):
     """Code pattern not allowed."""
 
     pass
@@ -130,6 +124,15 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         """Visit function declaration."""
+        # Lazy imports to avoid layering violation (abshdl → hdllib)
+        from hdltools.hdllib.patterns import (
+            ClockedBlock,
+            ClockedRstBlock,
+            ParallelBlock,
+            SequentialBlock,
+        )
+        from hdltools.hdllib.fsm import FSM
+
         # starting point is function declaration. Remove our own decorator.
         decorator_list = [
             x
@@ -146,7 +149,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
                 decorator_class = getattr(
                     sys.modules[__name__], decorator.func.id
                 )
-            except:
+            except AttributeError:
                 if decorator.func.id not in self._CUSTOM_TYPE_MAPPING:
                     decorator_class = None
                 else:
@@ -581,7 +584,7 @@ class HDLBlock(HDLObject, ast.NodeVisitor):
     def _get_current_block(self):
         try:
             block, kwargs = self._current_block.pop()
-        except:
+        except IndexError:
             return None
 
         self._current_block.append((block, kwargs))

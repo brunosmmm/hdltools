@@ -41,11 +41,8 @@ class VCDScope(VCDObject):
 
     def __eq__(self, other):
         """Scope equality."""
-        # FIXME: raising TypeError is weird
         if not isinstance(other, VCDScope):
-            raise TypeError(
-                f"other must be a VCDScope object, got {type(other)}"
-            )
+            return NotImplemented
         return self._scopes == other._scopes
 
     def __hash__(self):

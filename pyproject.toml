@@ -1,19 +1,21 @@
-[tool.poetry]
+[project]
 name = "hdltools"
 version = "0.1.0"
-description = ""
-authors = ["Bruno <brunosmmm@gmail.com>"]
+description = "Python library for RTL/HDL manipulation, code generation, and verification"
+authors = [{name = "Bruno Morais", email = "brunosmmm@gmail.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "textX>=4.2.2",
+    "dictator @ git+https://github.com/brunosmmm/dictator@b158aeec85efe1401e6bd6fc8f0cdd6f1d0303ae",
+    "colorama>=0.4.6",
+    "astunparse>=1.6.3",
+    "scoff @ git+https://github.com/brunosmmm/scoff@f544c6c5a20da130cd64f8365fc36e679fe92b33",
+    "rich>=13.7.1",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-textX = "^4.2.2"
-dictator = {git = "https://github.com/brunosmmm/dictator", rev = "master"}
-colorama = ">=0.4.6"
-astunparse = "^1.6.3"
-scoff = {git = "https://github.com/brunosmmm/scoff", rev = "f544c6c5a20da130cd64f8365fc36e679fe92b33"}
-rich = "^13.7.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 axi_slave_builder = "hdltools.tools.axi_slave_builder:main"
 fnboundary = "hdltools.tools.fnboundary:main"
 inputgen = "hdltools.tools.inputgen:main"
@@ -24,13 +26,32 @@ vcdtracker = "hdltools.tools.vcdtracker:main"
 vgc = "hdltools.tools.vgc:main"
 vcdcmp = "hdltools.tools.vcdcmp:main"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.2.0"
-coverage = "^5.5"
-pytest-cov = "^2.11.1"
-sphinx = ">=6.0,<8.0"
-sphinx-rtd-theme = ">=1.3.0"
+[dependency-groups]
+dev = [
+    "pytest>=7.2.0",
+    "coverage>=5.5",
+    "pytest-cov>=2.11.1",
+    "sphinx>=6.0,<8.0",
+    "sphinx-rtd-theme>=1.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["hdltools"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"hdltools/binutils/objdump.tx" = "hdltools/binutils/objdump.tx"
+"hdltools/mmap/mmap.tx" = "hdltools/mmap/mmap.tx"
+"hdltools/vcd/trigger/trigcond.tx" = "hdltools/vcd/trigger/trigcond.tx"
+"hdltools/vecgen/vecgrammar.tx" = "hdltools/vecgen/vecgrammar.tx"
+"hdltools/verilog/module_grammar.tx" = "hdltools/verilog/module_grammar.tx"

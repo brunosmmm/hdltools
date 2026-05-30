@@ -20,8 +20,8 @@ class HDLCodeGenerator(CodeGenerator):
         raise NotImplementedError
 
     def gen_HDLStringConstant(self, element, **kwargs):
-        """Generate String constants."""
-        raise NotImplementedError
+        """Generate string constants."""
+        return '"{}"'.format(element.value)
 
     def gen_HDLVectorDescriptor(self, element, **kwargs):
         """Generate Vector elements."""

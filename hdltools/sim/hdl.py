@@ -10,9 +10,10 @@ from hdltools.abshdl.highlvl import HDLBlock
 from hdltools.abshdl.signal import HDLSignal
 from hdltools.sim import HDLSimulationObject
 from hdltools.sim.util import concat
+from hdltools import HDLToolsError
 
 
-class IllegalCodeError(Exception):
+class IllegalCodeError(HDLToolsError):
     """Illegal code, untranslatable."""
 
 
@@ -218,8 +219,14 @@ class CombinatorialChecker(ast.NodeVisitor):
             if func.value.id == "self":
                 if func.attr in HDLSimulationObject._sequential_methods:
                     self._is_comb = False
+            self.generic_visit(node)
+            return
         if isinstance(func, ast.Name) and func.id in self._symbols:
             return
+        if not isinstance(func, ast.Name):
+            raise RuntimeError(
+                "unsupported call type: '{}'".format(type(func).__name__)
+            )
         if func.id not in self._symbols:
             raise RuntimeError("unknown python function: '{}'".format(func.id))
         self.generic_visit(node)
@@ -255,7 +262,7 @@ class CombinatorialChecker(ast.NodeVisitor):
                             target, infer_register, assign=node
                         )
                     else:
-                        assigned_globals.append(target, infer_register)
+                        assigned_globals.append(target)
             elif isinstance(target, ast.Name):
                 # locals are taken as combinatorial assignments.
                 # signal must be created before passing through

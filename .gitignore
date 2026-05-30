@@ -1,5 +1,12 @@
 *.*~
 *.pyc
+__pycache__/
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+.pytest_cache/
 .coverage*
 *.vcd
 cover/
