@@ -159,7 +159,12 @@ class VerilogCodeGenerator(HDLCodeGenerator):
         if assign_type == "parallel":
             assign_str = "assign {} = {}".format(assign_lhs, assign_rhs)
         elif assign_type == "series":
-            if element.assign_type == "block":
+            # Verilog for-loop indices are `integer`/`var` and must use blocking `=`.
+            # HDLAssignment defaults to assign_type="block" (<=); signal.assign() sets
+            # nonblock for vars — force `=` so either construction path is legal.
+            if element.signal.get_sig_type() == "var":
+                assign_op = "="
+            elif element.assign_type == "block":
                 assign_op = "<="
             else:
                 assign_op = "="

@@ -60,14 +60,13 @@ def test_streaming_parser_value_at_time_golden():
     parser = StreamingVCDParser()
     parser.parse(MINI_VCD)
 
-    # Scalar clock
+    # Scalar clock — exact value at t=10 after rising to 1
     assert parser.get_value_at_time_efficient("a", 0) in ("0", "0a", "b0")
     clk10 = parser.get_value_at_time_efficient("a", 10)
-    assert clk10 is not None
-    assert "1" in clk10
+    assert clk10 in ("1", "1a", "b1")
 
-    # Vector counter
+    # Vector counter — exact bits, not a loose substring
     c20 = parser.get_value_at_time_efficient("b", 20)
     c30 = parser.get_value_at_time_efficient("b", 30)
-    assert c20 is not None and "0001" in c20.replace(" ", "")
-    assert c30 is not None and "1010" in c30.replace(" ", "")
+    assert c20 is not None and c20.lstrip("b").endswith("0001")
+    assert c30 is not None and c30.lstrip("b").endswith("1010")

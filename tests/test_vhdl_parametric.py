@@ -66,8 +66,9 @@ def test_vhdl_sensitivity_any_without_signal():
     seq.add(HDLAssignment(out_sig, 0))
 
     out = VHDLCodeGenerator().dump_element(seq)
-    assert "process" in out
-    assert "all" in out
+    compact = " ".join(out.split())
+    assert "process (all)" in compact
+
 
 
 def test_vhdl_get_axi_mm_slave_full_dump():
