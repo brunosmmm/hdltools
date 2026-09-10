@@ -126,6 +126,10 @@ class HDLConcatenation(HDLObject):
                     "and manual size not provided"
                 )
             item_size = size
+            # Parametric / unevaluable items need an explicit size so later
+            # len()/pack() can measure the concatenation.
+            if getattr(_item, "size", None) is None:
+                _item.size = item_size
 
         # remove placeholders
         actual_offset = self._find_offset(offset)

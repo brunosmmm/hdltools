@@ -50,8 +50,9 @@ def test_vcdtracker_pattern_occurrences():
     )
     tracker.parse(TRACKER_VCD)
     hist = tracker.history
-    n = len(hist._entries) if hasattr(hist, "_entries") else len(hist)
-    assert n >= 2
+    entries = list(hist._entries)
+    assert [e.time for e in entries] == [10, 30]
+    assert all(e.signal == "data" for e in entries)
 
 
 @pytest.mark.skipif(not INPUT1_VG.is_file(), reason="input1.vg missing")
@@ -66,7 +67,9 @@ def test_vgc_inputgen_pipeline(tmp_path, monkeypatch):
     vgc_main()
     assert json_out.is_file()
     data = json.loads(json_out.read_text())
-    assert "sequence" in data or "initial" in data or isinstance(data, (dict, list))
+    assert isinstance(data, dict)
+    assert "sequence" in data
+    assert data["sequence"], "vgc must emit a non-empty sequence"
 
     monkeypatch.setattr(
         sys, "argv", ["inputgen", str(json_out), "--output", str(txt_out)]

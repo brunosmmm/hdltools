@@ -30,7 +30,7 @@ def test_dump_port_data_width_div_eight_verilog():
     )
     out = VerilogCodeGenerator().dump_element(port)
     assert "S_AXI_WSTRB" in out
-    assert "C_S_AXI_DATA_WIDTH" in out
+    assert "C_S_AXI_DATA_WIDTH/8" in out.replace(" ", "")
 
 
 def test_dump_port_data_width_div_eight_vhdl():
@@ -42,4 +42,5 @@ def test_dump_port_data_width_div_eight_vhdl():
     )
     out = VHDLCodeGenerator().dump_element(port)
     assert "S_AXI_WSTRB" in out
-    assert "C_S_AXI_DATA_WIDTH" in out
+    compact = out.replace(" ", "")
+    assert "C_S_AXI_DATA_WIDTH/8" in compact or "C_S_AXI_DATA_WIDTH/8" in out

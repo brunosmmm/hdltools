@@ -80,7 +80,7 @@ def test_hierarchy_event_counts_exact():
     # Clock highs that return low before EOF complete and are counted
     assert tracker.event_counts.get("clock_high", 0) == 2
 
-    # Sustained state match may not end → assert history starts
+    # Sustained state==2 from t=30 onward → exactly one history start
     state_starts = [e for e in tracker.event_history if e.evt_type == "state_two"]
-    assert len(state_starts) >= 1
+    assert len(state_starts) == 1
     assert state_starts[0].time == 30

@@ -50,5 +50,5 @@ def test_cpu_scope_inst_addr_match_from_debug_scenario():
     assert cond.vcd_var == '"'
 
     hits = [e for e in tracker.event_history if e.evt_type == "hit_addr"]
-    assert len(hits) >= 1
+    assert len(hits) == 1
     assert hits[0].time == 20
