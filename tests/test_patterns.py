@@ -203,19 +203,22 @@ class TestPatternGeneration:
         verilog_gen = VerilogCodeGenerator()
         vhdl_gen = VHDLCodeGenerator()
         
+        # Try to generate code (may fail due to empty logic)
+        verilog_gen = VerilogCodeGenerator()
+        vhdl_gen = VHDLCodeGenerator()
+
         try:
             verilog_code = verilog_gen.dump_element(result)
             assert isinstance(verilog_code, str)
-        except Exception:
-            # Empty patterns might not generate valid code
-            pass
-        
+        except (TypeError, ValueError, KeyError, AttributeError) as exc:
+            # Empty ParallelBlock patterns may not be dumpable yet
+            pytest.skip(f"verilog dump unsupported for empty pattern: {exc}")
+
         try:
             vhdl_code = vhdl_gen.dump_element(result)
             assert isinstance(vhdl_code, str)
-        except Exception:
-            # Empty patterns might not generate valid code
-            pass
+        except (TypeError, ValueError, KeyError, AttributeError) as exc:
+            pytest.skip(f"vhdl dump unsupported for empty pattern: {exc}")
 
 
 if __name__ == "__main__":

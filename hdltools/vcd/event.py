@@ -382,22 +382,34 @@ def get_tracker_class(parser_class: Type) -> Type:
         
         def _find_variables_for_condition(self, cond):
             """Find variables for condition using efficient search when available."""
+            import re
+
+            # VCD var names are typically without bus extents; conditions may use
+            # signal[15:0]. Try the bare name as well.
+            names = [cond.name]
+            bare = re.sub(r"\[\d+(?::\d+)?\]$", "", cond.name)
+            if bare and bare not in names:
+                names.append(bare)
+
             # Try efficient search first if available
-            if hasattr(self, 'find_variables_efficient'):
-                try:
-                    scope_str = str(cond.scope) if cond.scope else None
-                    efficient_vars = self.find_variables_efficient(
-                        name=cond.name, scope=scope_str
-                    )
-                    # Only return efficient results if non-empty
-                    if efficient_vars:
-                        return set(efficient_vars)
-                    # If empty results, fall through to legacy search
-                except (AttributeError, KeyError):
-                    pass
-            
+            if hasattr(self, "find_variables_efficient"):
+                for name in names:
+                    try:
+                        scope_str = str(cond.scope) if cond.scope else None
+                        efficient_vars = self.find_variables_efficient(
+                            name=name, scope=scope_str
+                        )
+                        if efficient_vars:
+                            return set(efficient_vars)
+                    except (AttributeError, KeyError):
+                        pass
+
             # Fall back to legacy search
-            return self.variable_search(cond.name, cond.scope, True)
+            for name in names:
+                found = self.variable_search(name, cond.scope, True)
+                if found:
+                    return found
+            return set()
 
         def clock_change_handler(self, time):
             """Handle time with optimized variable access."""

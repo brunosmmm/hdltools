@@ -425,21 +425,26 @@ class VHDLCodeGenerator(HDLCodeGenerator):
         
         # For VHDL, handle type conversions for std_logic_vector assignments
         if hasattr(element.signal, 'vector') and element.signal.vector is not None:
-            # This is a vector signal
-            target_size = len(element.signal.vector)
-            
-            # Check if source is a simple integer that needs conversion
-            if isinstance(source, str) and source.isdigit():
-                # Convert integer to binary string
-                int_val = int(source)
-                binary_str = format(int_val, f'0{target_size}b')
-                source = f'"{binary_str}"'
-            elif isinstance(source, str) and '+' in source:
-                # This looks like an arithmetic expression - handle vector arithmetic properly
-                # Convert counter_reg+1 to unsigned(counter_reg)+1 for proper arithmetic
-                if 'counter_reg' in source and '+1' in source:
-                    source = source.replace('counter_reg', 'unsigned(counter_reg)')
-                source = f"std_logic_vector({source})"
+            # Parametric widths raise KeyError on len(); skip sized int conversion then.
+            target_size = None
+            try:
+                target_size = len(element.signal.vector)
+            except (TypeError, ValueError, KeyError, NameError):
+                pass
+
+            if target_size is not None:
+                # Check if source is a simple integer that needs conversion
+                if isinstance(source, str) and source.isdigit():
+                    # Convert integer to binary string
+                    int_val = int(source)
+                    binary_str = format(int_val, f'0{target_size}b')
+                    source = f'"{binary_str}"'
+                elif isinstance(source, str) and '+' in source:
+                    # This looks like an arithmetic expression - handle vector arithmetic properly
+                    # Convert counter_reg+1 to unsigned(counter_reg)+1 for proper arithmetic
+                    if 'counter_reg' in source and '+1' in source:
+                        source = source.replace('counter_reg', 'unsigned(counter_reg)')
+                    source = f"std_logic_vector({source})"
         
         # Determine assignment type based on signal type
         if hasattr(element.signal, 'sig_type'):
