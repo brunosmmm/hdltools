@@ -73,3 +73,33 @@ def test_module():
     mod = HDLModule(module_name="my_module", ports=[inp, out], params=[prm])
 
     print(gen.dump_element(mod))
+
+
+def test_dump_port_with_parametric_width():
+    """AXI-style parametric port widths must dump as symbolic slices."""
+    gen = VerilogCodeGenerator()
+    port = HDLModulePort(
+        direction="in",
+        name="S_AXI_AWADDR",
+        size=HDLExpression("C_S_AXI_ADDR_WIDTH"),
+    )
+
+    out = gen.dump_element(port)
+
+    assert "S_AXI_AWADDR" in out
+    assert "C_S_AXI_ADDR_WIDTH" in out
+
+
+def test_dump_signal_with_parametric_width():
+    """AXI-style parametric signal widths must dump as symbolic slices."""
+    gen = VerilogCodeGenerator()
+    sig = HDLSignal(
+        sig_type="reg",
+        sig_name="axi_awaddr",
+        size=HDLExpression("C_S_AXI_ADDR_WIDTH"),
+    )
+
+    out = gen.dump_element(sig)
+
+    assert "axi_awaddr" in out
+    assert "C_S_AXI_ADDR_WIDTH" in out

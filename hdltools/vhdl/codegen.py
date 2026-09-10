@@ -50,7 +50,7 @@ class VHDLCodeGenerator(HDLCodeGenerator):
                     # Fallback to vector notation
                     port_type = "std_logic_vector"
                     ext_str = self.dump_element(element.vector, evaluate=evaluate)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, KeyError, NameError):
                 # If we can't determine the size, assume it's a vector
                 port_type = "std_logic_vector"
                 ext_str = self.dump_element(element.vector, evaluate=evaluate)
@@ -364,7 +364,7 @@ class VHDLCodeGenerator(HDLCodeGenerator):
                     signal_type = "std_logic_vector{}".format(
                         self.dump_element(element.vector, evaluate=False)
                     )
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, KeyError, NameError):
                 signal_type = "std_logic_vector{}".format(
                     self.dump_element(element.vector, evaluate=False)
                 )
