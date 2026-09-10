@@ -38,6 +38,8 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+# tests/hdltools is a symlink to the package (legacy coverage combine), not tests
+norecursedirs = [".git", "venv", "hdltools"]
 
 [build-system]
 requires = ["hatchling"]

@@ -51,3 +51,30 @@ def test_vhdl_assign_to_parametric_width_signal():
 
     assert "axi_awaddr" in out
     assert "<=" in out
+
+
+def test_vhdl_sensitivity_any_without_signal():
+    """IDEA-465: always @(*) / sens_type any dumps as process (all)."""
+    from hdltools.abshdl.sens import HDLSensitivityDescriptor, HDLSensitivityList
+    from hdltools.abshdl.seq import HDLSequentialBlock
+    from hdltools.abshdl.assign import HDLAssignment
+
+    sens = HDLSensitivityList()
+    sens.add(HDLSensitivityDescriptor("any"))
+    seq = HDLSequentialBlock(sensitivity_list=sens)
+    out_sig = HDLSignal("reg", "dout", size=1)
+    seq.add(HDLAssignment(out_sig, 0))
+
+    out = VHDLCodeGenerator().dump_element(seq)
+    assert "process" in out
+    assert "all" in out
+
+
+def test_vhdl_get_axi_mm_slave_full_dump():
+    """IDEA-465: full axi mm slave entity dump must not TypeError on sens."""
+    from hdltools.hdllib.aximm import get_axi_mm_slave
+
+    slave = get_axi_mm_slave("tb_slave", 32, 2)
+    out = VHDLCodeGenerator().dump_element(slave)
+    assert "tb_slave" in out
+    assert "process" in out

@@ -123,7 +123,7 @@ Each bullet seeds one INCUBATE child idea (`:EPIC: HDLTOOLS-0001`, `:PROJECT: Hd
 - [x] C3 Hierarchy mixin + scoped descriptor linking — cond.vcd_var resolves for scope::sig[15:0]
 - [x] C4 vcdevts hierarchical event golden — VCDEventTrackerWithHierarchy; exact event_counts/timestamps
 - [x] C5 Remove conditional event asserts — fail if expected events absent in comprehensive suite
-- [ ] C6 Promote debug_*.py scenarios into pytest fixtures — value matching / cpu scope / timing
+- [x] C6 Promote debug_*.py scenarios into pytest fixtures — value matching / cpu scope / timing
 
 ### Wave D — CLI honesty
 - [x] D1 vcdtracker functional regression — synthetic VCD + pattern; match count asserted
@@ -131,27 +131,27 @@ Each bullet seeds one INCUBATE child idea (`:EPIC: HDLTOOLS-0001`, `:PROJECT: Hd
 - [x] D3 mmap_docgen CLI content asserts — videochk markdown tables/reset values
 - [x] D4 vgc→inputgen pipeline asserts — input1.vg chain; JSON schema + hex vector expectations
 - [x] D5 fnboundary list-fns / --fn-boundary asserts — fixture objdump; exit 0 + names/ranges
-- [ ] D6 Fix test_cli_tools weak returncodes — success must be 0; add vcdcmp --help; install-aware
+- [x] D6 Fix test_cli_tools weak returncodes — success must be 0; add vcdcmp --help; install-aware
 
 ### Wave E — Hygiene / honesty
-- [ ] E1 Clarify or fix tests/hdltools source mirror — document, exclude from confusion, or stop dual-path imports in traces
+- [x] E1 Clarify or fix tests/hdltools source mirror — document, exclude from confusion, or stop dual-path imports in traces
 - [x] E2 Exercise assets/tests/sample.mm in pytest — parse+docgen or builder smoke
-- [ ] E3 Repair stale CLAUDE.md test-count claims — only after suite green with evidence
+- [x] E3 Repair stale CLAUDE.md test-count claims — only after suite green with evidence
 - [x] E4 Pattern codegen test must not swallow Exception — replace bare except pass with asserts
-- [ ] E5 FST VCD→FST smoke (optional/cheap) — convert minimal VCD; file exists; skip if immature
+- [x] E5 FST VCD→FST smoke (optional/cheap) — convert minimal VCD; file exists; skip if immature
 
 Sequencing: A before claiming AXI safe; B parallelizable after A1/A4; C unblocks AutoBrew/debug
 workflows independently; D can parallel A once fixtures exist; E last or opportunistic.
 
 ## Acceptance criteria
 
-- [ ] Every Wave A–D child idea is `done`/`researched` with linked fix or accepted child spec, or explicitly `drop`ped with reason.
-- [ ] `axi_slave_builder assets/tests/videochk.mmap` is covered by pytest with exit 0 + content asserts.
-- [ ] `tests.sh` fails the job if a tool invocation fails.
-- [ ] VHDL parametric dump + assignment paths have regressions equivalent to Verilog ADDR_WIDTH tests.
-- [ ] At least one hierarchical `vcdevts`-class event test asserts exact counts (no conditional skip).
-- [ ] `vcdtracker` and `vcdcmp` CLI have at least one functional success-path test each.
-- [ ] CLAUDE.md test health claims match a recorded pytest run.
+- [x] Every Wave A–D child idea is `done`/`researched` with linked fix or accepted child spec, or explicitly `drop`ped with reason.
+- [x] `axi_slave_builder assets/tests/videochk.mmap` is covered by pytest with exit 0 + content asserts.
+- [x] `tests.sh` fails the job if a tool invocation fails.
+- [x] VHDL parametric dump + assignment paths have regressions equivalent to Verilog ADDR_WIDTH tests.
+- [x] At least one hierarchical `vcdevts`-class event test asserts exact counts (no conditional skip).
+- [x] `vcdtracker` and `vcdcmp` CLI have at least one functional success-path test each.
+- [x] CLAUDE.md test health claims match a recorded pytest run.
 
 ## Test plan
 

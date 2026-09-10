@@ -564,12 +564,16 @@ class VHDLCodeGenerator(HDLCodeGenerator):
 
     def gen_HDLSensitivityDescriptor(self, element, **kwargs):
         """Generate sensitivity list descriptors."""
+        # Combinational always @(*) → VHDL-2008 process (all)
+        if element.sens_type == "any" or element.signal is None:
+            return "all"
+
         # Force signal to be treated as just a name in sensitivity context
-        if hasattr(element.signal, 'name'):
+        if hasattr(element.signal, "name"):
             signal_name = element.signal.name
         else:
             signal_name = self.dump_element(element.signal, evaluate=False)
-        
+
         # In VHDL sensitivity lists, we can only use signal names
         # Edge detection must be done inside the process
         return signal_name
