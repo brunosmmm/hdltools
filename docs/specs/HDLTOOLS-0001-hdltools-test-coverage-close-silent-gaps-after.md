@@ -1,7 +1,7 @@
 ---
 id: HDLTOOLS-0001
 title: 'Hdltools test-coverage: close silent gaps after axi KeyError regression'
-status: accepted
+status: done
 owner: bmorais
 created: 2026-09-10
 updated: 2026-09-10
